@@ -29,7 +29,7 @@ class HealthConfig:
     
     Example:
         ```python
-        from src import HealthConfig
+        from fastMiddleware import HealthConfig
         
         async def check_database():
             # Return True if healthy, False otherwise
@@ -90,7 +90,7 @@ class HealthCheckMiddleware(BaseHTTPMiddleware):
     Example:
         ```python
         from fastapi import FastAPI
-        from src import HealthCheckMiddleware, HealthConfig
+        from fastMiddleware import HealthCheckMiddleware, HealthConfig
         
         app = FastAPI()
         

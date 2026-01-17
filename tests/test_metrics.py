@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from src import MetricsMiddleware, MetricsConfig, MetricsCollector
+from fastMiddleware import MetricsMiddleware, MetricsConfig, MetricsCollector
 
 
 @pytest.fixture

@@ -25,7 +25,7 @@ class FastMVCMiddleware(BaseHTTPMiddleware, ABC):
     
     Example:
         ```python
-        from src import FastMVCMiddleware
+        from fastMiddleware import FastMVCMiddleware
         
         class MyMiddleware(FastMVCMiddleware):
             async def dispatch(self, request, call_next):

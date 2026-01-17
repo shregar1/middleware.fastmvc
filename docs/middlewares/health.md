@@ -1,18 +1,18 @@
 # HealthCheckMiddleware
 
-Provides built-in health, readiness, and liveness endpoints for Kubernetes and monitoring systems.
+Built-in health, readiness, and liveness endpoints for Kubernetes and load balancer health checks.
 
 ## Installation
 
 ```python
-from src import HealthCheckMiddleware, HealthConfig
+from fastMiddleware import HealthCheckMiddleware, HealthConfig
 ```
 
 ## Quick Start
 
 ```python
 from fastapi import FastAPI
-from src import HealthCheckMiddleware
+from fastMiddleware import HealthCheckMiddleware
 
 app = FastAPI()
 
@@ -28,22 +28,22 @@ app.add_middleware(HealthCheckMiddleware)
 | `health_path` | `str` | `"/health"` | Health endpoint path |
 | `ready_path` | `str` | `"/ready"` | Readiness endpoint path |
 | `live_path` | `str` | `"/live"` | Liveness endpoint path |
+| `include_details` | `bool` | `True` | Include detailed info |
 | `version` | `str \| None` | `None` | Application version |
 | `service_name` | `str \| None` | `None` | Service name |
-| `include_details` | `bool` | `True` | Include detailed info |
-| `custom_checks` | `dict` | `{}` | Custom health check functions |
+| `custom_checks` | `dict` | `{}` | Custom health checks |
 
 ## Endpoints
 
-| Endpoint | Purpose | Success | Failure |
-|----------|---------|---------|---------|
-| `/health` | Full health status | 200 | 503 |
-| `/ready` | Ready to receive traffic | 200 | 503 |
-| `/live` | Application is running | 200 | - |
+| Endpoint | Purpose | Returns |
+|----------|---------|---------|
+| `/health` | Full health status | Detailed health info |
+| `/ready` | Readiness check | Ready/not ready |
+| `/live` | Liveness check | Alive/not alive |
 
 ## Response Formats
 
-### Health Endpoint
+### /health
 
 ```json
 {
@@ -54,24 +54,25 @@ app.add_middleware(HealthCheckMiddleware)
     "service": "my-api",
     "checks": {
         "database": "healthy",
-        "cache": "healthy"
+        "redis": "healthy"
     }
 }
 ```
 
-### Ready Endpoint
+### /ready
 
 ```json
 {
     "ready": true,
     "timestamp": "2024-01-01T00:00:00Z",
     "checks": {
-        "database": "healthy"
+        "database": "healthy",
+        "redis": "healthy"
     }
 }
 ```
 
-### Live Endpoint
+### /live
 
 ```json
 {
@@ -85,8 +86,6 @@ app.add_middleware(HealthCheckMiddleware)
 ### Basic Configuration
 
 ```python
-from src import HealthCheckMiddleware, HealthConfig
-
 config = HealthConfig(
     version="1.0.0",
     service_name="my-api",
@@ -95,39 +94,48 @@ config = HealthConfig(
 app.add_middleware(HealthCheckMiddleware, config=config)
 ```
 
-### Custom Health Checks
+### With Custom Checks
 
 ```python
 async def check_database() -> bool:
-    """Check database connection."""
+    """Check database connectivity."""
     try:
-        await db.execute("SELECT 1")
+        await database.execute("SELECT 1")
         return True
     except Exception:
         return False
 
 async def check_redis() -> bool:
-    """Check Redis connection."""
+    """Check Redis connectivity."""
     try:
         await redis.ping()
         return True
     except Exception:
         return False
 
-async def check_disk_space() -> bool:
-    """Check disk space."""
-    import shutil
-    usage = shutil.disk_usage("/")
-    return usage.free > 1_000_000_000  # > 1GB free
+async def check_external_api() -> bool:
+    """Check external API availability."""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.example.com/health",
+                timeout=5.0
+            )
+            return response.status_code == 200
+    except Exception:
+        return False
 
 config = HealthConfig(
     version="1.0.0",
+    service_name="my-api",
     custom_checks={
         "database": check_database,
         "redis": check_redis,
-        "disk": check_disk_space,
+        "external_api": check_external_api,
     },
 )
+
+app.add_middleware(HealthCheckMiddleware, config=config)
 ```
 
 ### Custom Paths
@@ -138,25 +146,22 @@ config = HealthConfig(
     ready_path="/readiness",
     live_path="/liveness",
 )
+
+app.add_middleware(HealthCheckMiddleware, config=config)
 ```
 
 ### Without Details
 
 ```python
 config = HealthConfig(
-    include_details=False,  # Only status, no uptime/version
+    include_details=False,
 )
+
+# Response:
+# {"status": "healthy", "timestamp": "..."}
 ```
 
-Response:
-```json
-{
-    "status": "healthy",
-    "timestamp": "2024-01-01T00:00:00Z"
-}
-```
-
-## Kubernetes Integration
+## Kubernetes Configuration
 
 ### Pod Spec
 
@@ -166,7 +171,7 @@ kind: Pod
 spec:
   containers:
     - name: my-api
-      image: my-api:latest
+      image: my-api:1.0.0
       ports:
         - containerPort: 8000
       
@@ -176,6 +181,7 @@ spec:
           port: 8000
         initialDelaySeconds: 10
         periodSeconds: 10
+        timeoutSeconds: 5
         failureThreshold: 3
       
       readinessProbe:
@@ -184,6 +190,7 @@ spec:
           port: 8000
         initialDelaySeconds: 5
         periodSeconds: 5
+        timeoutSeconds: 3
         failureThreshold: 3
       
       startupProbe:
@@ -195,138 +202,106 @@ spec:
         failureThreshold: 30
 ```
 
-### Probe Types
-
-| Probe | Purpose | Endpoint |
-|-------|---------|----------|
-| `livenessProbe` | Restart if dead | `/live` |
-| `readinessProbe` | Remove from load balancer if not ready | `/ready` |
-| `startupProbe` | Wait for app to start | `/health` |
-
-## Load Balancer Integration
-
-### AWS ALB
+### Deployment
 
 ```yaml
-# Target Group Health Check
-HealthCheckPath: /health
-HealthCheckIntervalSeconds: 30
-HealthyThresholdCount: 2
-UnhealthyThresholdCount: 3
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-api
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: my-api
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 8000
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
 ```
 
-### Nginx
+## Health Check Types
 
-```nginx
-upstream backend {
-    server backend1:8000;
-    server backend2:8000;
+### Liveness
+
+**Purpose**: Is the application running?
+
+- Simple check
+- Always returns 200 if process is alive
+- Failure triggers pod restart
+
+**When to fail**:
+- Application deadlock
+- Unrecoverable state
+- Resource exhaustion
+
+### Readiness
+
+**Purpose**: Can the application serve traffic?
+
+- Checks dependencies
+- Returns 503 if not ready
+- Failure removes from load balancer
+
+**When to fail**:
+- Database unavailable
+- Cache unavailable
+- Required service down
+
+### Health (Startup)
+
+**Purpose**: Full application health
+
+- Detailed status
+- Includes all checks
+- Used for startup verification
+
+## Status Codes
+
+| Condition | /health | /ready | /live |
+|-----------|---------|--------|-------|
+| All healthy | 200 | 200 | 200 |
+| Some checks failed | 503 | 503 | 200 |
+| Application alive | 200/503 | 200/503 | 200 |
+
+## Check Failure Handling
+
+When a check fails:
+
+```json
+{
+    "status": "unhealthy",
+    "timestamp": "2024-01-01T00:00:00Z",
+    "checks": {
+        "database": "healthy",
+        "redis": "unhealthy"  // Failed check
+    }
 }
-
-location /health {
-    proxy_pass http://backend/health;
-}
 ```
 
-## Graceful Shutdown
-
-The `/ready` endpoint can return 503 during shutdown:
-
-```python
-import signal
-
-shutdown_flag = False
-
-async def check_not_shutting_down() -> bool:
-    return not shutdown_flag
-
-config = HealthConfig(
-    custom_checks={
-        "accepting_traffic": check_not_shutting_down,
-    },
-)
-
-def handle_sigterm(signum, frame):
-    global shutdown_flag
-    shutdown_flag = True
-    # Allow 30 seconds for in-flight requests
-
-signal.signal(signal.SIGTERM, handle_sigterm)
-```
-
-## Dependency Check Examples
-
-### Database (PostgreSQL)
-
-```python
-import asyncpg
-
-async def check_postgres() -> bool:
-    try:
-        conn = await asyncpg.connect(DATABASE_URL)
-        await conn.execute("SELECT 1")
-        await conn.close()
-        return True
-    except Exception:
-        return False
-```
-
-### Redis
-
-```python
-import redis.asyncio as redis
-
-async def check_redis() -> bool:
-    try:
-        client = redis.from_url(REDIS_URL)
-        await client.ping()
-        await client.close()
-        return True
-    except Exception:
-        return False
-```
-
-### External API
-
-```python
-import httpx
-
-async def check_external_api() -> bool:
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://api.example.com/health",
-                timeout=5.0
-            )
-            return response.status_code == 200
-    except Exception:
-        return False
-```
-
-### Message Queue (RabbitMQ)
-
-```python
-import aio_pika
-
-async def check_rabbitmq() -> bool:
-    try:
-        connection = await aio_pika.connect(RABBITMQ_URL)
-        await connection.close()
-        return True
-    except Exception:
-        return False
-```
+HTTP Status: `503 Service Unavailable`
 
 ## Best Practices
 
-1. **Keep liveness simple** - Just check if app is running
-2. **Make readiness thorough** - Check all dependencies
-3. **Don't block on slow checks** - Use timeouts
-4. **Return 503 during shutdown** - Graceful termination
-5. **Include version** - Helps debugging
+1. **Keep liveness simple** - Should always pass if app is running
+2. **Use readiness for dependencies** - Database, cache, etc.
+3. **Set appropriate timeouts** - Don't let checks hang
+4. **Log check failures** - For debugging
+5. **Don't expose sensitive info** - In health responses
 
-## Related
+## Performance Considerations
 
-- [MetricsMiddleware](metrics.md) - Prometheus metrics
-- [MaintenanceMiddleware](maintenance.md) - Maintenance mode
+- Health checks run on every request to health endpoints
+- Keep checks fast (< 1 second)
+- Cache check results if expensive
+- Use connection pools for database checks
 
+## Related Middlewares
+
+- [MetricsMiddleware](./metrics.md) - Monitor health check metrics
+- [MaintenanceMiddleware](./maintenance.md) - Maintenance mode

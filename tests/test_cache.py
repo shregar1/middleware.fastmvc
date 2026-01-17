@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from src import CacheMiddleware, CacheConfig
+from fastMiddleware import CacheMiddleware, CacheConfig
 
 
 @pytest.fixture

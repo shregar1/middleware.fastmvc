@@ -1,18 +1,18 @@
 # ErrorHandlerMiddleware
 
-Catches exceptions and returns consistent, structured error responses.
+Centralized error handling with consistent error response formatting, exception mapping, and optional traceback inclusion.
 
 ## Installation
 
 ```python
-from src import ErrorHandlerMiddleware, ErrorConfig
+from fastMiddleware import ErrorHandlerMiddleware, ErrorConfig
 ```
 
 ## Quick Start
 
 ```python
 from fastapi import FastAPI
-from src import ErrorHandlerMiddleware
+from fastMiddleware import ErrorHandlerMiddleware
 
 app = FastAPI()
 
@@ -28,19 +28,30 @@ app.add_middleware(ErrorHandlerMiddleware)
 | `include_traceback` | `bool` | `False` | Include stack trace |
 | `include_exception_type` | `bool` | `False` | Include exception class |
 | `log_exceptions` | `bool` | `True` | Log exceptions |
-| `default_message` | `str` | `"An internal error occurred"` | Default error message |
+| `default_message` | `str` | `"An internal error occurred"` | Default message |
 | `status_code` | `int` | `500` | Default status code |
 | `error_handlers` | `dict` | `{}` | Custom exception handlers |
 
 ## Response Format
 
-### Default (Production)
+```json
+{
+    "error": true,
+    "message": "An internal error occurred",
+    "status_code": 500,
+    "request_id": "abc-123-def"
+}
+```
+
+### With Exception Type
 
 ```json
 {
     "error": true,
     "message": "An internal error occurred",
-    "request_id": "abc-123"
+    "status_code": 500,
+    "type": "ValueError",
+    "request_id": "abc-123-def"
 }
 ```
 
@@ -49,32 +60,22 @@ app.add_middleware(ErrorHandlerMiddleware)
 ```json
 {
     "error": true,
-    "message": "An internal error occurred",
+    "message": "invalid literal for int()",
+    "status_code": 500,
     "type": "ValueError",
     "detail": "invalid literal for int() with base 10: 'abc'",
-    "request_id": "abc-123",
     "traceback": [
         "Traceback (most recent call last):",
-        "  File \"app.py\", line 10, in handler",
-        "    int('abc')",
-        "ValueError: invalid literal for int() with base 10: 'abc'"
+        "  File \"app.py\", line 42, in handler",
+        "    value = int(input)",
+        "ValueError: invalid literal for int()"
     ]
 }
 ```
 
 ## Examples
 
-### Development Mode
-
-```python
-app.add_middleware(
-    ErrorHandlerMiddleware,
-    include_traceback=True,
-    include_exception_type=True,
-)
-```
-
-### Production Mode
+### Production Configuration
 
 ```python
 app.add_middleware(
@@ -85,14 +86,32 @@ app.add_middleware(
 )
 ```
 
-### Custom Error Handlers
+### Development Configuration
 
 ```python
-from src import ErrorHandlerMiddleware, ErrorConfig
+app.add_middleware(
+    ErrorHandlerMiddleware,
+    include_traceback=True,
+    include_exception_type=True,
+    log_exceptions=True,
+)
+```
+
+### Custom Error Message
+
+```python
+app.add_middleware(
+    ErrorHandlerMiddleware,
+    default_message="Something went wrong. Please try again.",
+)
+```
+
+### Custom Exception Handlers
+
+```python
+from fastMiddleware import ErrorConfig
 
 config = ErrorConfig()
-
-# Map exception types to (status_code, message)
 config.error_handlers[ValueError] = (400, "Invalid value provided")
 config.error_handlers[PermissionError] = (403, "Permission denied")
 config.error_handlers[FileNotFoundError] = (404, "Resource not found")
@@ -101,43 +120,57 @@ config.error_handlers[TimeoutError] = (504, "Request timed out")
 app.add_middleware(ErrorHandlerMiddleware, config=config)
 ```
 
-### Custom Default Message
+### Handler with Custom Response
 
 ```python
-app.add_middleware(
-    ErrorHandlerMiddleware,
-    default_message="Something went wrong. Please try again later.",
-)
+from fastMiddleware import ErrorConfig
+
+def handle_validation_error(exc: ValueError) -> tuple[int, str, dict]:
+    """Custom handler returning (status, message, extra_data)."""
+    return 400, str(exc), {"validation_error": True}
+
+config = ErrorConfig()
+config.error_handlers[ValueError] = handle_validation_error
+
+app.add_middleware(ErrorHandlerMiddleware, config=config)
 ```
 
-## Custom Exception Classes
+## Exception Mapping
+
+Map exceptions to HTTP status codes:
+
+| Exception | Status | Message |
+|-----------|--------|---------|
+| `ValueError` | 400 | Bad Request |
+| `PermissionError` | 403 | Forbidden |
+| `FileNotFoundError` | 404 | Not Found |
+| `NotImplementedError` | 501 | Not Implemented |
+| `TimeoutError` | 504 | Gateway Timeout |
+| Other | 500 | Internal Server Error |
+
+## Logging
+
+When `log_exceptions=True`:
 
 ```python
-class BusinessError(Exception):
-    """Base class for business errors."""
-    status_code = 400
-    message = "A business error occurred"
+import logging
 
-class OrderNotFoundError(BusinessError):
-    status_code = 404
-    message = "Order not found"
+# Configure logging
+logging.basicConfig(level=logging.ERROR)
 
-class InsufficientFundsError(BusinessError):
-    status_code = 402
-    message = "Insufficient funds"
-
-# Register handlers
-config = ErrorConfig()
-config.error_handlers[OrderNotFoundError] = (404, "Order not found")
-config.error_handlers[InsufficientFundsError] = (402, "Insufficient funds")
+# Exceptions are logged with:
+# - Exception type
+# - Message
+# - Traceback
+# - Request ID (if available)
 ```
 
 ## Integration with Request ID
 
 ```python
-from src import ErrorHandlerMiddleware, RequestIDMiddleware
+from fastMiddleware import ErrorHandlerMiddleware, RequestIDMiddleware
 
-# Error responses include request ID
+# Request ID is included in error responses
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(RequestIDMiddleware)
 ```
@@ -151,120 +184,77 @@ Response:
 }
 ```
 
-## Logging
+## Custom Error Responses
 
-With `log_exceptions=True`, exceptions are logged:
+### JSON API Format
 
 ```python
-import logging
+class JSONAPIErrorMiddleware(ErrorHandlerMiddleware):
+    async def format_error(self, request, exc, status_code, message):
+        return {
+            "errors": [{
+                "status": str(status_code),
+                "title": type(exc).__name__,
+                "detail": message,
+            }]
+        }
+```
 
-logging.basicConfig(level=logging.ERROR)
+### Problem Details (RFC 7807)
 
+```python
+class ProblemDetailsMiddleware(ErrorHandlerMiddleware):
+    async def format_error(self, request, exc, status_code, message):
+        return {
+            "type": f"https://api.example.com/errors/{status_code}",
+            "title": HTTP_STATUS_PHRASES.get(status_code, "Error"),
+            "status": status_code,
+            "detail": message,
+            "instance": str(request.url),
+        }
+```
+
+## Middleware Order
+
+Place ErrorHandlerMiddleware early to catch all exceptions:
+
+```python
+app.add_middleware(ErrorHandlerMiddleware)  # Add early
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(AuthenticationMiddleware)
+app.add_middleware(RateLimitMiddleware)
+```
+
+## Path Exclusion
+
+Exclude paths from error handling:
+
+```python
 app.add_middleware(
     ErrorHandlerMiddleware,
-    log_exceptions=True,
+    exclude_paths={"/health"},
 )
-```
-
-Log output:
-```
-ERROR:fastmvc:Unhandled exception in request abc-123
-Traceback (most recent call last):
-  ...
-ValueError: invalid input
-```
-
-## Exception Filtering
-
-Exclude certain paths from error handling:
-
-```python
-app.add_middleware(
-    ErrorHandlerMiddleware,
-    exclude_paths={"/webhooks"},  # Let webhook errors propagate
-)
-```
-
-## HTTP Exceptions
-
-FastAPI's `HTTPException` is not caught by default (passed through):
-
-```python
-from fastapi import HTTPException
-
-@app.get("/item/{id}")
-async def get_item(id: int):
-    if id < 0:
-        raise HTTPException(status_code=400, detail="Invalid ID")
-    # This is NOT caught by ErrorHandlerMiddleware
-```
-
-To catch all exceptions:
-
-```python
-# Custom handler for HTTPException
-config.error_handlers[HTTPException] = None  # Let it pass through
-
-# Or handle it:
-def handle_http_exception(exc: HTTPException):
-    return (exc.status_code, exc.detail)
 ```
 
 ## Best Practices
 
-### Development
-
-- Include tracebacks for debugging
-- Include exception types
-- Log all exceptions
-
-```python
-app.add_middleware(
-    ErrorHandlerMiddleware,
-    include_traceback=True,
-    include_exception_type=True,
-    log_exceptions=True,
-)
-```
-
-### Production
-
-- Hide tracebacks (security)
-- Hide exception types (security)
-- Log exceptions for monitoring
-- Use generic error messages
-
-```python
-app.add_middleware(
-    ErrorHandlerMiddleware,
-    include_traceback=False,
-    include_exception_type=False,
-    log_exceptions=True,
-    default_message="An error occurred. Please try again.",
-)
-```
+1. **Never expose tracebacks in production** - Security risk
+2. **Log all exceptions** - For debugging and monitoring
+3. **Include request ID** - For support and debugging
+4. **Use custom handlers** - Map domain exceptions
+5. **Return consistent format** - Easier for clients
 
 ## Security Considerations
 
-⚠️ **Never expose in production:**
-- Stack traces
-- Internal exception types
-- Database error messages
-- File paths
-- Internal IDs
+- Tracebacks can expose:
+  - File paths
+  - Database queries
+  - Internal variable values
+  - Configuration details
+- Always disable in production
+- Sanitize error messages
 
-## Middleware Order
+## Related Middlewares
 
-Place early to catch exceptions from all middleware:
-
-```python
-app.add_middleware(ErrorHandlerMiddleware)  # Add early (catches all)
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(AuthenticationMiddleware)
-```
-
-## Related
-
-- [RequestIDMiddleware](request-id.md) - Include request IDs in errors
-- [LoggingMiddleware](logging.md) - Request logging
-
+- [RequestIDMiddleware](./request-id.md) - Add request ID to errors
+- [LoggingMiddleware](./logging.md) - Log error details

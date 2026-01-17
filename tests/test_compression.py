@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from starlette.testclient import TestClient
 from starlette.responses import StreamingResponse
 
-from src import CompressionMiddleware, CompressionConfig
+from fastMiddleware import CompressionMiddleware, CompressionConfig
 
 
 @pytest.fixture

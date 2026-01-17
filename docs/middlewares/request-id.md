@@ -5,14 +5,14 @@ Generates unique request identifiers for distributed tracing and request correla
 ## Installation
 
 ```python
-from src import RequestIDMiddleware
+from fastMiddleware import RequestIDMiddleware
 ```
 
 ## Quick Start
 
 ```python
 from fastapi import FastAPI
-from src import RequestIDMiddleware
+from fastMiddleware import RequestIDMiddleware
 
 app = FastAPI()
 
@@ -23,14 +23,13 @@ app.add_middleware(RequestIDMiddleware)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `header_name` | `str` | `"X-Request-ID"` | Request ID header name |
+| `header_name` | `str` | `"X-Request-ID"` | Header name for request ID |
 | `generator` | `Callable` | UUID4 | ID generator function |
 | `trust_incoming` | `bool` | `True` | Trust incoming request IDs |
 
 ## Response Header
 
 ```http
-HTTP/1.1 200 OK
 X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
 ```
 
@@ -40,6 +39,8 @@ X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
 
 ```python
 app.add_middleware(RequestIDMiddleware)
+
+# Generates UUIDv4: X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
 ```
 
 ### Custom Header Name
@@ -57,27 +58,58 @@ app.add_middleware(
 import uuid
 import time
 
-def short_id():
-    """Generate a short request ID."""
-    return f"{int(time.time())}-{uuid.uuid4().hex[:8]}"
+def custom_generator() -> str:
+    """Generate a custom request ID with timestamp prefix."""
+    timestamp = int(time.time() * 1000)
+    unique = uuid.uuid4().hex[:8]
+    return f"{timestamp}-{unique}"
 
 app.add_middleware(
     RequestIDMiddleware,
-    generator=short_id,
+    generator=custom_generator,
 )
+
+# Result: X-Request-ID: 1704067200000-a1b2c3d4
 ```
 
-Response: `X-Request-ID: 1704067200-a1b2c3d4`
+### Short IDs
+
+```python
+import secrets
+
+def short_id_generator() -> str:
+    """Generate short, URL-safe IDs."""
+    return secrets.token_urlsafe(12)
+
+app.add_middleware(
+    RequestIDMiddleware,
+    generator=short_id_generator,
+)
+
+# Result: X-Request-ID: Kj8_mX2pQvNt
+```
 
 ### Don't Trust Incoming IDs
 
 ```python
-# Always generate new IDs, ignore incoming headers
 app.add_middleware(
     RequestIDMiddleware,
-    trust_incoming=False,
+    trust_incoming=False,  # Always generate new ID
 )
 ```
+
+### Propagate Incoming IDs
+
+```python
+app.add_middleware(
+    RequestIDMiddleware,
+    trust_incoming=True,  # Use incoming ID if present
+)
+```
+
+When `trust_incoming=True`:
+- If request has `X-Request-ID`: Use that ID
+- If no incoming ID: Generate new ID
 
 ## Accessing Request ID
 
@@ -92,119 +124,153 @@ async def root(request: Request):
     return {"request_id": request_id}
 ```
 
-### In Services
+### In Dependencies
 
 ```python
-from src import get_request_id
+from fastapi import Request, Depends
 
-async def process_order(order_id: str):
-    request_id = get_request_id()
-    logger.info(f"Processing order {order_id}", extra={"request_id": request_id})
+def get_request_id(request: Request) -> str:
+    return request.state.request_id
+
+@app.get("/")
+async def root(request_id: str = Depends(get_request_id)):
+    return {"request_id": request_id}
 ```
 
-## Distributed Tracing
+### In Services/Repositories
 
-### Propagating IDs Across Services
+```python
+from fastMiddleware import get_request_id
+
+async def my_service_function():
+    request_id = get_request_id()
+    logger.info(f"Processing request {request_id}")
+```
+
+## Use Cases
+
+### Distributed Tracing
+
+Pass request ID to downstream services:
 
 ```python
 import httpx
 
-async def call_downstream_service():
-    request_id = get_request_id()
+@app.get("/api/data")
+async def get_data(request: Request):
+    request_id = request.state.request_id
     
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "https://downstream-service.example.com/api",
-            headers={"X-Request-ID": request_id}
+            "http://other-service/data",
+            headers={"X-Request-ID": request_id},
         )
     
     return response.json()
 ```
 
-### Trusting Incoming IDs
-
-When `trust_incoming=True` (default), the middleware uses existing request IDs:
-
-```http
-# Incoming request
-GET /api/data HTTP/1.1
-X-Request-ID: upstream-request-id-123
-
-# Response (same ID preserved)
-HTTP/1.1 200 OK
-X-Request-ID: upstream-request-id-123
-```
-
-## Logging Integration
-
-### Include Request ID in Logs
+### Log Correlation
 
 ```python
 import logging
 
-class RequestIDFilter(logging.Filter):
-    def filter(self, record):
-        from src import get_request_id
-        record.request_id = get_request_id() or "-"
-        return True
-
-# Configure logger
-logger = logging.getLogger("app")
-logger.addFilter(RequestIDFilter())
-
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter(
-    "[%(request_id)s] %(levelname)s - %(message)s"
-))
-logger.addHandler(handler)
+@app.get("/api/users")
+async def get_users(request: Request):
+    request_id = request.state.request_id
+    
+    logging.info(
+        f"Fetching users",
+        extra={"request_id": request_id}
+    )
+    
+    users = await db.get_users()
+    
+    logging.info(
+        f"Found {len(users)} users",
+        extra={"request_id": request_id}
+    )
+    
+    return users
 ```
 
-Output:
-```
-[550e8400-e29b-41d4-a716-446655440000] INFO - Processing request
-[550e8400-e29b-41d4-a716-446655440000] INFO - Fetching user data
-[550e8400-e29b-41d4-a716-446655440000] INFO - Request completed
-```
-
-## Error Tracking
-
-Include request ID in error responses for debugging:
+### Error Tracking
 
 ```python
-from src import ErrorHandlerMiddleware, RequestIDMiddleware
-
-app.add_middleware(ErrorHandlerMiddleware, include_request_id=True)
-app.add_middleware(RequestIDMiddleware)
+@app.exception_handler(Exception)
+async def exception_handler(request: Request, exc: Exception):
+    request_id = getattr(request.state, "request_id", "unknown")
+    
+    # Log with request ID
+    logging.error(
+        f"Unhandled exception: {exc}",
+        extra={"request_id": request_id},
+        exc_info=True,
+    )
+    
+    # Return request ID to client for support
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "request_id": request_id,
+        },
+    )
 ```
 
-Error response:
-```json
-{
-    "error": true,
-    "message": "Internal server error",
-    "request_id": "550e8400-e29b-41d4-a716-446655440000"
-}
+### Support Tickets
+
+```python
+@app.get("/support/ticket")
+async def create_ticket(request: Request, issue: str):
+    request_id = request.state.request_id
+    
+    return {
+        "message": f"Ticket created. Reference: {request_id}",
+        "request_id": request_id,
+    }
+```
+
+## Integration with Other Middlewares
+
+### With Logging
+
+```python
+from fastMiddleware import RequestIDMiddleware, LoggingMiddleware
+
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(RequestIDMiddleware)
+
+# Logs include request ID automatically
+```
+
+### With Request Context
+
+```python
+from fastMiddleware import RequestIDMiddleware, RequestContextMiddleware
+
+app.add_middleware(RequestContextMiddleware)
+app.add_middleware(RequestIDMiddleware)
+
+# Request ID available via get_request_id()
 ```
 
 ## Best Practices
 
-1. **Always use request IDs** - Essential for debugging
-2. **Include in all logs** - Makes correlation easy
-3. **Propagate to downstream services** - Enables distributed tracing
-4. **Include in error responses** - Helps support debugging
-5. **Trust incoming IDs** - Unless you have security concerns
+1. **Always include in responses** - Helps clients report issues
+2. **Propagate to downstream services** - Enables distributed tracing
+3. **Include in all logs** - Makes log correlation possible
+4. **Use in error responses** - Customers can reference for support
+5. **Consider ID format** - UUID for uniqueness, shorter for readability
 
-## Middleware Order
+## Security Considerations
 
-Add `RequestIDMiddleware` early so other middleware can access the ID:
+- Request IDs can reveal request volume patterns
+- Don't use sequential IDs (reveals total request count)
+- Consider using random IDs for public APIs
+- Trust incoming IDs only from trusted sources
 
-```python
-app.add_middleware(LoggingMiddleware)  # Uses request ID
-app.add_middleware(RequestIDMiddleware)  # Generates ID
-```
+## Related Middlewares
 
-## Related
-
-- [RequestContextMiddleware](request-context.md) - Full request context
-- [LoggingMiddleware](logging.md) - Request logging
-
+- [RequestContextMiddleware](./request-context.md) - Access request ID anywhere
+- [LoggingMiddleware](./logging.md) - Log with request ID
+- [ErrorHandlerMiddleware](./error-handler.md) - Include ID in errors

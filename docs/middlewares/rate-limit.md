@@ -1,18 +1,23 @@
 # RateLimitMiddleware
 
-Protects your API from abuse with configurable rate limiting using a sliding window algorithm.
+Protects your API from abuse with sliding window rate limiting, configurable limits, and custom key functions.
 
 ## Installation
 
 ```python
-from src import RateLimitMiddleware, RateLimitConfig
+from fastMiddleware import (
+    RateLimitMiddleware,
+    RateLimitConfig,
+    RateLimitStore,
+    InMemoryRateLimitStore,
+)
 ```
 
 ## Quick Start
 
 ```python
 from fastapi import FastAPI
-from src import RateLimitMiddleware
+from fastMiddleware import RateLimitMiddleware
 
 app = FastAPI()
 
@@ -29,25 +34,16 @@ app.add_middleware(RateLimitMiddleware)
 | `requests_per_minute` | `int` | `60` | Requests allowed per minute |
 | `requests_per_hour` | `int \| None` | `None` | Requests allowed per hour |
 | `burst_limit` | `int \| None` | `None` | Maximum burst requests |
-| `key_func` | `Callable` | IP-based | Function to extract rate limit key |
+| `key_func` | `Callable` | IP-based | Key extraction function |
 | `error_message` | `str` | `"Rate limit exceeded"` | Error message |
-| `error_status_code` | `int` | `429` | Too Many Requests status |
-
-## Response Headers
-
-| Header | Description |
-|--------|-------------|
-| `X-RateLimit-Limit` | Maximum requests allowed |
-| `X-RateLimit-Remaining` | Requests remaining in window |
-| `X-RateLimit-Reset` | Unix timestamp when limit resets |
-| `Retry-After` | Seconds until retry (when limited) |
+| `include_headers` | `bool` | `True` | Include rate limit headers |
 
 ## Examples
 
 ### Basic Rate Limiting
 
 ```python
-from src import RateLimitMiddleware, RateLimitConfig
+from fastMiddleware import RateLimitMiddleware, RateLimitConfig
 
 config = RateLimitConfig(
     requests_per_minute=100,
@@ -63,16 +59,19 @@ app.add_middleware(RateLimitMiddleware, config=config)
 from starlette.requests import Request
 
 def get_user_key(request: Request) -> str:
-    """Rate limit by user ID if authenticated."""
+    """Rate limit by authenticated user."""
     if hasattr(request.state, "auth"):
-        user_id = request.state.auth.get("sub", "unknown")
+        user_id = request.state.auth.get("user_id", "unknown")
         return f"user:{user_id}"
     
-    # Fall back to IP address
+    # Fall back to IP for unauthenticated requests
+    return get_ip_key(request)
+
+def get_ip_key(request: Request) -> str:
+    """Rate limit by IP address."""
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return f"ip:{forwarded.split(',')[0].strip()}"
-    
     return f"ip:{request.client.host if request.client else 'unknown'}"
 
 config = RateLimitConfig(
@@ -83,16 +82,18 @@ config = RateLimitConfig(
 app.add_middleware(RateLimitMiddleware, config=config)
 ```
 
-### Per-API-Key Rate Limiting
+### API Key Based Limits
 
 ```python
 def get_api_key(request: Request) -> str:
     """Rate limit by API key."""
-    api_key = request.headers.get("X-API-Key", "anonymous")
-    return f"api:{api_key}"
+    api_key = request.headers.get("X-API-Key", "")
+    if api_key:
+        return f"api:{api_key[:16]}"  # Use prefix for privacy
+    return get_ip_key(request)
 
 config = RateLimitConfig(
-    requests_per_minute=1000,
+    requests_per_minute=1000,  # Higher limit for API keys
     key_func=get_api_key,
 )
 ```
@@ -106,32 +107,66 @@ TIER_LIMITS = {
     "enterprise": 1000,
 }
 
-def get_tiered_key(request: Request) -> str:
+def get_tier_key(request: Request) -> str:
+    """Rate limit based on user tier."""
     tier = "free"
     if hasattr(request.state, "auth"):
         tier = request.state.auth.get("tier", "free")
     
-    user_id = request.state.auth.get("sub", "anon") if hasattr(request.state, "auth") else "anon"
+    user_id = request.state.auth.get("user_id", "anon") if hasattr(request.state, "auth") else "anon"
     return f"{tier}:{user_id}"
-
-# Note: For different limits per tier, use multiple instances
-# or implement custom logic in the key function
 ```
 
-### Exclude Paths
+### With Burst Limit
 
 ```python
-app.add_middleware(
-    RateLimitMiddleware,
-    config=config,
-    exclude_paths={"/health", "/metrics", "/docs"},
+config = RateLimitConfig(
+    requests_per_minute=60,
+    burst_limit=10,  # Allow 10 requests instantly
 )
+```
+
+## Response Headers
+
+Rate limit information is included in response headers:
+
+| Header | Description | Example |
+|--------|-------------|---------|
+| `X-RateLimit-Limit` | Maximum requests allowed | `60` |
+| `X-RateLimit-Remaining` | Remaining requests | `45` |
+| `X-RateLimit-Reset` | Unix timestamp when limit resets | `1704067200` |
+| `Retry-After` | Seconds until allowed (when limited) | `30` |
+
+### Normal Response
+
+```http
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 45
+X-RateLimit-Reset: 1704067200
+```
+
+### Rate Limited Response
+
+```http
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1704067200
+Retry-After: 30
+Content-Type: application/json
+
+{
+    "detail": "Rate limit exceeded. Try again in 30 seconds."
+}
 ```
 
 ## Custom Storage Backend
 
+For distributed systems, implement a custom storage backend:
+
 ```python
-from src import RateLimitStore
+from fastMiddleware import RateLimitStore
 
 class RedisRateLimitStore(RateLimitStore):
     """Redis-backed rate limit storage."""
@@ -145,102 +180,81 @@ class RedisRateLimitStore(RateLimitStore):
         limit: int,
         window: int,
     ) -> tuple[bool, int, int]:
-        """Check if rate limited.
+        """Check if rate limited and return remaining count."""
+        pipe = self.redis.pipeline()
+        now = time.time()
+        window_start = now - window
         
-        Returns:
-            (is_allowed, remaining, reset_time)
-        """
-        current = await self.redis.get(f"rate:{key}")
-        # Implement sliding window logic
-        ...
+        # Remove old entries
+        pipe.zremrangebyscore(key, 0, window_start)
+        # Count current entries
+        pipe.zcard(key)
+        # Add current request
+        pipe.zadd(key, {str(now): now})
+        # Set expiration
+        pipe.expire(key, window)
+        
+        results = await pipe.execute()
+        current_count = results[1]
+        
+        allowed = current_count < limit
+        remaining = max(0, limit - current_count - 1)
+        reset_time = int(now + window)
+        
+        return allowed, remaining, reset_time
     
-    async def record_request(self, key: str, window: int) -> None:
-        """Record a request."""
-        await self.redis.incr(f"rate:{key}")
-        await self.redis.expire(f"rate:{key}", window)
+    async def record_request(self, key: str) -> None:
+        """Record a request (already done in check_rate_limit)."""
+        pass
 
-# Use custom store
+# Usage
+import redis.asyncio as redis
+
+redis_client = redis.from_url("redis://localhost")
 store = RedisRateLimitStore(redis_client)
-app.add_middleware(RateLimitMiddleware, store=store)
+
+app.add_middleware(
+    RateLimitMiddleware,
+    store=store,
+    config=RateLimitConfig(requests_per_minute=100),
+)
 ```
 
-## Response Examples
+## Path Exclusion
 
-### Normal Response
-
-```http
-HTTP/1.1 200 OK
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1704067260
-```
-
-### Rate Limited Response
-
-```http
-HTTP/1.1 429 Too Many Requests
-Content-Type: application/json
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1704067260
-Retry-After: 45
-
-{
-    "detail": "Rate limit exceeded"
-}
-```
-
-## Client Handling
-
-### JavaScript Example
-
-```javascript
-async function fetchWithRetry(url, options = {}) {
-    const response = await fetch(url, options);
-    
-    if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After');
-        const waitTime = parseInt(retryAfter) * 1000;
-        
-        console.log(`Rate limited. Retrying in ${retryAfter}s`);
-        await new Promise(r => setTimeout(r, waitTime));
-        
-        return fetchWithRetry(url, options);
-    }
-    
-    return response;
-}
-```
-
-### Python Example
+Exclude paths from rate limiting:
 
 ```python
-import httpx
-import asyncio
-
-async def request_with_retry(url):
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
-        
-        if response.status_code == 429:
-            retry_after = int(response.headers.get("Retry-After", 60))
-            await asyncio.sleep(retry_after)
-            return await request_with_retry(url)
-        
-        return response
+app.add_middleware(
+    RateLimitMiddleware,
+    exclude_paths={"/health", "/metrics", "/docs"},
+)
 ```
 
 ## Best Practices
 
-1. **Set reasonable limits** - Balance protection with usability
-2. **Use per-user limits** when possible - Fairer than IP-based
-3. **Implement tiered limits** - Different limits for different plans
+1. **Use Redis for distributed systems** - In-memory store doesn't share across instances
+2. **Rate limit by user, not just IP** - Shared IPs affect multiple users
+3. **Set reasonable limits** - Too strict causes friction, too loose allows abuse
 4. **Exclude health checks** - Don't rate limit monitoring
-5. **Monitor rate limit hits** - Track abuse patterns
-6. **Document limits** - Let API consumers know the limits
+5. **Log rate limit events** - Track potential abuse patterns
 
-## Related
+## Algorithm
 
-- [AuthenticationMiddleware](authentication.md) - Authentication
-- [IdempotencyMiddleware](idempotency.md) - Safe retries
+This middleware uses the **sliding window** algorithm:
 
+1. Track request timestamps within window
+2. Count requests in current window
+3. Allow if count < limit
+4. Reject with 429 if count >= limit
+
+Benefits over fixed window:
+- No burst at window boundaries
+- More accurate rate enforcement
+- Smoother rate limiting experience
+
+## Related Middlewares
+
+- [AuthenticationMiddleware](./authentication.md) - Authenticate before rate limiting
+- [RequestIDMiddleware](./request-id.md) - Track rate limited requests
+- [MetricsMiddleware](./metrics.md) - Monitor rate limit events

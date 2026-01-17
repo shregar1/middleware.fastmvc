@@ -6,59 +6,59 @@ robust FastAPI/Starlette applications with security, observability, and
 rate limiting built-in.
 """
 
-from src.base import FastMVCMiddleware
-from src.cors import CORSMiddleware
-from src.logging import LoggingMiddleware
-from src.timing import TimingMiddleware
-from src.request_id import RequestIDMiddleware
-from src.security import SecurityHeadersMiddleware, SecurityHeadersConfig
-from src.rate_limit import (
+from fastMiddleware.base import FastMVCMiddleware
+from fastMiddleware.cors import CORSMiddleware
+from fastMiddleware.logging import LoggingMiddleware
+from fastMiddleware.timing import TimingMiddleware
+from fastMiddleware.request_id import RequestIDMiddleware
+from fastMiddleware.security import SecurityHeadersMiddleware, SecurityHeadersConfig
+from fastMiddleware.rate_limit import (
     RateLimitMiddleware,
     RateLimitConfig,
     RateLimitStore,
     InMemoryRateLimitStore,
 )
-from src.authentication import (
+from fastMiddleware.authentication import (
     AuthenticationMiddleware,
     AuthConfig,
     AuthBackend,
     JWTAuthBackend,
     APIKeyAuthBackend,
 )
-from src.request_context import (
+from fastMiddleware.request_context import (
     RequestContextMiddleware,
     get_request_id,
     get_request_context,
 )
-from src.compression import (
+from fastMiddleware.compression import (
     CompressionMiddleware,
     CompressionConfig,
 )
-from src.trusted_host import TrustedHostMiddleware
-from src.error_handler import (
+from fastMiddleware.trusted_host import TrustedHostMiddleware
+from fastMiddleware.error_handler import (
     ErrorHandlerMiddleware,
     ErrorConfig,
 )
-from src.health import (
+from fastMiddleware.health import (
     HealthCheckMiddleware,
     HealthConfig,
 )
-from src.idempotency import (
+from fastMiddleware.idempotency import (
     IdempotencyMiddleware,
     IdempotencyConfig,
     IdempotencyStore,
     InMemoryIdempotencyStore,
 )
-from src.cache import (
+from fastMiddleware.cache import (
     CacheMiddleware,
     CacheConfig,
 )
-from src.metrics import (
+from fastMiddleware.metrics import (
     MetricsMiddleware,
     MetricsConfig,
     MetricsCollector,
 )
-from src.maintenance import (
+from fastMiddleware.maintenance import (
     MaintenanceMiddleware,
     MaintenanceConfig,
 )

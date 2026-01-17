@@ -165,7 +165,7 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from src import SecurityHeadersMiddleware
+from fastMiddleware import SecurityHeadersMiddleware
 
 class TestSecurityHeaders:
     """Tests for SecurityHeadersMiddleware."""
@@ -303,7 +303,7 @@ from typing import Callable, Awaitable, Set
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.base import FastMVCMiddleware
+from fastMiddleware.base import FastMVCMiddleware
 
 
 @dataclass

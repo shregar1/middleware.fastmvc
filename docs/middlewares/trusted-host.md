@@ -1,21 +1,22 @@
 # TrustedHostMiddleware
 
-Validates the HTTP Host header against a list of allowed hosts to prevent host header attacks.
+Validates the HTTP Host header to prevent host header attacks, DNS rebinding, and cache poisoning.
 
 ## Installation
 
 ```python
-from src import TrustedHostMiddleware
+from fastMiddleware import TrustedHostMiddleware, TrustedHostConfig
 ```
 
 ## Quick Start
 
 ```python
 from fastapi import FastAPI
-from src import TrustedHostMiddleware
+from fastMiddleware import TrustedHostMiddleware
 
 app = FastAPI()
 
+# Allow specific hosts
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["example.com", "www.example.com"],
@@ -24,32 +25,43 @@ app.add_middleware(
 
 ## Configuration
 
+### TrustedHostConfig
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `allowed_hosts` | `list[str]` | `["*"]` | Allowed host patterns |
+| `allowed_hosts` | `Sequence[str]` | `["*"]` | List of allowed host patterns |
 | `www_redirect` | `bool` | `False` | Redirect www to non-www |
-| `redirect_to_primary` | `bool` | `False` | Redirect to primary host |
+| `redirect_to_primary` | `bool` | `False` | Redirect all hosts to primary |
 | `primary_host` | `str \| None` | `None` | Primary host for redirects |
 
 ## Host Patterns
 
 | Pattern | Matches | Example |
 |---------|---------|---------|
-| `"example.com"` | Exact match | `example.com` ✓, `api.example.com` ✗ |
-| `"*.example.com"` | Any subdomain | `api.example.com` ✓, `example.com` ✗ |
-| `"*"` | Any host | All hosts (development only!) |
+| `example.com` | Exact host | Only `example.com` |
+| `*.example.com` | Subdomains | `api.example.com`, `www.example.com` |
+| `*` | Any host | All hosts (development only) |
 
 ## Examples
 
-### Production Configuration
+### Single Host
+
+```python
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["api.example.com"],
+)
+```
+
+### Multiple Hosts
 
 ```python
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=[
-        "api.example.com",
         "example.com",
         "www.example.com",
+        "api.example.com",
     ],
 )
 ```
@@ -59,91 +71,164 @@ app.add_middleware(
 ```python
 app.add_middleware(
     TrustedHostMiddleware,
+    allowed_hosts=["*.example.com"],  # Matches any subdomain
+)
+```
+
+### Mixed Patterns
+
+```python
+app.add_middleware(
+    TrustedHostMiddleware,
     allowed_hosts=[
-        "*.example.com",  # All subdomains
-        "example.com",     # Root domain
+        "example.com",           # Exact match
+        "*.staging.example.com", # Staging subdomains
+        "localhost",             # Local development
     ],
 )
 ```
 
-### Development (Allow All)
+### Development Mode
 
 ```python
-# ⚠️ Only for development!
+# Allow any host (development only!)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["*"],
 )
 ```
 
-### With WWW Redirect
+> ⚠️ **Warning**: Never use `["*"]` in production!
+
+### WWW Redirect
 
 ```python
-app.add_middleware(
-    TrustedHostMiddleware,
+config = TrustedHostConfig(
     allowed_hosts=["example.com", "www.example.com"],
     www_redirect=True,  # Redirect www.example.com → example.com
 )
+
+app.add_middleware(TrustedHostMiddleware, config=config)
 ```
 
-### Redirect to Primary Host
+### Primary Host Redirect
 
 ```python
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["example.com", "legacy.example.com"],
+config = TrustedHostConfig(
+    allowed_hosts=["example.com", "example.org", "example.net"],
     redirect_to_primary=True,
-    primary_host="example.com",
+    primary_host="example.com",  # All requests redirect here
 )
+
+app.add_middleware(TrustedHostMiddleware, config=config)
 ```
 
-## Error Response
+## Response
 
-Invalid host requests receive a 400 Bad Request:
+### Valid Host
+
+Request proceeds normally.
+
+### Invalid Host
 
 ```http
 HTTP/1.1 400 Bad Request
-Content-Type: text/plain
 
 Invalid host header
 ```
 
-## Why Use This?
+## Path Exclusion
+
+Exclude paths from host validation (e.g., for health checks):
+
+```python
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["api.example.com"],
+    exclude_paths={"/health", "/ready", "/live"},
+)
+```
+
+## Environment-Based Configuration
+
+```python
+import os
+
+# Development vs Production
+if os.environ.get("ENVIRONMENT") == "development":
+    allowed_hosts = ["localhost", "127.0.0.1", "*.localhost"]
+else:
+    allowed_hosts = os.environ["ALLOWED_HOSTS"].split(",")
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=allowed_hosts,
+)
+```
+
+## Kubernetes/Docker
+
+For containerized applications:
+
+```python
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=[
+        "api.example.com",    # Public domain
+        "api.internal",       # Internal service name
+        "api.default.svc",    # Kubernetes service
+        "localhost",          # Health checks
+    ],
+)
+```
+
+## Security Considerations
 
 ### Host Header Attacks
 
-Without validation, attackers can manipulate the Host header:
+Without validation, attackers can:
+- **Cache poisoning**: Inject malicious content into CDN caches
+- **Password reset poisoning**: Redirect password reset links
+- **Web cache deception**: Steal sensitive cached data
+- **Server-Side Request Forgery (SSRF)**: Bypass access controls
 
-```http
-GET /reset-password HTTP/1.1
-Host: evil.com
-```
+### Best Practices
 
-If your app uses the Host header to generate URLs (e.g., password reset links), this could redirect users to malicious sites.
+1. **Be specific** - List only necessary hosts
+2. **Avoid wildcards in production** - Use exact matches when possible
+3. **Include all valid hosts** - Don't forget www, API subdomains
+4. **Test thoroughly** - Ensure all legitimate traffic works
 
-### Cache Poisoning
+## Common Issues
 
-Invalid Host headers can poison web caches, serving malicious content to legitimate users.
+### Port Numbers
 
-## Security Best Practices
-
-1. **Always specify allowed hosts** in production
-2. **Never use `"*"`** in production
-3. **Include all valid domains** (with and without www)
-4. **Use with HTTPS** for complete protection
-5. **Place early in middleware stack** (first to execute)
-
-## Middleware Order
+Hosts with non-standard ports are handled automatically:
 
 ```python
-# Trusted host should be last added (first executed)
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(RateLimitMiddleware)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["..."])
+# This works for both example.com and example.com:8080
+allowed_hosts=["example.com"]
 ```
 
-## Related
+### Case Sensitivity
 
-- [SecurityHeadersMiddleware](security-headers.md) - Security headers
-- [CORSMiddleware](cors.md) - CORS handling
+Host matching is case-insensitive:
 
+```python
+# Matches EXAMPLE.COM, Example.Com, example.com
+allowed_hosts=["example.com"]
+```
+
+### Behind a Proxy
+
+If behind a reverse proxy, ensure the proxy forwards the original Host header:
+
+```nginx
+# nginx configuration
+proxy_set_header Host $host;
+```
+
+## Related Middlewares
+
+- [SecurityHeadersMiddleware](./security-headers.md) - Security headers
+- [CORSMiddleware](./cors.md) - Cross-origin settings

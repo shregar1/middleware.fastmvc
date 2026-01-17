@@ -7,7 +7,7 @@ import logging
 from fastapi import FastAPI, HTTPException
 from starlette.testclient import TestClient
 
-from src import ErrorHandlerMiddleware, ErrorConfig
+from fastMiddleware import ErrorHandlerMiddleware, ErrorConfig
 
 
 class TestErrorHandlerMiddleware:
@@ -267,7 +267,7 @@ class TestRequestIdInError:
     @pytest.fixture
     def request_id_app(self) -> FastAPI:
         """Create app with request ID."""
-        from src import RequestIDMiddleware
+        from fastMiddleware import RequestIDMiddleware
         
         app = FastAPI()
         app.add_middleware(ErrorHandlerMiddleware, include_exception_type=True)

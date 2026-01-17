@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from src import SecurityHeadersMiddleware, SecurityHeadersConfig
+from fastMiddleware import SecurityHeadersMiddleware, SecurityHeadersConfig
 
 
 @pytest.fixture

@@ -11,7 +11,7 @@ from typing import Callable, Awaitable, Set, Any, Dict
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
 
-from src.base import FastMVCMiddleware
+from fastMiddleware.base import FastMVCMiddleware
 
 
 @dataclass
@@ -29,7 +29,7 @@ class AuthConfig:
     
     Example:
         ```python
-        from src import AuthConfig
+        from fastMiddleware import AuthConfig
         
         config = AuthConfig(
             exclude_paths={"/health", "/login", "/register"},
@@ -56,7 +56,7 @@ class AuthBackend(ABC):
     
     Example:
         ```python
-        from src import AuthBackend
+        from fastMiddleware import AuthBackend
         
         class CustomAuthBackend(AuthBackend):
             async def authenticate(self, request, credentials):
@@ -98,7 +98,7 @@ class JWTAuthBackend(AuthBackend):
     
     Example:
         ```python
-        from src import JWTAuthBackend
+        from fastMiddleware import JWTAuthBackend
         
         backend = JWTAuthBackend(
             secret="your-secret-key",
@@ -181,7 +181,7 @@ class APIKeyAuthBackend(AuthBackend):
     
     Example:
         ```python
-        from src import APIKeyAuthBackend
+        from fastMiddleware import APIKeyAuthBackend
         
         # Static keys
         backend = APIKeyAuthBackend(
@@ -256,7 +256,7 @@ class AuthenticationMiddleware(FastMVCMiddleware):
     Example:
         ```python
         from fastapi import FastAPI, Request
-        from src import (
+        from fastMiddleware import (
             AuthenticationMiddleware,
             AuthConfig,
             JWTAuthBackend,

@@ -21,7 +21,7 @@ This document provides detailed API documentation for all middleware components.
 Base class for all FastMVC middlewares.
 
 ```python
-from src import FastMVCMiddleware
+from fastMiddleware import FastMVCMiddleware
 
 class FastMVCMiddleware(BaseHTTPMiddleware):
     """Base middleware class with common functionality."""
@@ -71,7 +71,7 @@ class MyMiddleware(FastMVCMiddleware):
 Adds security headers to all responses.
 
 ```python
-from src import SecurityHeadersMiddleware, SecurityHeadersConfig
+from fastMiddleware import SecurityHeadersMiddleware, SecurityHeadersConfig
 ```
 
 **Class: `SecurityHeadersConfig`**
@@ -111,7 +111,7 @@ SecurityHeadersMiddleware(
 Validates the Host header against allowed hosts.
 
 ```python
-from src import TrustedHostMiddleware, TrustedHostConfig
+from fastMiddleware import TrustedHostMiddleware, TrustedHostConfig
 ```
 
 **Class: `TrustedHostConfig`**
@@ -135,7 +135,7 @@ from src import TrustedHostMiddleware, TrustedHostConfig
 Cross-Origin Resource Sharing support.
 
 ```python
-from src import CORSMiddleware
+from fastMiddleware import CORSMiddleware
 ```
 
 **Parameters:**
@@ -156,7 +156,7 @@ from src import CORSMiddleware
 Pluggable authentication middleware.
 
 ```python
-from src import (
+from fastMiddleware import (
     AuthenticationMiddleware,
     AuthConfig,
     JWTAuthBackend,
@@ -210,7 +210,7 @@ APIKeyAuthBackend(
 Request/response logging.
 
 ```python
-from src import LoggingMiddleware
+from fastMiddleware import LoggingMiddleware
 ```
 
 **Parameters:**
@@ -232,7 +232,7 @@ from src import LoggingMiddleware
 Adds processing time header.
 
 ```python
-from src import TimingMiddleware
+from fastMiddleware import TimingMiddleware
 ```
 
 **Parameters:**
@@ -250,7 +250,7 @@ from src import TimingMiddleware
 Generates/propagates request IDs.
 
 ```python
-from src import RequestIDMiddleware
+from fastMiddleware import RequestIDMiddleware
 ```
 
 **Parameters:**
@@ -271,7 +271,7 @@ from src import RequestIDMiddleware
 Async-safe request context.
 
 ```python
-from src import (
+from fastMiddleware import (
     RequestContextMiddleware,
     get_request_id,
     get_request_context,
@@ -299,7 +299,7 @@ from src import (
 Prometheus metrics collection.
 
 ```python
-from src import MetricsMiddleware, MetricsConfig, MetricsCollector
+from fastMiddleware import MetricsMiddleware, MetricsConfig, MetricsCollector
 ```
 
 **Class: `MetricsConfig`**
@@ -330,7 +330,7 @@ from src import MetricsMiddleware, MetricsConfig, MetricsCollector
 Rate limiting with sliding window.
 
 ```python
-from src import (
+from fastMiddleware import (
     RateLimitMiddleware,
     RateLimitConfig,
     RateLimitStore,
@@ -363,7 +363,7 @@ from src import (
 Centralized error handling.
 
 ```python
-from src import ErrorHandlerMiddleware, ErrorConfig
+from fastMiddleware import ErrorHandlerMiddleware, ErrorConfig
 ```
 
 **Class: `ErrorConfig`**
@@ -392,7 +392,7 @@ config.error_handlers[PermissionError] = (403, "Forbidden")
 Idempotency key support.
 
 ```python
-from src import (
+from fastMiddleware import (
     IdempotencyMiddleware,
     IdempotencyConfig,
     IdempotencyStore,
@@ -421,7 +421,7 @@ from src import (
 GZip response compression.
 
 ```python
-from src import CompressionMiddleware, CompressionConfig
+from fastMiddleware import CompressionMiddleware, CompressionConfig
 ```
 
 **Class: `CompressionConfig`**
@@ -439,7 +439,7 @@ from src import CompressionMiddleware, CompressionConfig
 HTTP caching with ETags.
 
 ```python
-from src import CacheMiddleware, CacheConfig, InMemoryCacheStore
+from fastMiddleware import CacheMiddleware, CacheConfig, InMemoryCacheStore
 ```
 
 **Class: `CacheConfig`**
@@ -475,7 +475,7 @@ config = CacheConfig(
 Health check endpoints.
 
 ```python
-from src import HealthCheckMiddleware, HealthConfig
+from fastMiddleware import HealthCheckMiddleware, HealthConfig
 ```
 
 **Class: `HealthConfig`**
@@ -516,7 +516,7 @@ config = HealthConfig(
 Maintenance mode control.
 
 ```python
-from src import MaintenanceMiddleware, MaintenanceConfig
+from fastMiddleware import MaintenanceMiddleware, MaintenanceConfig
 ```
 
 **Class: `MaintenanceConfig`**
@@ -551,7 +551,7 @@ middleware.is_enabled()
 ### Request Context Helpers
 
 ```python
-from src import get_request_id, get_request_context
+from fastMiddleware import get_request_id, get_request_context
 ```
 
 | Function | Returns | Description |
@@ -574,7 +574,7 @@ async def my_service():
 ## Version Information
 
 ```python
-from src import __version__, __author__, __license__
+from fastMiddleware import __version__, __author__, __license__
 
 print(__version__)  # "0.1.0"
 print(__author__)   # "Shiv"

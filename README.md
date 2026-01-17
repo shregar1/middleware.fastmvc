@@ -40,7 +40,7 @@ pip install fastmvc-middleware[all]
 
 ```python
 from fastapi import FastAPI
-from src import (
+from fastMiddleware import (
     CORSMiddleware,
     SecurityHeadersMiddleware,
     LoggingMiddleware,
@@ -112,7 +112,7 @@ async def root():
 Adds comprehensive security headers to protect against common web vulnerabilities.
 
 ```python
-from src import SecurityHeadersMiddleware, SecurityHeadersConfig
+from fastMiddleware import SecurityHeadersMiddleware, SecurityHeadersConfig
 
 # Using individual parameters
 app.add_middleware(
@@ -152,7 +152,7 @@ app.add_middleware(SecurityHeadersMiddleware, config=config)
 Validates the Host header to prevent host header attacks.
 
 ```python
-from src import TrustedHostMiddleware
+from fastMiddleware import TrustedHostMiddleware
 
 # Specific hosts
 app.add_middleware(
@@ -188,7 +188,7 @@ app.add_middleware(
 Cross-origin resource sharing with sensible defaults.
 
 ```python
-from src import CORSMiddleware
+from fastMiddleware import CORSMiddleware
 
 # Production (specific origins)
 app.add_middleware(
@@ -225,7 +225,7 @@ app.add_middleware(
 Pluggable authentication with support for JWT tokens and API keys.
 
 ```python
-from src import (
+from fastMiddleware import (
     AuthenticationMiddleware,
     AuthConfig,
     JWTAuthBackend,
@@ -290,7 +290,7 @@ backend = APIKeyAuthBackend(validator=validate_api_key)
 Structured request/response logging with configurable verbosity.
 
 ```python
-from src import LoggingMiddleware
+from fastMiddleware import LoggingMiddleware
 import logging
 
 app.add_middleware(
@@ -326,7 +326,7 @@ app.add_middleware(
 Adds request processing time to response headers.
 
 ```python
-from src import TimingMiddleware
+from fastMiddleware import TimingMiddleware
 
 app.add_middleware(
     TimingMiddleware,
@@ -352,7 +352,7 @@ app.add_middleware(
 Generates unique request identifiers for distributed tracing.
 
 ```python
-from src import RequestIDMiddleware
+from fastMiddleware import RequestIDMiddleware
 
 app.add_middleware(
     RequestIDMiddleware,
@@ -383,7 +383,7 @@ async def root(request: Request):
 Provides async-safe context variables accessible from anywhere in your code.
 
 ```python
-from src import (
+from fastMiddleware import (
     RequestContextMiddleware,
     get_request_id,
     get_request_context,
@@ -421,7 +421,7 @@ async def my_service_function():
 Collects request metrics and exposes a Prometheus-compatible endpoint.
 
 ```python
-from src import MetricsMiddleware, MetricsConfig
+from fastMiddleware import MetricsMiddleware, MetricsConfig
 
 # Basic usage
 app.add_middleware(MetricsMiddleware)
@@ -465,7 +465,7 @@ scrape_configs:
 Protects your API from abuse with configurable rate limiting.
 
 ```python
-from src import RateLimitMiddleware, RateLimitConfig
+from fastMiddleware import RateLimitMiddleware, RateLimitConfig
 
 # Basic usage - 60 requests per minute
 app.add_middleware(RateLimitMiddleware)
@@ -502,7 +502,7 @@ app.add_middleware(RateLimitMiddleware, config=config)
 
 **Custom Storage Backend:**
 ```python
-from src import RateLimitStore
+from fastMiddleware import RateLimitStore
 
 class RedisRateLimitStore(RateLimitStore):
     def __init__(self, redis_client):
@@ -525,7 +525,7 @@ app.add_middleware(
 Catches exceptions and returns consistent error responses.
 
 ```python
-from src import ErrorHandlerMiddleware, ErrorConfig
+from fastMiddleware import ErrorHandlerMiddleware, ErrorConfig
 
 # Development mode (include traceback)
 app.add_middleware(
@@ -578,7 +578,7 @@ app.add_middleware(ErrorHandlerMiddleware, config=config)
 Provides idempotency key support for safe request retries.
 
 ```python
-from src import IdempotencyMiddleware, IdempotencyConfig
+from fastMiddleware import IdempotencyMiddleware, IdempotencyConfig
 
 # Basic usage
 app.add_middleware(IdempotencyMiddleware)
@@ -612,7 +612,7 @@ curl -X POST /api/payments \
 
 **Custom Storage Backend:**
 ```python
-from src import IdempotencyStore
+from fastMiddleware import IdempotencyStore
 
 class RedisIdempotencyStore(IdempotencyStore):
     async def get(self, key):
@@ -635,7 +635,7 @@ class RedisIdempotencyStore(IdempotencyStore):
 GZip compression for HTTP responses.
 
 ```python
-from src import CompressionMiddleware, CompressionConfig
+from fastMiddleware import CompressionMiddleware, CompressionConfig
 
 # Basic usage
 app.add_middleware(CompressionMiddleware)
@@ -674,7 +674,7 @@ app.add_middleware(CompressionMiddleware, config=config)
 HTTP caching with ETag generation and conditional requests.
 
 ```python
-from src import CacheMiddleware, CacheConfig
+from fastMiddleware import CacheMiddleware, CacheConfig
 
 # Basic usage with ETags
 app.add_middleware(CacheMiddleware)
@@ -731,7 +731,7 @@ curl -i -H "If-None-Match: \"abc123\"" /api/data
 Built-in health, readiness, and liveness endpoints.
 
 ```python
-from src import HealthCheckMiddleware, HealthConfig
+from fastMiddleware import HealthCheckMiddleware, HealthConfig
 
 # Basic usage
 app.add_middleware(HealthCheckMiddleware)
@@ -800,7 +800,7 @@ readinessProbe:
 Enable maintenance mode that returns 503 responses.
 
 ```python
-from src import MaintenanceMiddleware, MaintenanceConfig
+from fastMiddleware import MaintenanceMiddleware, MaintenanceConfig
 
 # Static configuration
 config = MaintenanceConfig(
@@ -915,7 +915,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["..."])
 
 ```python
 import os
-from src import (
+from fastMiddleware import (
     CompressionMiddleware,
     SecurityHeadersMiddleware,
     RateLimitMiddleware,
@@ -1003,7 +1003,7 @@ app.add_middleware(
 Extend `FastMVCMiddleware` to create your own middleware:
 
 ```python
-from src import FastMVCMiddleware
+from fastMiddleware import FastMVCMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -1068,7 +1068,7 @@ pytest tests/test_security.py -v
 import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
-from src import SecurityHeadersMiddleware
+from fastMiddleware import SecurityHeadersMiddleware
 
 @pytest.fixture
 def app():

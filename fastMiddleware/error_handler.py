@@ -12,7 +12,7 @@ from typing import Callable, Awaitable, Set, Dict, Any, Type
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
 
-from src.base import FastMVCMiddleware
+from fastMiddleware.base import FastMVCMiddleware
 
 
 logger = logging.getLogger("fastmvc.middleware.error")
@@ -33,7 +33,7 @@ class ErrorConfig:
     
     Example:
         ```python
-        from src import ErrorConfig
+        from fastMiddleware import ErrorConfig
         
         # Development config
         config = ErrorConfig(
@@ -89,7 +89,7 @@ class ErrorHandlerMiddleware(FastMVCMiddleware):
     Example:
         ```python
         from fastapi import FastAPI
-        from src import ErrorHandlerMiddleware, ErrorConfig
+        from fastMiddleware import ErrorHandlerMiddleware, ErrorConfig
         
         app = FastAPI()
         

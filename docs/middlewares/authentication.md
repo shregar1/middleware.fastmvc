@@ -1,11 +1,11 @@
 # AuthenticationMiddleware
 
-Pluggable authentication middleware supporting JWT tokens and API keys with customizable backends.
+Pluggable authentication middleware supporting JWT tokens and API keys with configurable backends.
 
 ## Installation
 
 ```python
-from src import (
+from fastMiddleware import (
     AuthenticationMiddleware,
     AuthConfig,
     JWTAuthBackend,
@@ -17,16 +17,12 @@ from src import (
 
 ```python
 from fastapi import FastAPI
-from src import AuthenticationMiddleware, JWTAuthBackend
+from fastMiddleware import AuthenticationMiddleware, JWTAuthBackend
 
 app = FastAPI()
 
 backend = JWTAuthBackend(secret="your-secret-key")
-
-app.add_middleware(
-    AuthenticationMiddleware,
-    backend=backend,
-)
+app.add_middleware(AuthenticationMiddleware, backend=backend)
 ```
 
 ## Configuration
@@ -39,16 +35,16 @@ app.add_middleware(
 | `exclude_methods` | `set[str]` | `{"OPTIONS"}` | Methods without auth |
 | `header_name` | `str` | `"Authorization"` | Auth header name |
 | `header_scheme` | `str` | `"Bearer"` | Auth scheme prefix |
-| `error_message` | `str` | `"Authentication required"` | Unauthorized message |
-| `error_status_code` | `int` | `401` | Unauthorized status |
+| `error_message` | `str` | `"Authentication required"` | Error message |
+| `error_status_code` | `int` | `401` | Error status code |
 
-## Auth Backends
+## Backends
 
 ### JWTAuthBackend
 
-```python
-from src import JWTAuthBackend
+JSON Web Token authentication.
 
+```python
 backend = JWTAuthBackend(
     secret="your-secret-key",
     algorithm="HS256",
@@ -60,7 +56,7 @@ backend = JWTAuthBackend(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `secret` | `str` | Required | JWT signing secret |
+| `secret` | `str` | Required | JWT secret key |
 | `algorithm` | `str` | `"HS256"` | JWT algorithm |
 | `verify_exp` | `bool` | `True` | Verify expiration |
 | `audience` | `str \| None` | `None` | Expected audience |
@@ -68,9 +64,9 @@ backend = JWTAuthBackend(
 
 ### APIKeyAuthBackend
 
-```python
-from src import APIKeyAuthBackend
+API key authentication.
 
+```python
 # Static keys
 backend = APIKeyAuthBackend(
     valid_keys={"key1", "key2", "key3"},
@@ -79,7 +75,7 @@ backend = APIKeyAuthBackend(
 
 # Dynamic validation
 backend = APIKeyAuthBackend(
-    validator=my_validator_function,
+    validator=my_validator_func,
     header_name="X-API-Key",
 )
 ```
@@ -88,23 +84,19 @@ backend = APIKeyAuthBackend(
 |-----------|------|---------|-------------|
 | `valid_keys` | `set[str] \| None` | `None` | Static valid keys |
 | `validator` | `Callable \| None` | `None` | Async validator function |
-| `header_name` | `str` | `"X-API-Key"` | API key header |
+| `header_name` | `str` | `"X-API-Key"` | Header name |
 
 ## Examples
 
 ### JWT Authentication
 
 ```python
+from fastMiddleware import AuthenticationMiddleware, AuthConfig, JWTAuthBackend
 import os
-from fastapi import FastAPI, Request
-from src import AuthenticationMiddleware, AuthConfig, JWTAuthBackend
-
-app = FastAPI()
 
 backend = JWTAuthBackend(
     secret=os.environ["JWT_SECRET"],
     algorithm="HS256",
-    verify_exp=True,
 )
 
 config = AuthConfig(
@@ -123,127 +115,127 @@ app.add_middleware(
     backend=backend,
     config=config,
 )
+```
+
+### Accessing User Data
+
+```python
+from fastapi import Request
 
 @app.get("/me")
 async def get_current_user(request: Request):
-    # Access decoded JWT payload
-    return {"user": request.state.auth}
+    # Auth data is stored in request.state.auth
+    user = request.state.auth
+    return {
+        "user_id": user["sub"],
+        "email": user.get("email"),
+    }
+
+@app.get("/protected")
+async def protected_route(request: Request):
+    if not hasattr(request.state, "auth"):
+        # This shouldn't happen if middleware is configured correctly
+        raise HTTPException(401, "Not authenticated")
+    
+    return {"message": f"Hello, {request.state.auth['sub']}"}
 ```
 
-### API Key Authentication
+### API Key with Static Keys
 
 ```python
-from src import AuthenticationMiddleware, APIKeyAuthBackend
+from fastMiddleware import APIKeyAuthBackend
 
-# Static keys
 backend = APIKeyAuthBackend(
     valid_keys={
         "sk_live_abc123",
         "sk_live_def456",
+        "sk_test_xyz789",
     }
 )
 
 app.add_middleware(AuthenticationMiddleware, backend=backend)
 ```
 
-### Dynamic API Key Validation
+### API Key with Database Validation
 
 ```python
-from src import APIKeyAuthBackend
-
 async def validate_api_key(key: str) -> dict | None:
-    """Validate API key and return user info."""
-    # Query database
-    key_record = await db.api_keys.find_one({"key": key})
+    """Validate API key against database."""
+    from your_app.db import get_api_key
     
-    if key_record and key_record["active"]:
+    api_key = await get_api_key(key)
+    
+    if api_key and api_key.is_active:
         return {
-            "user_id": key_record["user_id"],
-            "tier": key_record["tier"],
-            "scopes": key_record["scopes"],
+            "user_id": api_key.user_id,
+            "tier": api_key.tier,
+            "scopes": api_key.scopes,
+            "rate_limit": api_key.rate_limit,
         }
+    
     return None
 
 backend = APIKeyAuthBackend(validator=validate_api_key)
 ```
 
-### Custom Auth Backend
+### Combined JWT and API Key
 
 ```python
-from src.authentication import AuthBackend
-
-class CustomAuthBackend(AuthBackend):
-    """Custom authentication backend."""
+class CombinedAuthBackend:
+    """Support both JWT and API key authentication."""
     
-    async def authenticate(self, token: str) -> dict | None:
-        """Authenticate and return user data or None."""
-        # Your custom logic
-        if await self.verify_token(token):
-            return {"user_id": "123", "role": "admin"}
+    def __init__(self, jwt_secret: str, api_keys: set[str]):
+        self.jwt_backend = JWTAuthBackend(secret=jwt_secret)
+        self.api_key_backend = APIKeyAuthBackend(valid_keys=api_keys)
+    
+    async def authenticate(self, request: Request) -> dict | None:
+        # Try JWT first
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return await self.jwt_backend.authenticate(request)
+        
+        # Try API key
+        if "X-API-Key" in request.headers:
+            return await self.api_key_backend.authenticate(request)
+        
         return None
 
-backend = CustomAuthBackend()
-app.add_middleware(AuthenticationMiddleware, backend=backend)
-```
-
-### Exclude Multiple Paths
-
-```python
-config = AuthConfig(
-    exclude_paths={
-        # Public endpoints
-        "/",
-        "/about",
-        "/pricing",
-        
-        # Auth endpoints
-        "/login",
-        "/register",
-        "/forgot-password",
-        "/reset-password",
-        
-        # Health checks
-        "/health",
-        "/ready",
-        "/live",
-        
-        # API documentation
-        "/docs",
-        "/redoc",
-        "/openapi.json",
-    },
-    exclude_methods={"OPTIONS", "HEAD"},
+backend = CombinedAuthBackend(
+    jwt_secret=os.environ["JWT_SECRET"],
+    api_keys={"key1", "key2"},
 )
 ```
 
-## Request State
-
-After authentication, user data is available in `request.state.auth`:
+### Custom Error Response
 
 ```python
-@app.get("/profile")
-async def get_profile(request: Request):
-    user_data = request.state.auth
-    
-    # JWT payload example
-    # {
-    #     "sub": "user123",
-    #     "email": "user@example.com",
-    #     "exp": 1234567890,
-    #     "iat": 1234567800,
-    # }
-    
-    return {"user_id": user_data.get("sub")}
+config = AuthConfig(
+    error_message="Please login to access this resource",
+    error_status_code=401,
+)
 ```
+
+Response:
+```json
+{
+    "detail": "Please login to access this resource"
+}
+```
+
+## Request Flow
+
+1. Request arrives at middleware
+2. Check if path/method is excluded
+3. Extract token from header
+4. Validate token with backend
+5. If valid: store auth data in `request.state.auth`
+6. If invalid: return 401 error
 
 ## Error Responses
 
 ### Missing Token
 
-```http
-HTTP/1.1 401 Unauthorized
-Content-Type: application/json
-
+```json
 {
     "detail": "Authentication required"
 }
@@ -251,26 +243,39 @@ Content-Type: application/json
 
 ### Invalid Token
 
-```http
-HTTP/1.1 401 Unauthorized
-Content-Type: application/json
-
+```json
 {
     "detail": "Invalid authentication credentials"
 }
 ```
 
-## Security Best Practices
+### Expired Token
+
+```json
+{
+    "detail": "Token has expired"
+}
+```
+
+## Best Practices
 
 1. **Use environment variables** for secrets
-2. **Enable expiration verification** (`verify_exp=True`)
-3. **Use short token lifetimes** (15-60 minutes)
-4. **Implement refresh tokens** for long sessions
-5. **Exclude only necessary paths** from auth
-6. **Use HTTPS** to protect tokens in transit
+2. **Exclude public routes** explicitly
+3. **Set short expiration times** for JWT tokens
+4. **Rotate secrets** regularly
+5. **Use HTTPS** in production
+6. **Log authentication failures** for security monitoring
 
-## Related
+## Security Considerations
 
-- [RateLimitMiddleware](rate-limit.md) - Rate limiting
-- [RequestIDMiddleware](request-id.md) - Request tracing
+- Never hardcode secrets in source code
+- Use strong, random secrets (32+ characters)
+- Implement token refresh for long sessions
+- Consider using RS256 for distributed systems
+- Rate limit authentication endpoints
 
+## Related Middlewares
+
+- [RateLimitMiddleware](./rate-limit.md) - Rate limiting
+- [SecurityHeadersMiddleware](./security-headers.md) - Security headers
+- [RequestContextMiddleware](./request-context.md) - Request context

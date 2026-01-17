@@ -1,18 +1,18 @@
 # CORSMiddleware
 
-Cross-Origin Resource Sharing (CORS) middleware that handles preflight requests and adds appropriate headers for cross-origin access.
+Cross-Origin Resource Sharing (CORS) middleware for handling browser security restrictions on cross-origin HTTP requests.
 
 ## Installation
 
 ```python
-from src import CORSMiddleware
+from fastMiddleware import CORSMiddleware
 ```
 
 ## Quick Start
 
 ```python
 from fastapi import FastAPI
-from src import CORSMiddleware
+from fastMiddleware import CORSMiddleware
 
 app = FastAPI()
 
@@ -20,6 +20,8 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://example.com"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 ```
 
@@ -32,31 +34,14 @@ app.add_middleware(
 | `allow_headers` | `list[str]` | `["*"]` | Allowed request headers |
 | `allow_credentials` | `bool` | `True` | Allow cookies/auth headers |
 | `expose_headers` | `list[str]` | `[]` | Headers exposed to browser |
-| `max_age` | `int` | `600` | Preflight cache time (seconds) |
+| `max_age` | `int` | `600` | Preflight cache duration (seconds) |
 
 ## Examples
-
-### Production Configuration
-
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://app.example.com",
-        "https://admin.example.com",
-    ],
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-    allow_credentials=True,
-    expose_headers=["X-Request-ID", "X-RateLimit-Remaining"],
-    max_age=3600,  # Cache preflight for 1 hour
-)
-```
 
 ### Development (Allow All)
 
 ```python
-# ⚠️ Only for development!
+# ⚠️ Development only!
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -64,17 +49,28 @@ app.add_middleware(
 )
 ```
 
-### Allow Multiple Origins with Credentials
+### Single Origin
+
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://app.example.com"],
+    allow_credentials=True,
+)
+```
+
+### Multiple Origins
 
 ```python
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "https://staging.example.com",
         "https://app.example.com",
+        "https://admin.example.com",
+        "https://mobile.example.com",
     ],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=["*"],
     allow_credentials=True,
 )
 ```
@@ -87,81 +83,94 @@ app.add_middleware(
     allow_origins=["https://app.example.com"],
     expose_headers=[
         "X-Request-ID",
-        "X-RateLimit-Limit",
         "X-RateLimit-Remaining",
         "X-RateLimit-Reset",
     ],
 )
 ```
 
-## How It Works
+### Long Preflight Cache
 
-### Simple Requests
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://app.example.com"],
+    max_age=86400,  # Cache preflight for 24 hours
+)
+```
 
-For simple requests (GET, POST with simple content types), CORS headers are added to the response:
+### Specific Methods Only
+
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://app.example.com"],
+    allow_methods=["GET", "POST"],  # Only GET and POST
+    allow_headers=["Content-Type", "Authorization"],
+)
+```
+
+## Response Headers
+
+### Simple Request
+
+For simple requests (GET, HEAD, POST with simple content types):
 
 ```http
-HTTP/1.1 200 OK
 Access-Control-Allow-Origin: https://app.example.com
 Access-Control-Allow-Credentials: true
 ```
 
-### Preflight Requests
+### Preflight Response (OPTIONS)
 
-For complex requests, browsers send an OPTIONS preflight request first:
-
-```http
-OPTIONS /api/data HTTP/1.1
-Origin: https://app.example.com
-Access-Control-Request-Method: POST
-Access-Control-Request-Headers: Content-Type, Authorization
-```
-
-Response:
+For complex requests, browsers send a preflight:
 
 ```http
-HTTP/1.1 200 OK
 Access-Control-Allow-Origin: https://app.example.com
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE
 Access-Control-Allow-Headers: Content-Type, Authorization
 Access-Control-Allow-Credentials: true
-Access-Control-Max-Age: 3600
+Access-Control-Max-Age: 600
 ```
 
-## Headers Reference
+### Exposed Headers
 
-### Request Headers (from browser)
+When headers are exposed:
 
-| Header | Description |
-|--------|-------------|
-| `Origin` | The requesting origin |
-| `Access-Control-Request-Method` | Method for preflight |
-| `Access-Control-Request-Headers` | Headers for preflight |
+```http
+Access-Control-Expose-Headers: X-Request-ID, X-RateLimit-Remaining
+```
 
-### Response Headers (from server)
+## How CORS Works
 
-| Header | Description |
-|--------|-------------|
-| `Access-Control-Allow-Origin` | Allowed origin(s) |
-| `Access-Control-Allow-Methods` | Allowed methods |
-| `Access-Control-Allow-Headers` | Allowed headers |
-| `Access-Control-Allow-Credentials` | Allow credentials |
-| `Access-Control-Expose-Headers` | Exposed headers |
-| `Access-Control-Max-Age` | Preflight cache time |
+### Simple Requests
+
+1. Browser sends request with `Origin` header
+2. Server responds with `Access-Control-Allow-Origin`
+3. Browser allows/blocks based on response
+
+### Preflight Requests
+
+For "complex" requests (custom headers, PUT/DELETE, etc.):
+
+1. Browser sends OPTIONS request (preflight)
+2. Server responds with allowed methods/headers
+3. If allowed, browser sends actual request
+4. Server responds normally
 
 ## Common Issues
 
-### Credentials with Wildcard Origin
+### Wildcard with Credentials
 
 ```python
-# ❌ This will fail - can't use credentials with "*"
+# ❌ This doesn't work!
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,  # Error!
+    allow_credentials=True,  # Cannot use with "*"
 )
 
-# ✅ Use specific origins with credentials
+# ✅ Use specific origins instead
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://app.example.com"],
@@ -169,41 +178,59 @@ app.add_middleware(
 )
 ```
 
-### Missing Exposed Headers
+### Missing Headers
 
-If JavaScript can't read custom headers:
+If custom headers aren't accessible in JavaScript:
 
 ```python
-# ✅ Expose the headers you need
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://app.example.com"],
-    expose_headers=["X-Custom-Header", "X-Request-ID"],
+    expose_headers=["X-Custom-Header"],  # Must expose explicitly
 )
 ```
 
-### Preflight Caching
+### Preflight Not Cached
 
-Increase `max_age` to reduce preflight requests:
+Browser keeps sending OPTIONS requests:
 
 ```python
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://app.example.com"],
     max_age=86400,  # Cache for 24 hours
 )
 ```
 
-## Security Best Practices
+## Environment Configuration
 
-1. **Never use `"*"` in production** with credentials
-2. **List specific origins** instead of wildcards
-3. **Limit allowed methods** to what's needed
-4. **Limit allowed headers** to what's needed
-5. **Use HTTPS origins** in production
+```python
+import os
 
-## Related
+origins = os.environ.get("CORS_ORIGINS", "").split(",")
 
-- [SecurityHeadersMiddleware](security-headers.md) - Security headers
-- [TrustedHostMiddleware](trusted-host.md) - Host validation
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins if origins[0] else [],
+    allow_credentials=True,
+)
+```
 
+## Best Practices
+
+1. **Never use `*` in production** with credentials
+2. **Be specific** about allowed origins
+3. **Use HTTPS** for all production origins
+4. **Cache preflights** to reduce OPTIONS requests
+5. **Only expose necessary headers**
+
+## Security Considerations
+
+- CORS is enforced by browsers, not servers
+- Server-side requests bypass CORS entirely
+- Always validate/authenticate requests server-side
+- Don't rely on CORS as your only security measure
+
+## Related Middlewares
+
+- [SecurityHeadersMiddleware](./security-headers.md) - Security headers
+- [TrustedHostMiddleware](./trusted-host.md) - Host validation
+- [AuthenticationMiddleware](./authentication.md) - Request authentication

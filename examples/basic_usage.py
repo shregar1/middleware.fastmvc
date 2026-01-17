@@ -8,7 +8,7 @@ Run with: uvicorn examples.basic_usage:app --reload
 """
 
 from fastapi import FastAPI, Request
-from src import (
+from fastMiddleware import (
     CORSMiddleware,
     LoggingMiddleware,
     TimingMiddleware,

@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from src import CORSMiddleware
+from fastMiddleware import CORSMiddleware
 
 
 @pytest.fixture

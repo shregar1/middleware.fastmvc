@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
 
-from src.base import FastMVCMiddleware
+from fastMiddleware.base import FastMVCMiddleware
 
 
 @dataclass
@@ -30,7 +30,7 @@ class IdempotencyConfig:
     
     Example:
         ```python
-        from src import IdempotencyConfig
+        from fastMiddleware import IdempotencyConfig
         
         config = IdempotencyConfig(
             header_name="X-Idempotency-Key",
@@ -58,7 +58,7 @@ class IdempotencyStore(ABC):
     
     Example:
         ```python
-        from src import IdempotencyStore
+        from fastMiddleware import IdempotencyStore
         
         class RedisIdempotencyStore(IdempotencyStore):
             def __init__(self, redis_client):
@@ -179,7 +179,7 @@ class IdempotencyMiddleware(FastMVCMiddleware):
     Example:
         ```python
         from fastapi import FastAPI
-        from src import IdempotencyMiddleware, IdempotencyConfig
+        from fastMiddleware import IdempotencyMiddleware, IdempotencyConfig
         
         app = FastAPI()
         

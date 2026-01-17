@@ -1,11 +1,11 @@
 # RequestContextMiddleware
 
-Provides async-safe context variables accessible from anywhere in your code without passing request objects.
+Provides async-safe context variables accessible from anywhere in your application code.
 
 ## Installation
 
 ```python
-from src import (
+from fastMiddleware import (
     RequestContextMiddleware,
     get_request_id,
     get_request_context,
@@ -16,16 +16,16 @@ from src import (
 
 ```python
 from fastapi import FastAPI
-from src import RequestContextMiddleware, get_request_id
+from fastMiddleware import RequestContextMiddleware, get_request_id
 
 app = FastAPI()
 
 app.add_middleware(RequestContextMiddleware)
 
-@app.get("/")
-async def root():
+# Access request ID anywhere
+async def my_service():
     request_id = get_request_id()
-    return {"request_id": request_id}
+    print(f"Processing request {request_id}")
 ```
 
 ## Helper Functions
@@ -33,190 +33,232 @@ async def root():
 | Function | Returns | Description |
 |----------|---------|-------------|
 | `get_request_id()` | `str \| None` | Current request ID |
-| `get_request_context()` | `dict` | Full context dictionary |
+| `get_request_context()` | `dict` | Full request context |
 
 ## Context Data
 
 | Key | Type | Description |
 |-----|------|-------------|
 | `request_id` | `str` | Unique request identifier |
-| `start_time` | `datetime` | Request start time |
+| `start_time` | `datetime` | Request start timestamp |
 | `client_ip` | `str` | Client IP address |
 | `method` | `str` | HTTP method |
 | `path` | `str` | Request path |
 
 ## Examples
 
-### Accessing Context in Services
+### Basic Usage
 
 ```python
-from src import get_request_id, get_request_context
+from fastMiddleware import RequestContextMiddleware, get_request_id, get_request_context
 
-class OrderService:
-    async def create_order(self, data: dict):
+app.add_middleware(RequestContextMiddleware)
+
+@app.get("/")
+async def root():
+    request_id = get_request_id()
+    ctx = get_request_context()
+    
+    return {
+        "request_id": request_id,
+        "path": ctx["path"],
+        "method": ctx["method"],
+    }
+```
+
+### In Service Layer
+
+```python
+from fastMiddleware import get_request_id, get_request_context
+
+class UserService:
+    async def get_users(self):
         request_id = get_request_id()
         ctx = get_request_context()
         
-        self.logger.info(
-            f"Creating order for client {ctx['client_ip']}",
-            extra={"request_id": request_id}
+        # Log with context
+        logger.info(
+            f"Fetching users",
+            extra={
+                "request_id": request_id,
+                "client_ip": ctx["client_ip"],
+            }
         )
         
-        order = await self.db.orders.create(data)
-        return order
+        return await self.db.get_users()
 ```
 
-### Logging with Context
+### In Repository Layer
+
+```python
+from fastMiddleware import get_request_id
+
+class UserRepository:
+    async def get_by_id(self, user_id: int):
+        request_id = get_request_id()
+        
+        try:
+            user = await self.db.fetchone(
+                "SELECT * FROM users WHERE id = $1",
+                user_id
+            )
+            return user
+        except Exception as e:
+            logger.error(
+                f"Database error in request {request_id}: {e}"
+            )
+            raise
+```
+
+### In Background Tasks
+
+```python
+from fastMiddleware import get_request_id
+
+@app.post("/process")
+async def process_data(background_tasks: BackgroundTasks):
+    request_id = get_request_id()
+    
+    # Pass request ID to background task
+    background_tasks.add_task(
+        process_in_background,
+        request_id=request_id,
+    )
+    
+    return {"status": "processing"}
+
+async def process_in_background(request_id: str):
+    # Note: get_request_id() won't work here
+    # Use the passed request_id instead
+    logger.info(f"Background processing for {request_id}")
+```
+
+### Structured Logging
 
 ```python
 import logging
-from src import get_request_id, get_request_context
+import json
 
-class ContextLogger:
-    def __init__(self, name: str):
-        self.logger = logging.getLogger(name)
-    
-    def info(self, message: str):
-        request_id = get_request_id() or "-"
-        ctx = get_request_context()
+class ContextualFormatter(logging.Formatter):
+    def format(self, record):
+        from fastMiddleware import get_request_context
         
-        self.logger.info(
-            message,
-            extra={
-                "request_id": request_id,
-                "path": ctx.get("path", "-"),
-                "client_ip": ctx.get("client_ip", "-"),
-            }
-        )
-
-# Usage
-logger = ContextLogger("app")
-
-async def process_data():
-    logger.info("Processing data")  # Includes request context automatically
+        ctx = get_request_context() or {}
+        
+        log_data = {
+            "timestamp": self.formatTime(record),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "request_id": ctx.get("request_id"),
+            "path": ctx.get("path"),
+            "client_ip": ctx.get("client_ip"),
+        }
+        
+        return json.dumps(log_data)
 ```
 
-### Database Query Tagging
-
-```python
-from src import get_request_id
-
-async def query_with_context(query: str):
-    request_id = get_request_id()
-    
-    # Add request ID as comment for query tracing
-    tagged_query = f"/* request_id={request_id} */ {query}"
-    
-    return await db.execute(tagged_query)
-```
-
-### External API Calls
-
-```python
-import httpx
-from src import get_request_id
-
-async def call_external_api(endpoint: str):
-    request_id = get_request_id()
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            endpoint,
-            headers={"X-Request-ID": request_id}
-        )
-    
-    return response.json()
-```
-
-### Audit Logging
-
-```python
-from src import get_request_context
-
-async def audit_log(action: str, resource: str):
-    ctx = get_request_context()
-    
-    await db.audit_logs.insert({
-        "action": action,
-        "resource": resource,
-        "request_id": ctx.get("request_id"),
-        "client_ip": ctx.get("client_ip"),
-        "path": ctx.get("path"),
-        "method": ctx.get("method"),
-        "timestamp": ctx.get("start_time"),
-    })
-```
-
-## Thread Safety
-
-The context uses Python's `contextvars` module, which is:
-- ✅ Safe for async code
-- ✅ Isolated between requests
-- ✅ Works with asyncio tasks
-
-```python
-import asyncio
-from src import get_request_id
-
-async def parallel_task():
-    # Each task sees its own request context
-    request_id = get_request_id()
-    print(f"Task sees request ID: {request_id}")
-
-@app.get("/parallel")
-async def parallel_endpoint():
-    # All tasks see the same request ID
-    await asyncio.gather(
-        parallel_task(),
-        parallel_task(),
-        parallel_task(),
-    )
-    return {"ok": True}
-```
-
-## Middleware Order
-
-Add `RequestContextMiddleware` before middleware that needs context access:
-
-```python
-app.add_middleware(LoggingMiddleware)  # Can use get_request_id()
-app.add_middleware(RequestContextMiddleware)  # Sets up context
-app.add_middleware(RequestIDMiddleware)  # Generates request ID
-```
-
-## Custom Context Data
-
-Extend the context with custom data:
+### Custom Context Data
 
 ```python
 from contextvars import ContextVar
 
 # Create custom context variable
-user_context: ContextVar[dict] = ContextVar("user", default={})
+user_context: ContextVar[dict] = ContextVar("user_context", default={})
 
-@app.middleware("http")
-async def set_user_context(request, call_next):
-    # Set custom context
-    if hasattr(request.state, "auth"):
-        user_context.set(request.state.auth)
-    
-    response = await call_next(request)
-    return response
+class EnhancedContextMiddleware(RequestContextMiddleware):
+    async def dispatch(self, request, call_next):
+        # Set standard context
+        response = await super().dispatch(request, call_next)
+        
+        # Add custom data
+        if hasattr(request.state, "auth"):
+            user_context.set({
+                "user_id": request.state.auth.get("user_id"),
+                "role": request.state.auth.get("role"),
+            })
+        
+        return response
 
-# Access anywhere
-def get_current_user() -> dict:
-    return user_context.get({})
+def get_user_context() -> dict:
+    return user_context.get()
 ```
+
+### Database Query Logging
+
+```python
+from fastMiddleware import get_request_id
+
+class TracedDatabase:
+    async def execute(self, query: str, *args):
+        request_id = get_request_id()
+        start = time.time()
+        
+        try:
+            result = await self.db.execute(query, *args)
+            duration = time.time() - start
+            
+            logger.debug(
+                f"Query executed in {duration:.3f}s",
+                extra={
+                    "request_id": request_id,
+                    "query": query[:100],
+                    "duration": duration,
+                }
+            )
+            
+            return result
+        except Exception as e:
+            logger.error(
+                f"Query failed for request {request_id}: {e}",
+                extra={"query": query[:100]}
+            )
+            raise
+```
+
+## Thread Safety
+
+Context variables are async-safe and work correctly with:
+- ✅ async/await code
+- ✅ FastAPI dependencies
+- ✅ Starlette middleware
+- ✅ Multiple concurrent requests
+- ⚠️ Background tasks (context doesn't propagate automatically)
+- ⚠️ Thread pools (use `contextvars.copy_context()`)
+
+### Thread Pool Usage
+
+```python
+import asyncio
+from contextvars import copy_context
+
+async def run_in_thread(func, *args):
+    loop = asyncio.get_event_loop()
+    ctx = copy_context()
+    return await loop.run_in_executor(None, ctx.run, func, *args)
+```
+
+## Middleware Order
+
+Place RequestContextMiddleware after RequestIDMiddleware:
+
+```python
+# Order matters!
+app.add_middleware(RequestContextMiddleware)  # Add first (runs last)
+app.add_middleware(RequestIDMiddleware)        # Add second (runs first)
+```
+
+This ensures request ID is available when context is created.
 
 ## Best Practices
 
-1. **Use for cross-cutting concerns** - Logging, tracing, auditing
-2. **Keep context read-only** - Don't modify context data
-3. **Handle None values** - Context may be empty outside requests
-4. **Don't overuse** - Pass data explicitly when appropriate
+1. **Don't overuse** - Pass data explicitly when practical
+2. **Handle missing context** - Always check for None
+3. **Don't mutate context** - Treat as read-only
+4. **Copy for background tasks** - Context doesn't propagate automatically
+5. **Use for cross-cutting concerns** - Logging, tracing, not business logic
 
-## Related
+## Related Middlewares
 
-- [RequestIDMiddleware](request-id.md) - Request ID generation
-- [LoggingMiddleware](logging.md) - Request logging
-
+- [RequestIDMiddleware](./request-id.md) - Generates request IDs
+- [LoggingMiddleware](./logging.md) - Logs with context
+- [AuthenticationMiddleware](./authentication.md) - Adds auth to state

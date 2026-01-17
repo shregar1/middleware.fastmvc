@@ -10,7 +10,7 @@ import re
 from starlette.requests import Request
 from starlette.responses import Response, PlainTextResponse
 
-from src.base import FastMVCMiddleware
+from fastMiddleware.base import FastMVCMiddleware
 
 
 class TrustedHostMiddleware(FastMVCMiddleware):
@@ -30,7 +30,7 @@ class TrustedHostMiddleware(FastMVCMiddleware):
     Example:
         ```python
         from fastapi import FastAPI
-        from src import TrustedHostMiddleware
+        from fastMiddleware import TrustedHostMiddleware
         
         app = FastAPI()
         

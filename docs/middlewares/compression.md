@@ -1,18 +1,18 @@
 # CompressionMiddleware
 
-GZip compression for HTTP responses to reduce bandwidth and improve load times.
+GZip compression for HTTP responses, reducing bandwidth and improving load times.
 
 ## Installation
 
 ```python
-from src import CompressionMiddleware, CompressionConfig
+from fastMiddleware import CompressionMiddleware, CompressionConfig
 ```
 
 ## Quick Start
 
 ```python
 from fastapi import FastAPI
-from src import CompressionMiddleware
+from fastMiddleware import CompressionMiddleware
 
 app = FastAPI()
 
@@ -27,19 +27,29 @@ app.add_middleware(CompressionMiddleware)
 |-----------|------|---------|-------------|
 | `minimum_size` | `int` | `500` | Minimum bytes to compress |
 | `compression_level` | `int` | `6` | GZip level (1-9) |
-| `compressible_types` | `tuple` | JSON, HTML, etc. | MIME types to compress |
+| `compressible_types` | `tuple` | See below | MIME types to compress |
 
-### Compression Levels
+### Default Compressible Types
 
-| Level | Speed | Compression |
-|-------|-------|-------------|
-| 1 | Fastest | Lowest |
-| 6 | Balanced | Good (default) |
-| 9 | Slowest | Best |
+```python
+compressible_types = (
+    "text/html",
+    "text/css",
+    "text/plain",
+    "text/xml",
+    "text/javascript",
+    "application/json",
+    "application/javascript",
+    "application/xml",
+    "application/xhtml+xml",
+    "image/svg+xml",
+)
+```
 
 ## Response Headers
 
-When compressed:
+When compression is applied:
+
 ```http
 Content-Encoding: gzip
 Vary: Accept-Encoding
@@ -51,102 +61,133 @@ Vary: Accept-Encoding
 
 ```python
 app.add_middleware(CompressionMiddleware)
+
+# Compresses responses > 500 bytes
+# Uses compression level 6
 ```
 
-### High Compression
+### Custom Minimum Size
 
 ```python
-from src import CompressionMiddleware, CompressionConfig
-
-config = CompressionConfig(
-    compression_level=9,  # Maximum compression
-)
-
-app.add_middleware(CompressionMiddleware, config=config)
-```
-
-### Custom Threshold
-
-```python
-config = CompressionConfig(
+app.add_middleware(
+    CompressionMiddleware,
     minimum_size=1000,  # Only compress responses > 1KB
+)
+```
+
+### Maximum Compression
+
+```python
+app.add_middleware(
+    CompressionMiddleware,
+    compression_level=9,  # Best compression, more CPU
 )
 ```
 
 ### Fast Compression
 
 ```python
-config = CompressionConfig(
-    compression_level=1,  # Fastest compression
+app.add_middleware(
+    CompressionMiddleware,
+    compression_level=1,  # Fastest, less compression
 )
 ```
 
-### Custom Content Types
+### Custom Compressible Types
 
 ```python
+from fastMiddleware import CompressionConfig
+
 config = CompressionConfig(
     compressible_types=(
         "application/json",
         "text/html",
         "text/css",
         "application/javascript",
-        "text/xml",
-        "application/xml",
-        "image/svg+xml",
+        "application/wasm",  # Add WebAssembly
     ),
 )
+
+app.add_middleware(CompressionMiddleware, config=config)
 ```
 
-### Exclude Paths
+### Full Configuration
+
+```python
+from fastMiddleware import CompressionMiddleware, CompressionConfig
+
+config = CompressionConfig(
+    minimum_size=1000,
+    compression_level=6,
+    compressible_types=(
+        "application/json",
+        "text/html",
+        "text/css",
+        "application/javascript",
+    ),
+)
+
+app.add_middleware(CompressionMiddleware, config=config)
+```
+
+## Compression Levels
+
+| Level | Speed | Ratio | Use Case |
+|-------|-------|-------|----------|
+| 1 | Fastest | ~50% | High-traffic, CPU-limited |
+| 4-5 | Balanced | ~65% | General use |
+| 6 | Default | ~70% | Good balance |
+| 9 | Slowest | ~75% | Bandwidth-critical |
+
+## What Gets Compressed
+
+✅ Compressed:
+- JSON responses
+- HTML pages
+- CSS files
+- JavaScript
+- SVG images
+- XML data
+
+❌ Not Compressed:
+- Images (JPEG, PNG, GIF, WebP)
+- Videos
+- Already compressed files (zip, gzip)
+- Small responses (< minimum_size)
+- Streaming responses
+
+## Path Exclusion
+
+Exclude paths from compression:
 
 ```python
 app.add_middleware(
     CompressionMiddleware,
-    exclude_paths={"/images", "/videos"},
+    exclude_paths={"/stream", "/sse"},
 )
 ```
 
-## Content Types
-
-Default compressible types:
-- `text/html`
-- `text/css`
-- `text/plain`
-- `text/xml`
-- `text/javascript`
-- `application/json`
-- `application/javascript`
-- `application/xml`
-- `application/xhtml+xml`
-- `image/svg+xml`
-
-**Not compressed by default:**
-- Binary files (images, videos)
-- Already compressed formats (gzip, zip)
-- Very small responses
-
 ## Client Requirements
 
-The client must accept gzip encoding:
+Clients must include `Accept-Encoding` header:
 
 ```http
-GET /api/data HTTP/1.1
 Accept-Encoding: gzip, deflate
 ```
 
-If `Accept-Encoding` doesn't include `gzip`, responses are not compressed.
+Most browsers and HTTP clients do this automatically.
 
-## How It Works
+## Middleware Order
 
-1. Check if client accepts gzip (`Accept-Encoding` header)
-2. Generate response normally
-3. Check if response meets criteria:
-   - Size >= minimum_size
-   - Content-Type is compressible
-   - Not already compressed
-4. Compress response body
-5. Add `Content-Encoding: gzip` header
-6. Add `Vary: Accept-Encoding` header
+Place CompressionMiddleware early (executed late):
+
+```python
+# Add first = executed last = compresses final response
+app.add_middleware(CompressionMiddleware)  # Add first
+app.add_middleware(TimingMiddleware)
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(CORSMiddleware)  # Add last
+```
 
 ## Performance Considerations
 
@@ -154,89 +195,48 @@ If `Accept-Encoding` doesn't include `gzip`, responses are not compressed.
 
 | Scenario | Recommendation |
 |----------|----------------|
-| High bandwidth costs | Use level 9 |
-| CPU-constrained | Use level 1-3 |
-| Balanced | Use level 6 (default) |
+| High bandwidth cost | Level 9 |
+| High CPU cost | Level 1-3 |
+| Balanced | Level 5-6 |
 
-### When NOT to Compress
+### When to Skip Compression
 
-- Very small responses (< 500 bytes)
-- Already compressed content (gzip, images)
-- Streaming responses
-- WebSocket connections
+- Pre-compressed static files (use CDN)
+- Small responses (overhead > savings)
+- Real-time streaming
+- Binary files (images, videos)
 
-## Middleware Order
+## Caching Considerations
 
-Place `CompressionMiddleware` first (outermost) to compress final responses:
+The `Vary: Accept-Encoding` header ensures caches store separate versions:
+
+```http
+Vary: Accept-Encoding
+```
+
+This prevents serving compressed content to clients that don't support it.
+
+## Static File Compression
+
+For static files, consider pre-compression:
 
 ```python
-# First added = compresses everything
-app.add_middleware(CompressionMiddleware)
+# In production, serve pre-compressed files
+# Don't compress on every request
 
-# Other middleware
-app.add_middleware(TimingMiddleware)
-app.add_middleware(LoggingMiddleware)
+# Use nginx/CDN with:
+gzip_static on;
 ```
-
-## Streaming Responses
-
-Streaming responses are passed through without compression:
-
-```python
-from starlette.responses import StreamingResponse
-
-@app.get("/stream")
-async def stream():
-    async def generate():
-        for i in range(100):
-            yield f"data: {i}\n"
-    
-    return StreamingResponse(generate(), media_type="text/plain")
-```
-
-## Testing Compression
-
-```bash
-# Request with gzip
-curl -H "Accept-Encoding: gzip" https://api.example.com/data -o response.gz
-
-# Check if gzipped
-file response.gz
-# Output: response.gz: gzip compressed data
-
-# Decompress
-gunzip response.gz
-cat response
-```
-
-## Measuring Compression Ratio
-
-```python
-import gzip
-
-original_size = len(response_body)
-compressed_size = len(gzip.compress(response_body))
-ratio = compressed_size / original_size
-
-print(f"Compression ratio: {ratio:.2%}")
-print(f"Saved: {100 - ratio * 100:.1f}%")
-```
-
-Typical compression ratios:
-- JSON: 70-90% reduction
-- HTML: 70-85% reduction
-- Plain text: 60-80% reduction
 
 ## Best Practices
 
-1. **Use default settings** - Level 6 is balanced
-2. **Set appropriate minimum size** - Don't compress tiny responses
-3. **Exclude binary content** - Already compressed or not compressible
-4. **Add Vary header** - For correct caching
-5. **Test compression** - Verify savings are worthwhile
+1. **Set appropriate minimum size** - Don't compress tiny responses
+2. **Exclude binary content** - Already compressed
+3. **Pre-compress static files** - In production
+4. **Monitor CPU usage** - Adjust level if needed
+5. **Use CDN compression** - Offload to edge
 
-## Related
+## Related Middlewares
 
-- [CacheMiddleware](cache.md) - HTTP caching
-- [TimingMiddleware](timing.md) - Response timing
-
+- [CacheMiddleware](./cache.md) - Cache compressed responses
+- [TimingMiddleware](./timing.md) - Measure compression overhead

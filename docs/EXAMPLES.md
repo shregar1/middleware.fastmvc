@@ -23,7 +23,7 @@ This document provides practical examples for common use cases.
 
 ```python
 from fastapi import FastAPI
-from src import (
+from fastMiddleware import (
     CORSMiddleware,
     SecurityHeadersMiddleware,
     TimingMiddleware,
@@ -47,7 +47,7 @@ async def root():
 
 ```python
 import logging
-from src import LoggingMiddleware
+from fastMiddleware import LoggingMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -69,7 +69,7 @@ app.add_middleware(
 ### Strict Security Headers
 
 ```python
-from src import SecurityHeadersMiddleware, SecurityHeadersConfig
+from fastMiddleware import SecurityHeadersMiddleware, SecurityHeadersConfig
 
 config = SecurityHeadersConfig(
     enable_hsts=True,
@@ -88,7 +88,7 @@ app.add_middleware(SecurityHeadersMiddleware, config=config)
 ### Trusted Hosts (Production)
 
 ```python
-from src import TrustedHostMiddleware
+from fastMiddleware import TrustedHostMiddleware
 
 app.add_middleware(
     TrustedHostMiddleware,
@@ -102,7 +102,7 @@ app.add_middleware(
 ### CORS for API
 
 ```python
-from src import CORSMiddleware
+from fastMiddleware import CORSMiddleware
 
 # Production CORS
 app.add_middleware(
@@ -126,7 +126,7 @@ app.add_middleware(
 ### Basic Rate Limiting
 
 ```python
-from src import RateLimitMiddleware, RateLimitConfig
+from fastMiddleware import RateLimitMiddleware, RateLimitConfig
 
 config = RateLimitConfig(
     requests_per_minute=60,
@@ -202,7 +202,7 @@ config = RateLimitConfig(
 ### JWT Authentication
 
 ```python
-from src import (
+from fastMiddleware import (
     AuthenticationMiddleware,
     AuthConfig,
     JWTAuthBackend,
@@ -245,7 +245,7 @@ async def get_current_user(request: Request):
 ### API Key Authentication
 
 ```python
-from src import APIKeyAuthBackend
+from fastMiddleware import APIKeyAuthBackend
 
 # Static API keys
 backend = APIKeyAuthBackend(
@@ -279,7 +279,7 @@ backend = APIKeyAuthBackend(validator=validate_api_key)
 ### Basic Caching
 
 ```python
-from src import CacheMiddleware, CacheConfig
+from fastMiddleware import CacheMiddleware, CacheConfig
 
 config = CacheConfig(
     default_max_age=300,  # 5 minutes
@@ -332,7 +332,7 @@ curl -i -H "If-None-Match: \"abc123\"" https://api.example.com/data
 ### Basic Health Check
 
 ```python
-from src import HealthCheckMiddleware, HealthConfig
+from fastMiddleware import HealthCheckMiddleware, HealthConfig
 
 config = HealthConfig(
     version="1.0.0",
@@ -427,7 +427,7 @@ spec:
 ### Basic Metrics
 
 ```python
-from src import MetricsMiddleware
+from fastMiddleware import MetricsMiddleware
 
 app.add_middleware(MetricsMiddleware)
 ```
@@ -435,7 +435,7 @@ app.add_middleware(MetricsMiddleware)
 ### Custom Path Normalization
 
 ```python
-from src import MetricsMiddleware, MetricsConfig
+from fastMiddleware import MetricsMiddleware, MetricsConfig
 
 config = MetricsConfig(
     metrics_path="/prometheus",
@@ -490,7 +490,7 @@ fastmvc_uptime_seconds
 ### Basic Maintenance
 
 ```python
-from src import MaintenanceMiddleware, MaintenanceConfig
+from fastMiddleware import MaintenanceMiddleware, MaintenanceConfig
 
 config = MaintenanceConfig(
     enabled=False,  # Toggle to enable
@@ -506,7 +506,7 @@ middleware = MaintenanceMiddleware(app, config=config)
 
 ```python
 from fastapi import FastAPI
-from src import MaintenanceMiddleware, MaintenanceConfig
+from fastMiddleware import MaintenanceMiddleware, MaintenanceConfig
 
 app = FastAPI()
 config = MaintenanceConfig(enabled=False)
@@ -590,7 +590,7 @@ config = MaintenanceConfig(
 import os
 import logging
 from fastapi import FastAPI
-from src import (
+from fastMiddleware import (
     # Security
     CORSMiddleware,
     SecurityHeadersMiddleware,
@@ -743,7 +743,7 @@ if ALLOWED_ORIGINS and ALLOWED_ORIGINS[0]:
 ### Tenant Isolation
 
 ```python
-from src import FastMVCMiddleware
+from fastMiddleware import FastMVCMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
