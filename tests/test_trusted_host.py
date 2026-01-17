@@ -1,5 +1,5 @@
 """
-Tests for Trusted Host middleware.
+Comprehensive tests for Trusted Host middleware.
 """
 
 import pytest
@@ -10,30 +10,51 @@ from src import TrustedHostMiddleware
 
 
 @pytest.fixture
-def trusted_host_app(sample_routes) -> FastAPI:
-    """Create app with trusted host middleware."""
-    app = sample_routes
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["example.com", "www.example.com"],
-    )
+def sample_app() -> FastAPI:
+    """Create a sample FastAPI app."""
+    app = FastAPI()
+    
+    @app.get("/")
+    async def root():
+        return {"message": "Hello"}
+    
+    @app.get("/health")
+    async def health():
+        return {"status": "ok"}
+    
     return app
-
-
-@pytest.fixture
-def trusted_host_client(trusted_host_app: FastAPI) -> TestClient:
-    """Create test client for trusted host app."""
-    return TestClient(trusted_host_app)
 
 
 class TestTrustedHostMiddleware:
     """Tests for TrustedHostMiddleware."""
+    
+    @pytest.fixture
+    def trusted_host_app(self, sample_app) -> FastAPI:
+        """Create app with trusted host middleware."""
+        sample_app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=["example.com", "www.example.com"],
+        )
+        return sample_app
+    
+    @pytest.fixture
+    def trusted_host_client(self, trusted_host_app: FastAPI) -> TestClient:
+        return TestClient(trusted_host_app)
     
     def test_valid_host_allowed(self, trusted_host_client: TestClient):
         """Test that valid host is allowed."""
         response = trusted_host_client.get(
             "/",
             headers={"Host": "example.com"}
+        )
+        assert response.status_code == 200
+        assert response.json() == {"message": "Hello"}
+    
+    def test_valid_www_host_allowed(self, trusted_host_client: TestClient):
+        """Test that www subdomain is allowed."""
+        response = trusted_host_client.get(
+            "/",
+            headers={"Host": "www.example.com"}
         )
         assert response.status_code == 200
     
@@ -45,40 +66,61 @@ class TestTrustedHostMiddleware:
         )
         assert response.status_code == 400
         assert "Invalid host" in response.text
+    
+    def test_host_with_port_allowed(self, trusted_host_client: TestClient):
+        """Test that host with port is allowed."""
+        response = trusted_host_client.get(
+            "/",
+            headers={"Host": "example.com:8000"}
+        )
+        assert response.status_code == 200
+    
+    def test_case_insensitive_matching(self, trusted_host_client: TestClient):
+        """Test that host matching is case insensitive."""
+        response = trusted_host_client.get(
+            "/",
+            headers={"Host": "EXAMPLE.COM"}
+        )
+        assert response.status_code == 200
 
 
 class TestWildcardHost:
     """Tests for wildcard host matching."""
     
     @pytest.fixture
-    def wildcard_app(self, sample_routes) -> FastAPI:
+    def wildcard_app(self, sample_app) -> FastAPI:
         """Create app with wildcard host pattern."""
-        app = sample_routes
-        app.add_middleware(
+        sample_app.add_middleware(
             TrustedHostMiddleware,
             allowed_hosts=["*.example.com"],
         )
-        return app
+        return sample_app
     
     @pytest.fixture
     def wildcard_client(self, wildcard_app: FastAPI) -> TestClient:
-        """Create test client for wildcard app."""
         return TestClient(wildcard_app)
     
-    def test_wildcard_subdomain_allowed(self, wildcard_client: TestClient):
-        """Test that subdomain matching works."""
+    def test_subdomain_allowed(self, wildcard_client: TestClient):
+        """Test that subdomains are allowed."""
         response = wildcard_client.get(
             "/",
             headers={"Host": "api.example.com"}
         )
         assert response.status_code == 200
     
-    def test_base_domain_not_matched_by_wildcard(self, wildcard_client: TestClient):
-        """Test that base domain is not matched by wildcard."""
-        # *.example.com should not match example.com
+    def test_nested_subdomain_allowed(self, wildcard_client: TestClient):
+        """Test that nested subdomains are allowed."""
         response = wildcard_client.get(
             "/",
-            headers={"Host": "other.com"}
+            headers={"Host": "staging.api.example.com"}
+        )
+        assert response.status_code == 200
+    
+    def test_different_domain_rejected(self, wildcard_client: TestClient):
+        """Test that different domains are rejected."""
+        response = wildcard_client.get(
+            "/",
+            headers={"Host": "example.org"}
         )
         assert response.status_code == 400
 
@@ -87,18 +129,16 @@ class TestAllowAnyHost:
     """Tests for allowing any host."""
     
     @pytest.fixture
-    def any_host_app(self, sample_routes) -> FastAPI:
+    def any_host_app(self, sample_app) -> FastAPI:
         """Create app allowing any host."""
-        app = sample_routes
-        app.add_middleware(
+        sample_app.add_middleware(
             TrustedHostMiddleware,
             allowed_hosts=["*"],
         )
-        return app
+        return sample_app
     
     @pytest.fixture
     def any_host_client(self, any_host_app: FastAPI) -> TestClient:
-        """Create test client for any host app."""
         return TestClient(any_host_app)
     
     def test_any_host_allowed(self, any_host_client: TestClient):
@@ -108,4 +148,103 @@ class TestAllowAnyHost:
             headers={"Host": "anything.example.org"}
         )
         assert response.status_code == 200
+    
+    def test_localhost_allowed(self, any_host_client: TestClient):
+        """Test that localhost is allowed."""
+        response = any_host_client.get(
+            "/",
+            headers={"Host": "localhost:8000"}
+        )
+        assert response.status_code == 200
 
+
+class TestMixedHosts:
+    """Tests for mixed host patterns."""
+    
+    @pytest.fixture
+    def mixed_app(self, sample_app) -> FastAPI:
+        """Create app with mixed host patterns."""
+        sample_app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=["example.com", "*.staging.example.com", "localhost"],
+        )
+        return sample_app
+    
+    @pytest.fixture
+    def mixed_client(self, mixed_app: FastAPI) -> TestClient:
+        return TestClient(mixed_app)
+    
+    def test_exact_match_allowed(self, mixed_client: TestClient):
+        """Test exact host match."""
+        response = mixed_client.get("/", headers={"Host": "example.com"})
+        assert response.status_code == 200
+    
+    def test_wildcard_match_allowed(self, mixed_client: TestClient):
+        """Test wildcard host match."""
+        response = mixed_client.get("/", headers={"Host": "api.staging.example.com"})
+        assert response.status_code == 200
+    
+    def test_localhost_allowed(self, mixed_client: TestClient):
+        """Test localhost match."""
+        response = mixed_client.get("/", headers={"Host": "localhost"})
+        assert response.status_code == 200
+    
+    def test_unmatched_rejected(self, mixed_client: TestClient):
+        """Test unmatched host is rejected."""
+        response = mixed_client.get("/", headers={"Host": "production.example.com"})
+        assert response.status_code == 400
+
+
+class TestPathExclusion:
+    """Tests for path exclusion."""
+    
+    @pytest.fixture
+    def excluded_app(self, sample_app) -> FastAPI:
+        """Create app with path exclusion."""
+        sample_app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=["example.com"],
+            exclude_paths={"/health"},
+        )
+        return sample_app
+    
+    @pytest.fixture
+    def excluded_client(self, excluded_app: FastAPI) -> TestClient:
+        return TestClient(excluded_app)
+    
+    def test_excluded_path_allows_any_host(self, excluded_client: TestClient):
+        """Test that excluded paths allow any host."""
+        response = excluded_client.get(
+            "/health",
+            headers={"Host": "malicious.com"}
+        )
+        assert response.status_code == 200
+    
+    def test_non_excluded_path_validates_host(self, excluded_client: TestClient):
+        """Test that non-excluded paths validate host."""
+        response = excluded_client.get(
+            "/",
+            headers={"Host": "malicious.com"}
+        )
+        assert response.status_code == 400
+
+
+class TestEmptyHost:
+    """Tests for empty or missing host header."""
+    
+    @pytest.fixture
+    def app(self, sample_app) -> FastAPI:
+        sample_app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=["example.com"],
+        )
+        return sample_app
+    
+    @pytest.fixture
+    def client(self, app: FastAPI) -> TestClient:
+        return TestClient(app)
+    
+    def test_empty_host_rejected(self, client: TestClient):
+        """Test that empty host is rejected."""
+        response = client.get("/", headers={"Host": ""})
+        assert response.status_code == 400

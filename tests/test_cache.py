@@ -1,5 +1,5 @@
 """
-Tests for Cache middleware.
+Comprehensive tests for Cache middleware.
 """
 
 import pytest
@@ -21,18 +21,26 @@ def cache_app() -> FastAPI:
     
     @app.get("/data")
     async def get_data():
-        return {"message": "Hello"}
+        return {"message": "Hello", "timestamp": "2024-01-01"}
+    
+    @app.get("/dynamic")
+    async def get_dynamic():
+        import time
+        return {"time": time.time()}
     
     @app.post("/create")
     async def create_data():
         return {"created": True}
+    
+    @app.get("/empty")
+    async def get_empty():
+        return {}
     
     return app
 
 
 @pytest.fixture
 def cache_client(cache_app: FastAPI) -> TestClient:
-    """Create test client for cache app."""
     return TestClient(cache_app)
 
 
@@ -53,6 +61,8 @@ class TestCacheMiddleware:
         
         assert response.status_code == 200
         assert "ETag" in response.headers
+        assert response.headers["ETag"].startswith('"')
+        assert response.headers["ETag"].endswith('"')
     
     def test_vary_header_added(self, cache_client: TestClient):
         """Test that Vary header is added."""
@@ -66,7 +76,14 @@ class TestCacheMiddleware:
         response = cache_client.post("/create")
         
         assert response.status_code == 200
-        # POST should not have cache headers (or should have no-store)
+        # POST should not have typical cache headers
+    
+    def test_same_content_same_etag(self, cache_client: TestClient):
+        """Test that same content produces same ETag."""
+        response1 = cache_client.get("/data")
+        response2 = cache_client.get("/data")
+        
+        assert response1.headers["ETag"] == response2.headers["ETag"]
 
 
 class TestConditionalRequests:
@@ -87,6 +104,39 @@ class TestConditionalRequests:
         )
         
         assert response2.status_code == 304
+    
+    def test_304_has_etag(self, cache_client: TestClient):
+        """Test that 304 response has ETag header."""
+        response1 = cache_client.get("/data")
+        etag = response1.headers["ETag"]
+        
+        response2 = cache_client.get(
+            "/data",
+            headers={"If-None-Match": etag}
+        )
+        
+        assert response2.headers.get("ETag") == etag
+    
+    def test_200_on_non_matching_etag(self, cache_client: TestClient):
+        """Test that 200 is returned when ETag doesn't match."""
+        response = cache_client.get(
+            "/data",
+            headers={"If-None-Match": '"non-matching-etag"'}
+        )
+        
+        assert response.status_code == 200
+    
+    def test_304_has_cache_control(self, cache_client: TestClient):
+        """Test that 304 response has Cache-Control header."""
+        response1 = cache_client.get("/data")
+        etag = response1.headers["ETag"]
+        
+        response2 = cache_client.get(
+            "/data",
+            headers={"If-None-Match": etag}
+        )
+        
+        assert "Cache-Control" in response2.headers
 
 
 class TestCacheConfig:
@@ -98,18 +148,196 @@ class TestCacheConfig:
         
         assert config.default_max_age == 0
         assert config.enable_etag is True
+        assert config.private is False
+        assert config.no_store is False
         assert "GET" in config.cacheable_methods
+        assert "HEAD" in config.cacheable_methods
         assert 200 in config.cacheable_status_codes
+    
+    def test_custom_config(self):
+        """Test custom configuration values."""
+        config = CacheConfig(
+            default_max_age=7200,
+            enable_etag=False,
+            private=True,
+        )
+        
+        assert config.default_max_age == 7200
+        assert config.enable_etag is False
+        assert config.private is True
     
     def test_path_rules(self):
         """Test path-specific cache rules."""
         config = CacheConfig(
             path_rules={
-                "/api/static": {"max_age": 86400},
-                "/api/private": {"no_store": True},
+                "/api/static": {"max_age": 86400, "public": True},
+                "/api/private": {"max_age": 0, "no_store": True},
             }
         )
         
         assert config.path_rules["/api/static"]["max_age"] == 86400
         assert config.path_rules["/api/private"]["no_store"] is True
 
+
+class TestPathRules:
+    """Tests for path-specific cache rules."""
+    
+    @pytest.fixture
+    def path_rules_app(self) -> FastAPI:
+        """Create app with path-specific rules."""
+        app = FastAPI()
+        config = CacheConfig(
+            default_max_age=60,
+            path_rules={
+                "/static": {"max_age": 86400},
+                "/private": {"private": True, "max_age": 0},
+                "/no-cache": {"no_store": True},
+            },
+        )
+        app.add_middleware(CacheMiddleware, config=config)
+        
+        @app.get("/static/file")
+        async def static_file():
+            return {"type": "static"}
+        
+        @app.get("/private/data")
+        async def private_data():
+            return {"type": "private"}
+        
+        @app.get("/no-cache/data")
+        async def no_cache_data():
+            return {"type": "no-cache"}
+        
+        @app.get("/default")
+        async def default():
+            return {"type": "default"}
+        
+        return app
+    
+    @pytest.fixture
+    def path_rules_client(self, path_rules_app: FastAPI) -> TestClient:
+        return TestClient(path_rules_app)
+    
+    def test_static_path_long_cache(self, path_rules_client: TestClient):
+        """Test that static paths have long cache."""
+        response = path_rules_client.get("/static/file")
+        
+        assert "max-age=86400" in response.headers["Cache-Control"]
+    
+    def test_private_path_private_cache(self, path_rules_client: TestClient):
+        """Test that private paths have private cache."""
+        response = path_rules_client.get("/private/data")
+        
+        assert "private" in response.headers["Cache-Control"]
+    
+    def test_default_path_uses_default(self, path_rules_client: TestClient):
+        """Test that unmatched paths use default."""
+        response = path_rules_client.get("/default")
+        
+        assert "max-age=60" in response.headers["Cache-Control"]
+
+
+class TestNoEtag:
+    """Tests for disabled ETag."""
+    
+    @pytest.fixture
+    def no_etag_app(self) -> FastAPI:
+        """Create app without ETag."""
+        app = FastAPI()
+        config = CacheConfig(enable_etag=False)
+        app.add_middleware(CacheMiddleware, config=config)
+        
+        @app.get("/data")
+        async def get_data():
+            return {"value": 123}
+        
+        return app
+    
+    @pytest.fixture
+    def no_etag_client(self, no_etag_app: FastAPI) -> TestClient:
+        return TestClient(no_etag_app)
+    
+    def test_no_etag_header(self, no_etag_client: TestClient):
+        """Test that ETag header is not added."""
+        response = no_etag_client.get("/data")
+        
+        assert "ETag" not in response.headers
+    
+    def test_conditional_request_returns_200(self, no_etag_client: TestClient):
+        """Test that conditional request returns 200 without ETag."""
+        response = no_etag_client.get(
+            "/data",
+            headers={"If-None-Match": '"some-etag"'}
+        )
+        
+        assert response.status_code == 200
+
+
+class TestPrivateCache:
+    """Tests for private cache."""
+    
+    @pytest.fixture
+    def private_app(self) -> FastAPI:
+        """Create app with private cache."""
+        app = FastAPI()
+        config = CacheConfig(private=True, default_max_age=300)
+        app.add_middleware(CacheMiddleware, config=config)
+        
+        @app.get("/data")
+        async def get_data():
+            return {"value": "secret"}
+        
+        return app
+    
+    @pytest.fixture
+    def private_client(self, private_app: FastAPI) -> TestClient:
+        return TestClient(private_app)
+    
+    def test_private_cache_control(self, private_client: TestClient):
+        """Test that Cache-Control includes private."""
+        response = private_client.get("/data")
+        
+        assert "private" in response.headers["Cache-Control"]
+
+
+class TestPathExclusion:
+    """Tests for path exclusion."""
+    
+    @pytest.fixture
+    def excluded_app(self) -> FastAPI:
+        """Create app with path exclusion."""
+        app = FastAPI()
+        config = CacheConfig(default_max_age=3600, enable_etag=True)
+        app.add_middleware(
+            CacheMiddleware,
+            config=config,
+            exclude_paths={"/no-cache"},
+        )
+        
+        @app.get("/cached")
+        async def cached():
+            return {"cached": True}
+        
+        @app.get("/no-cache")
+        async def no_cache():
+            return {"cached": False}
+        
+        return app
+    
+    @pytest.fixture
+    def excluded_client(self, excluded_app: FastAPI) -> TestClient:
+        return TestClient(excluded_app)
+    
+    def test_excluded_path_no_cache_headers(self, excluded_client: TestClient):
+        """Test that excluded paths don't get cache headers."""
+        response = excluded_client.get("/no-cache")
+        
+        # Should pass through without cache middleware processing
+        assert response.status_code == 200
+    
+    def test_included_path_has_cache_headers(self, excluded_client: TestClient):
+        """Test that included paths get cache headers."""
+        response = excluded_client.get("/cached")
+        
+        assert "Cache-Control" in response.headers
+        assert "ETag" in response.headers

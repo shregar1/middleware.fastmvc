@@ -115,8 +115,8 @@ class MaintenanceMiddleware(FastMVCMiddleware):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maintenance</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
@@ -124,37 +124,37 @@ class MaintenanceMiddleware(FastMVCMiddleware):
             align-items: center;
             justify-content: center;
             color: #fff;
-        }
-        .container {
+        }}
+        .container {{
             text-align: center;
             padding: 2rem;
             max-width: 600px;
-        }
-        .icon {
+        }}
+        .icon {{
             font-size: 4rem;
             margin-bottom: 1.5rem;
-        }
-        h1 {
+        }}
+        h1 {{
             font-size: 2rem;
             margin-bottom: 1rem;
             font-weight: 600;
-        }
-        p {
+        }}
+        p {{
             color: #a0a0a0;
             font-size: 1.1rem;
             line-height: 1.6;
-        }
-        .retry {
+        }}
+        .retry {{
             margin-top: 2rem;
             padding: 1rem 2rem;
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
             display: inline-block;
-        }
-        .retry span {
+        }}
+        .retry span {{
             color: #4ade80;
             font-weight: 600;
-        }
+        }}
     </style>
 </head>
 <body>
