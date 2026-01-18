@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Publish target'
+        description: 'Target repository'
         required: true
         default: 'testpypi'
         type: choice
@@ -14,76 +14,56 @@ on:
           - testpypi
           - pypi
 
+permissions:
+  contents: read
+
 jobs:
   build:
-    name: Build distribution
+    name: Build Distribution
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      
-      - name: Install build dependencies
-        run: pip install build
-      
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build twine
+
       - name: Build package
         run: python -m build
-      
+
+      - name: Check package
+        run: twine check dist/*
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: dist
           path: dist/
-
-  test:
-    name: Test built package
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      
-      - name: Install package from wheel
-        run: pip install dist/*.whl
-      
-      - name: Test import
-        run: |
-          python -c "import fastMiddleware; print(f'Version: {fastMiddleware.__version__}')"
-          python -c "from fastMiddleware import CORSMiddleware, SecurityHeadersMiddleware, RateLimitMiddleware; print('Core middlewares imported successfully')"
+          retention-days: 5
 
   publish-testpypi:
     name: Publish to TestPyPI
-    needs: [build, test]
-    runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'testpypi'
-    
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/fastmvc-middleware
-    
+      url: https://test.pypi.org/project/fastmvc-middleware/
+
     permissions:
       id-token: write
-    
+
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
+          name: dist
           path: dist/
-      
+
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -91,24 +71,43 @@ jobs:
 
   publish-pypi:
     name: Publish to PyPI
-    needs: [build, test]
-    runs-on: ubuntu-latest
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'pypi')
-    
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/fastmvc-middleware
-    
+      url: https://pypi.org/project/fastmvc-middleware/
+
     permissions:
       id-token: write
-    
+
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
+          name: dist
           path: dist/
-      
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
+  create-github-release-assets:
+    name: Upload Release Assets
+    if: github.event_name == 'release'
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*

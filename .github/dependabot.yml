@@ -1,19 +1,47 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
+  # Python dependencies
+  - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - python
+    commit-message:
+      prefix: "chore(deps):"
     groups:
       development:
         patterns:
           - "pytest*"
-          - "mypy"
           - "ruff"
+          - "mypy"
+          - "bandit"
+          - "pre-commit"
+          - "twine"
+          - "build"
+        update-types:
+          - minor
+          - patch
+      production:
+        patterns:
+          - "starlette"
+          - "pyjwt"
           - "httpx"
 
-  - package-ecosystem: "github-actions"
+  # GitHub Actions
+  - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: "weekly"
-
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "chore(deps):"

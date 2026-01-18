@@ -91,8 +91,7 @@ poetry.lock
 
 # pdm
 .pdm.toml
-.pdm-python
-.pdm-build/
+pdm.lock
 
 # PEP 582
 __pypackages__/
@@ -106,12 +105,14 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+*.local
 
 # Spyder project settings
 .spyderproject
@@ -128,6 +129,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Ruff
+.ruff_cache/
+
 # Pyre type checker
 .pyre/
 
@@ -137,18 +141,43 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Ruff
-.ruff_cache/
-
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
-.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# Project specific
-*.local
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Secrets
+.secrets.baseline
+*.pem
+*.key
+secrets.json
 .env.local
 .env.*.local
+
+# Local development
+*.local.py
+local_config.py
+.devcontainer/
+
+# Benchmark results
+.benchmarks/
+
+# Profiling
+*.prof
+*.lprof

@@ -1,453 +1,339 @@
 # Contributing to FastMVC Middleware
 
-Thank you for your interest in contributing to FastMVC Middleware! This document provides guidelines and information for contributors.
-
-## Table of Contents
-
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Making Changes](#making-changes)
-- [Testing](#testing)
-- [Code Style](#code-style)
-- [Pull Request Process](#pull-request-process)
-- [Writing Middleware](#writing-middleware)
+Thank you for your interest in contributing! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
-By participating in this project, you agree to maintain a respectful and inclusive environment for everyone. Please:
-
-- Be respectful and considerate in discussions
-- Accept constructive criticism gracefully
-- Focus on what's best for the community
-- Show empathy towards other community members
+Please be respectful and constructive in all interactions. We're building this together.
 
 ## Getting Started
-
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/fastmvc-middleware.git
-   cd fastmvc-middleware
-   ```
-3. **Add the upstream remote**:
-   ```bash
-   git remote add upstream https://github.com/hyyre/fastmvc-middleware.git
-   ```
-
-## Development Setup
 
 ### Prerequisites
 
 - Python 3.10 or higher
-- pip or uv package manager
 - Git
+- Make (optional but recommended)
 
-### Installation
+### Development Setup
 
-1. Create a virtual environment:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-2. Install development dependencies:
-   ```bash
-   pip install -e ".[dev]"
-   ```
-
-   Or using Make:
-   ```bash
-   make install-dev
-   ```
-
-3. Verify the setup:
-   ```bash
-   make test
-   make lint
-   ```
-
-### Using Make
-
-We provide a Makefile for common development tasks:
-
-| Command | Description |
-|---------|-------------|
-| `make install` | Install package in editable mode |
-| `make install-dev` | Install with dev dependencies |
-| `make test` | Run tests with coverage |
-| `make lint` | Run linter (ruff) |
-| `make type-check` | Run type checker (mypy) |
-| `make format` | Format code |
-| `make clean` | Clean build artifacts |
-| `make all` | Run lint, type-check, and test |
-
-## Making Changes
-
-### Branching Strategy
-
-1. Create a new branch from `main`:
-   ```bash
-   git checkout main
-   git pull upstream main
-   git checkout -b feature/your-feature-name
-   ```
-
-2. Branch naming conventions:
-   - `feature/` - New features
-   - `fix/` - Bug fixes
-   - `docs/` - Documentation changes
-   - `refactor/` - Code refactoring
-   - `test/` - Test additions or improvements
-
-### Commit Messages
-
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-
-```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
-```
-
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
-
-Examples:
-```
-feat(security): add Content-Security-Policy report-only mode
-fix(rate-limit): handle missing client IP correctly
-docs(readme): add metrics middleware documentation
-test(cache): add tests for conditional requests
-```
-
-## Testing
-
-### Running Tests
+1. **Fork and clone the repository**
 
 ```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=src --cov-report=html
-
-# Run specific test file
-pytest tests/test_security.py
-
-# Run specific test
-pytest tests/test_security.py::TestSecurityHeaders::test_hsts_header
-
-# Run tests in parallel
-pytest -n auto
-
-# Run with verbose output
-pytest -v
+git clone https://github.com/YOUR_USERNAME/fastmvc-middleware.git
+cd fastmvc-middleware
 ```
 
-### Writing Tests
+2. **Create a virtual environment**
 
-1. **Test Location**: Place tests in the `tests/` directory
-2. **Test Naming**: Use descriptive names: `test_<what>_<expected_behavior>`
-3. **Test Structure**: Use the Arrange-Act-Assert pattern
-
-Example:
-```python
-import pytest
-from fastapi import FastAPI
-from starlette.testclient import TestClient
-
-from fastMiddleware import SecurityHeadersMiddleware
-
-class TestSecurityHeaders:
-    """Tests for SecurityHeadersMiddleware."""
-    
-    @pytest.fixture
-    def app(self) -> FastAPI:
-        """Create test application."""
-        app = FastAPI()
-        app.add_middleware(SecurityHeadersMiddleware, enable_hsts=True)
-        
-        @app.get("/")
-        async def root():
-            return {"ok": True}
-        
-        return app
-    
-    @pytest.fixture
-    def client(self, app: FastAPI) -> TestClient:
-        """Create test client."""
-        return TestClient(app)
-    
-    def test_hsts_header_present(self, client: TestClient):
-        """Test that HSTS header is present when enabled."""
-        # Arrange is done in fixtures
-        
-        # Act
-        response = client.get("/")
-        
-        # Assert
-        assert response.status_code == 200
-        assert "Strict-Transport-Security" in response.headers
-```
-
-### Test Coverage
-
-- Aim for 80%+ code coverage
-- Cover both success and error paths
-- Test edge cases and boundary conditions
-- Test middleware interaction with other middlewares
-
-## Code Style
-
-### Python Style
-
-We use:
-- [Ruff](https://github.com/astral-sh/ruff) for linting and formatting
-- [mypy](https://mypy.readthedocs.io/) for type checking
-
-Run before committing:
 ```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. **Install development dependencies**
+
+```bash
+make install-dev
+# Or manually:
+pip install -e ".[dev]"
+pre-commit install
+```
+
+4. **Verify setup**
+
+```bash
+make test-fast
 make lint
-make type-check
-make format
 ```
 
-### Style Guidelines
+## Development Workflow
 
-1. **Type Hints**: Use type hints for all function parameters and return values
-   ```python
-   def process_request(
-       self,
-       request: Request,
-       call_next: Callable[[Request], Awaitable[Response]],
-   ) -> Response:
-   ```
+### 1. Create a Branch
 
-2. **Docstrings**: Use Google-style docstrings
-   ```python
-   def dispatch(self, request: Request, call_next) -> Response:
-       """Process the request through the middleware.
-       
-       Args:
-           request: The incoming HTTP request.
-           call_next: The next middleware/route handler.
-       
-       Returns:
-           The HTTP response with modifications.
-       
-       Raises:
-           ValueError: If the request is malformed.
-       """
-   ```
+```bash
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/issue-description
+```
 
-3. **Class Structure**: Follow consistent ordering
-   ```python
-   class MyMiddleware(FastMVCMiddleware):
-       # 1. Class docstring
-       # 2. __init__
-       # 3. Public methods
-       # 4. Private methods (prefixed with _)
-   ```
+### 2. Make Changes
 
-## Pull Request Process
+- Write code following our style guide
+- Add tests for new functionality
+- Update documentation as needed
 
-### Before Submitting
+### 3. Run Quality Checks
 
-1. Update documentation if needed
-2. Add tests for new functionality
-3. Ensure all tests pass
-4. Run linter and type checker
-5. Update CHANGELOG.md
+```bash
+# Run all checks
+make check-all
 
-### Submitting
+# Or individually:
+make lint        # Linting
+make format      # Format code
+make type-check  # Type checking
+make security    # Security scan
+make test        # Tests with coverage
+```
 
-1. Push your branch to your fork:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
+### 4. Commit Changes
 
-2. Open a Pull Request against `main`
+We use conventional commits:
 
-3. Fill out the PR template:
-   - Description of changes
-   - Link to related issues
-   - Checklist of completed items
+```bash
+git commit -m "feat: add new middleware for XYZ"
+git commit -m "fix: resolve issue with rate limiting"
+git commit -m "docs: update README with new examples"
+git commit -m "test: add tests for compression middleware"
+```
 
-4. Wait for review and address feedback
+Prefixes:
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation only
+- `test:` - Adding tests
+- `refactor:` - Code refactoring
+- `perf:` - Performance improvement
+- `chore:` - Maintenance tasks
 
-### PR Review
+### 5. Submit Pull Request
 
-- PRs require at least one approval
-- CI must pass (tests, linting, type checking)
-- Maintain conversation in the PR for context
+1. Push your branch
+2. Open a PR against `main`
+3. Fill out the PR template
+4. Wait for review
 
-## Writing Middleware
+## Creating a New Middleware
 
-### Middleware Structure
-
-All middleware should extend `FastMVCMiddleware`:
+### 1. Create the middleware file
 
 ```python
-from dataclasses import dataclass
-from typing import Callable, Awaitable, Set
+# fastMiddleware/your_middleware.py
+"""
+Your Middleware - Brief description.
+
+This middleware does XYZ for FastAPI/Starlette applications.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Callable, Awaitable, Set
 
 from starlette.requests import Request
 from starlette.responses import Response
 
-from fastMiddleware.base import FastMVCMiddleware
+from .base import FastMVCMiddleware
+
+if TYPE_CHECKING:
+    from starlette.types import ASGIApp
 
 
 @dataclass
-class MyMiddlewareConfig:
-    """Configuration for MyMiddleware.
-    
+class YourMiddlewareConfig:
+    """Configuration for YourMiddleware.
+
     Attributes:
         option1: Description of option1.
         option2: Description of option2.
+        exclude_paths: Paths to exclude from processing.
     """
     option1: str = "default"
     option2: int = 100
+    exclude_paths: Set[str] = field(default_factory=set)
 
 
-class MyMiddleware(FastMVCMiddleware):
-    """Brief description of what this middleware does.
-    
+class YourMiddleware(FastMVCMiddleware):
+    """Middleware that does XYZ.
+
+    This middleware provides ABC functionality for FastAPI/Starlette apps.
+
     Example:
         ```python
-        app.add_middleware(MyMiddleware, option1="value")
+        from fastMiddleware import YourMiddleware, YourMiddlewareConfig
+
+        app.add_middleware(
+            YourMiddleware,
+            option1="value",
+            option2=50,
+        )
         ```
-    
-    Attributes:
-        config: The middleware configuration.
+
+    Args:
+        app: The ASGI application.
+        config: Configuration object (optional).
+        option1: Direct option (if not using config).
+        option2: Direct option (if not using config).
+        exclude_paths: Paths to exclude.
     """
-    
+
     def __init__(
         self,
-        app,
-        config: MyMiddlewareConfig | None = None,
-        option1: str | None = None,
-        option2: int | None = None,
+        app: ASGIApp,
+        config: YourMiddlewareConfig | None = None,
+        option1: str = "default",
+        option2: int = 100,
         exclude_paths: Set[str] | None = None,
-        exclude_methods: Set[str] | None = None,
     ) -> None:
-        """Initialize the middleware.
-        
-        Args:
-            app: The ASGI application.
-            config: Optional configuration object.
-            option1: Optional override for option1.
-            option2: Optional override for option2.
-            exclude_paths: Paths to skip processing.
-            exclude_methods: HTTP methods to skip.
-        """
-        super().__init__(app, exclude_paths=exclude_paths, exclude_methods=exclude_methods)
-        self.config = config or MyMiddlewareConfig()
-        
-        # Apply overrides
-        if option1 is not None:
-            self.config.option1 = option1
-        if option2 is not None:
-            self.config.option2 = option2
-    
+        super().__init__(app, exclude_paths=exclude_paths)
+
+        if config:
+            self.option1 = config.option1
+            self.option2 = config.option2
+        else:
+            self.option1 = option1
+            self.option2 = option2
+
     async def dispatch(
         self,
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         """Process the request.
-        
+
         Args:
             request: The incoming request.
-            call_next: The next handler.
-        
+            call_next: The next middleware/handler.
+
         Returns:
-            The modified response.
+            The response from the application.
         """
-        # Skip if excluded
         if self.should_skip(request):
             return await call_next(request)
-        
+
         # Pre-processing
         # ...
-        
-        # Call next handler
+
         response = await call_next(request)
-        
+
         # Post-processing
         # ...
-        
+
         return response
 ```
 
-### Middleware Checklist
-
-When creating a new middleware:
-
-- [ ] Extend `FastMVCMiddleware`
-- [ ] Create a dataclass config (if needed)
-- [ ] Support both config object and individual parameters
-- [ ] Implement `dispatch` method
-- [ ] Use `should_skip()` for path/method exclusion
-- [ ] Add comprehensive docstrings
-- [ ] Export from `src/__init__.py`
-- [ ] Add tests in `tests/`
-- [ ] Document in README.md
-- [ ] Update CHANGELOG.md
-
-### Testing Middleware
+### 2. Export in `__init__.py`
 
 ```python
-class TestMyMiddleware:
-    """Tests for MyMiddleware."""
-    
-    @pytest.fixture
-    def app(self) -> FastAPI:
-        """Create test application."""
-        app = FastAPI()
-        app.add_middleware(MyMiddleware, option1="test")
-        
-        @app.get("/")
-        async def root():
-            return {"ok": True}
-        
-        return app
-    
-    @pytest.fixture
-    def client(self, app: FastAPI) -> TestClient:
-        return TestClient(app)
-    
-    def test_basic_functionality(self, client: TestClient):
-        """Test that middleware works correctly."""
-        response = client.get("/")
-        assert response.status_code == 200
-    
-    def test_with_config_object(self):
-        """Test using config object."""
-        config = MyMiddlewareConfig(option1="custom", option2=200)
-        app = FastAPI()
-        app.add_middleware(MyMiddleware, config=config)
-        # ...
-    
-    def test_excluded_path_skipped(self, client: TestClient):
-        """Test that excluded paths are skipped."""
-        # ...
+from .your_middleware import YourMiddleware, YourMiddlewareConfig
 ```
+
+### 3. Add tests
+
+```python
+# tests/test_your_middleware.py
+import pytest
+from starlette.applications import Starlette
+from starlette.responses import PlainTextResponse
+from starlette.testclient import TestClient
+
+from fastMiddleware import YourMiddleware, YourMiddlewareConfig
+
+
+class TestYourMiddleware:
+    def test_basic_functionality(self):
+        app = Starlette()
+        app.add_middleware(YourMiddleware)
+
+        @app.route("/")
+        async def homepage(request):
+            return PlainTextResponse("OK")
+
+        client = TestClient(app)
+        response = client.get("/")
+
+        assert response.status_code == 200
+        # Add your assertions
+
+    def test_with_config(self):
+        config = YourMiddlewareConfig(option1="custom")
+        # Test with config...
+
+    def test_exclude_paths(self):
+        # Test path exclusion...
+```
+
+### 4. Add documentation
+
+Create `docs/middlewares/your-middleware.md`:
+
+```markdown
+# YourMiddleware
+
+Brief description of what it does.
+
+## Prerequisites
+
+✅ No additional dependencies required.
+
+## Installation
+
+\`\`\`bash
+pip install fastmvc-middleware
+\`\`\`
+
+## Usage
+
+\`\`\`python
+from fastMiddleware import YourMiddleware
+
+app.add_middleware(YourMiddleware, option1="value")
+\`\`\`
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `option1` | `str` | `"default"` | Description |
+| `option2` | `int` | `100` | Description |
+
+## Related Middlewares
+
+- [RelatedMiddleware](related.md)
+```
+
+## Code Style
+
+### Python
+
+- Follow PEP 8
+- Use type hints everywhere
+- Maximum line length: 100 characters
+- Use double quotes for strings
+- Use `from __future__ import annotations` for modern typing
+
+### Docstrings
+
+Use Google-style docstrings:
+
+```python
+def function(arg1: str, arg2: int = 0) -> bool:
+    """Brief description.
+
+    Longer description if needed.
+
+    Args:
+        arg1: Description of arg1.
+        arg2: Description of arg2.
+
+    Returns:
+        Description of return value.
+
+    Raises:
+        ValueError: When something is wrong.
+    """
+```
+
+### Testing
+
+- Minimum 80% coverage for new code
+- Test both success and failure cases
+- Test edge cases
+- Use fixtures for common setup
+- Use parametrize for similar tests
 
 ## Questions?
 
-If you have questions about contributing:
-
-1. Check existing issues and discussions
-2. Open a new discussion for general questions
-3. Open an issue for bugs or feature requests
+- Open a [Discussion](https://github.com/hyyre/fastmvc-middleware/discussions)
+- Check existing [Issues](https://github.com/hyyre/fastmvc-middleware/issues)
 
 Thank you for contributing! 🎉

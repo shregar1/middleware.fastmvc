@@ -77,6 +77,7 @@ dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
     "httpx>=0.24.0",
     "mypy>=1.0.0",
     "ruff>=0.1.0",
@@ -85,6 +86,8 @@ dev = [
     "uvicorn>=0.20.0",
     "build>=1.0.0",
     "twine>=4.0.0",
+    "bandit[toml]>=1.7.0",
+    "pre-commit>=3.0.0",
 ]
 
 [project.urls]
@@ -121,40 +124,101 @@ packages = ["fastMiddleware"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "-v --cov=fastMiddleware --cov-report=term-missing"
+addopts = "-v --cov=fastMiddleware --cov-report=term-missing --strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "security: marks tests as security tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:starlette.*:",
+    "ignore::DeprecationWarning:httpx.*:",
+]
 
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+disallow_untyped_decorators = true
 check_untyped_defs = true
+strict_equality = true
+extra_checks = true
 ignore_missing_imports = true
+show_error_codes = true
+show_column_numbers = true
 
 [tool.ruff]
 target-version = "py310"
 line-length = 100
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # Pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-]
-ignore = [
-    "E501",  # line too long (handled by formatter)
-    "B008",  # do not perform function calls in argument defaults
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+    "venv",
+    ".venv",
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # Pyflakes
+    "I",     # isort
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "UP",    # pyupgrade
+    "ARG",   # flake8-unused-arguments
+    "SIM",   # flake8-simplify
+    "TCH",   # flake8-type-checking
+    "PTH",   # flake8-use-pathlib
+    "ERA",   # eradicate (commented out code)
+    "PL",    # pylint
+    "RUF",   # Ruff-specific rules
+    "PERF",  # Perflint
+]
+ignore = [
+    "E501",    # line too long (handled by formatter)
+    "B008",    # do not perform function calls in argument defaults
+    "PLR0913", # too many arguments
+    "PLR2004", # magic value comparison
+    "PLR0912", # too many branches
+    "PLR0915", # too many statements
+    "ARG001",  # unused function argument (common in middleware)
+    "ARG002",  # unused method argument
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["PLR2004", "ARG", "S101"]
+"__init__.py" = ["F401", "E402"]
+
+[tool.ruff.lint.isort]
 known-first-party = ["fastMiddleware"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.coverage.run]
 source = ["fastMiddleware"]
 branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -163,4 +227,21 @@ exclude_lines = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
     "if __name__ == .__main__.:",
+    "@abstractmethod",
+    "class .*\\bProtocol\\):",
+    "\\.\\.\\.",
 ]
+fail_under = 40
+show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
+skips = ["B101"]  # assert used
+targets = ["fastMiddleware"]
+
+[tool.bandit.assert_used]
+skips = ["**/test_*.py", "**/tests.py"]
