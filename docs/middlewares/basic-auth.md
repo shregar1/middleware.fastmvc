@@ -88,4 +88,3 @@ async def handler(request: Request):
 
 - [BearerAuthMiddleware](bearer-auth.md)
 - [AuthenticationMiddleware](authentication.md)
-

@@ -121,4 +121,3 @@ app.add_middleware(
 
 - [CSRFMiddleware](csrf.md) - Uses session for tokens
 - [AuthenticationMiddleware](authentication.md)
-

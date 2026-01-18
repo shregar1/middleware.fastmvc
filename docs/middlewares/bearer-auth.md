@@ -79,4 +79,3 @@ async def handler(request: Request):
 
 - [BasicAuthMiddleware](basic-auth.md)
 - [AuthenticationMiddleware](authentication.md) - JWT support
-

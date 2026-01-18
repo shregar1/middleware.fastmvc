@@ -123,4 +123,3 @@ async def purchase(request: Request):
 
 - [FeatureFlagMiddleware](feature-flag.md)
 - [RequestSamplerMiddleware](request-sampler.md)
-

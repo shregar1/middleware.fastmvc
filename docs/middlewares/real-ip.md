@@ -113,4 +113,3 @@ The middleware returns the leftmost (client) IP.
 - [XFFTrustMiddleware](xff-trust.md) - Trusted proxy configuration
 - [IPFilterMiddleware](ip-filter.md) - IP-based access control
 - [GeoIPMiddleware](geoip.md) - Geographic information
-

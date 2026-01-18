@@ -124,4 +124,3 @@ if warmup._is_ready():
 - [HealthCheckMiddleware](health.md)
 - [GracefulShutdownMiddleware](graceful-shutdown.md)
 - [MaintenanceMiddleware](maintenance.md)
-

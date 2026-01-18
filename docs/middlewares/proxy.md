@@ -119,4 +119,3 @@ The middleware automatically forwards:
 
 - [PathRewriteMiddleware](path-rewrite.md) - URL rewriting
 - [RedirectMiddleware](redirect.md) - HTTP redirects
-

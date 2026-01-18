@@ -115,4 +115,3 @@ print(f"In-flight requests: {shutdown_mw.in_flight_requests}")
 - [HealthCheckMiddleware](health.md)
 - [WarmupMiddleware](warmup.md)
 - [MaintenanceMiddleware](maintenance.md)
-

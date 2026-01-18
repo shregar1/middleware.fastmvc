@@ -79,4 +79,3 @@ app.add_middleware(
 
 - [CircuitBreakerMiddleware](circuit-breaker.md)
 - [BulkheadMiddleware](bulkhead.md)
-

@@ -64,4 +64,3 @@ app.add_middleware(HTTPSRedirectMiddleware, config=config)
 ## Related Middlewares
 
 - [SecurityHeadersMiddleware](security-headers.md) - Adds HSTS header
-

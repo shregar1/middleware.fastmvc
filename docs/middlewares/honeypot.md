@@ -128,4 +128,3 @@ After accessing a honeypot, the IP receives 403 on all requests:
 - [IPFilterMiddleware](ip-filter.md) - IP blocking
 - [BotDetectionMiddleware](bot-detection.md)
 - [RateLimitMiddleware](rate-limit.md)
-

@@ -84,4 +84,3 @@ HALF_OPEN --[request fails]--> OPEN
 
 - [BulkheadMiddleware](bulkhead.md) - Isolation pattern
 - [LoadSheddingMiddleware](load-shedding.md) - Load management
-

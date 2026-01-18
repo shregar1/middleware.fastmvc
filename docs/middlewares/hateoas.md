@@ -134,4 +134,3 @@ async def get_user(user_id: int, request: Request):
 
 - [VersioningMiddleware](versioning.md)
 - [ContentNegotiationMiddleware](content-negotiation.md)
-

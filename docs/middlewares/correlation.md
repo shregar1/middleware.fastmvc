@@ -123,4 +123,3 @@ curl https://api.example.com/
 - [RequestIDMiddleware](request-id.md) - Request ID generation
 - [RequestIDPropagationMiddleware](request-id-propagation.md) - ID chain propagation
 - [LoggingMiddleware](logging.md)
-

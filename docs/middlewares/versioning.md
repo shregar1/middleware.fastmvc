@@ -126,4 +126,3 @@ If `supported_versions` is set and version not in list:
 
 - [DeprecationMiddleware](deprecation.md) - Version deprecation
 - [APIVersionHeaderMiddleware](api-version-header.md)
-

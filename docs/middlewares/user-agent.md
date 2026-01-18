@@ -126,4 +126,3 @@ async def handler(request: Request):
 - [BotDetectionMiddleware](bot-detection.md)
 - [ClientHintsMiddleware](client-hints.md)
 - [RequestFingerprintMiddleware](request-fingerprint.md)
-

@@ -130,22 +130,24 @@ config = CacheConfig(
 ### How It Works
 
 1. First request:
-   ```http
-   GET /api/data HTTP/1.1
 
-   HTTP/1.1 200 OK
-   ETag: "abc123"
-   Content: {...}
-   ```
+```http
+GET /api/data HTTP/1.1
+
+HTTP/1.1 200 OK
+ETag: "abc123"
+Content: {...}
+```
 
 2. Subsequent request:
-   ```http
-   GET /api/data HTTP/1.1
-   If-None-Match: "abc123"
 
-   HTTP/1.1 304 Not Modified
-   ETag: "abc123"
-   ```
+```http
+GET /api/data HTTP/1.1
+If-None-Match: "abc123"
+
+HTTP/1.1 304 Not Modified
+ETag: "abc123"
+```
 
 ### Client Usage
 

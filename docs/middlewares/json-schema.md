@@ -159,4 +159,3 @@ order_schema = {
 
 - [RequestValidatorMiddleware](request-validator.md)
 - [ContentTypeMiddleware](content-type.md)
-

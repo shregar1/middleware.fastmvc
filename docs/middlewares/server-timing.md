@@ -118,4 +118,3 @@ async def complex_handler():
 - [TimingMiddleware](timing.md) - Simple X-Process-Time header
 - [ProfilingMiddleware](profiling.md) - Detailed profiling
 - [ResponseTimeMiddleware](response-time.md) - SLA monitoring
-
