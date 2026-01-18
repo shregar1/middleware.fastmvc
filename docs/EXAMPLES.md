@@ -1,891 +1,812 @@
 # FastMVC Middleware Examples
 
-This document provides practical examples for common use cases.
+Comprehensive examples for common use cases.
 
 ## Table of Contents
 
-- [Basic Setup](#basic-setup)
-- [Security Configuration](#security-configuration)
-- [Rate Limiting](#rate-limiting)
-- [Authentication](#authentication)
-- [Caching](#caching)
-- [Health Checks](#health-checks)
-- [Metrics & Monitoring](#metrics--monitoring)
-- [Maintenance Mode](#maintenance-mode)
-- [Production Configuration](#production-configuration)
-- [Custom Middleware](#custom-middleware)
+1. [Production API Setup](#production-api-setup)
+2. [Microservices Configuration](#microservices-configuration)
+3. [Multi-Tenant SaaS Application](#multi-tenant-saas-application)
+4. [High-Traffic API](#high-traffic-api)
+5. [Secure Financial API](#secure-financial-api)
+6. [API Gateway](#api-gateway)
+7. [A/B Testing Platform](#ab-testing-platform)
+8. [Monitoring Stack](#monitoring-stack)
 
 ---
 
-## Basic Setup
+## Production API Setup
 
-### Minimal Configuration
+A complete production-ready API configuration.
 
 ```python
 from fastapi import FastAPI
 from fastMiddleware import (
     CORSMiddleware,
     SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    LoggingMiddleware,
     TimingMiddleware,
     RequestIDMiddleware,
+    HealthCheckMiddleware,
+    CompressionMiddleware,
+    ErrorHandlerMiddleware,
+    AuthenticationMiddleware,
+    JWTAuthBackend,
 )
 
-app = FastAPI()
+app = FastAPI(title="Production API")
 
-# Add middleware (order matters)
+# Order matters! First added = last executed
+
+# 1. Compress responses
+app.add_middleware(CompressionMiddleware, minimum_size=1000)
+
+# 2. Add timing header
 app.add_middleware(TimingMiddleware)
-app.add_middleware(SecurityHeadersMiddleware)
+
+# 3. Log all requests
+app.add_middleware(
+    LoggingMiddleware,
+    exclude_paths={"/health", "/metrics"},
+)
+
+# 4. Handle errors gracefully
+app.add_middleware(
+    ErrorHandlerMiddleware,
+    include_traceback=False,
+)
+
+# 5. Authenticate requests
+app.add_middleware(
+    AuthenticationMiddleware,
+    backend=JWTAuthBackend(
+        secret_key="your-jwt-secret",
+        algorithm="HS256",
+    ),
+    exclude_paths={"/health", "/login", "/register"},
+)
+
+# 6. Rate limit
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=100,
+)
+
+# 7. Security headers
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    enable_hsts=True,
+    content_security_policy="default-src 'self'",
+)
+
+# 8. Request ID for tracing
 app.add_middleware(RequestIDMiddleware)
-app.add_middleware(CORSMiddleware, allow_origins=["*"])
+
+# 9. Health endpoints
+app.add_middleware(
+    HealthCheckMiddleware,
+    version="1.0.0",
+)
+
+# 10. CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://app.example.com"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True,
+)
 
 @app.get("/")
 async def root():
     return {"message": "Hello, World!"}
 ```
 
-### With Logging
-
-```python
-import logging
-from fastMiddleware import LoggingMiddleware
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-
-app.add_middleware(
-    LoggingMiddleware,
-    log_level=logging.INFO,
-    exclude_paths={"/health", "/metrics"},
-)
-```
-
 ---
 
-## Security Configuration
+## Microservices Configuration
 
-### Strict Security Headers
-
-```python
-from fastMiddleware import SecurityHeadersMiddleware, SecurityHeadersConfig
-
-config = SecurityHeadersConfig(
-    enable_hsts=True,
-    hsts_max_age=31536000,
-    hsts_preload=True,
-    hsts_include_subdomains=True,
-    content_security_policy="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;",
-    x_frame_options="DENY",
-    referrer_policy="strict-origin-when-cross-origin",
-    permissions_policy="geolocation=(), microphone=(), camera=()",
-)
-
-app.add_middleware(SecurityHeadersMiddleware, config=config)
-```
-
-### Trusted Hosts (Production)
-
-```python
-from fastMiddleware import TrustedHostMiddleware
-
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=[
-        "api.example.com",
-        "*.example.com",  # Allow all subdomains
-    ],
-)
-```
-
-### CORS for API
-
-```python
-from fastMiddleware import CORSMiddleware
-
-# Production CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://app.example.com",
-        "https://admin.example.com",
-    ],
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-    allow_credentials=True,
-    expose_headers=["X-Request-ID", "X-RateLimit-Remaining"],
-    max_age=3600,
-)
-```
-
----
-
-## Rate Limiting
-
-### Basic Rate Limiting
-
-```python
-from fastMiddleware import RateLimitMiddleware, RateLimitConfig
-
-config = RateLimitConfig(
-    requests_per_minute=60,
-    requests_per_hour=1000,
-)
-
-app.add_middleware(RateLimitMiddleware, config=config)
-```
-
-### Per-User Rate Limiting
-
-```python
-from starlette.requests import Request
-
-def get_user_key(request: Request) -> str:
-    """Extract rate limit key from request."""
-    # Try to get user ID from auth
-    if hasattr(request.state, "auth"):
-        return f"user:{request.state.auth.get('user_id', 'unknown')}"
-    
-    # Try API key
-    api_key = request.headers.get("X-API-Key")
-    if api_key:
-        return f"api:{api_key[:8]}"
-    
-    # Fall back to IP
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return f"ip:{forwarded.split(',')[0].strip()}"
-    
-    return f"ip:{request.client.host if request.client else 'unknown'}"
-
-config = RateLimitConfig(
-    requests_per_minute=100,
-    key_func=get_user_key,
-)
-
-app.add_middleware(RateLimitMiddleware, config=config)
-```
-
-### Tiered Rate Limits
-
-```python
-from starlette.requests import Request
-
-# Define tiers
-RATE_LIMITS = {
-    "free": 60,
-    "pro": 300,
-    "enterprise": 1000,
-}
-
-def tiered_rate_limit(request: Request) -> str:
-    tier = "free"
-    if hasattr(request.state, "auth"):
-        tier = request.state.auth.get("tier", "free")
-    
-    # Include tier in key for separate buckets
-    user_id = getattr(request.state, "auth", {}).get("user_id", "anon")
-    return f"{tier}:{user_id}"
-
-# Create multiple middleware instances or use dynamic limits
-config = RateLimitConfig(
-    requests_per_minute=60,  # Default
-    key_func=tiered_rate_limit,
-)
-```
-
----
-
-## Authentication
-
-### JWT Authentication
-
-```python
-from fastMiddleware import (
-    AuthenticationMiddleware,
-    AuthConfig,
-    JWTAuthBackend,
-)
-import os
-
-jwt_backend = JWTAuthBackend(
-    secret=os.environ["JWT_SECRET"],
-    algorithm="HS256",
-    verify_exp=True,
-)
-
-auth_config = AuthConfig(
-    exclude_paths={
-        "/",
-        "/health",
-        "/ready",
-        "/live",
-        "/docs",
-        "/openapi.json",
-        "/login",
-        "/register",
-        "/forgot-password",
-    },
-    exclude_methods={"OPTIONS"},
-)
-
-app.add_middleware(
-    AuthenticationMiddleware,
-    backend=jwt_backend,
-    config=auth_config,
-)
-
-# Access authenticated user
-@app.get("/me")
-async def get_current_user(request: Request):
-    return {"user": request.state.auth}
-```
-
-### API Key Authentication
-
-```python
-from fastMiddleware import APIKeyAuthBackend
-
-# Static API keys
-backend = APIKeyAuthBackend(
-    valid_keys={
-        "sk_live_abc123",
-        "sk_live_def456",
-    }
-)
-
-# Or with dynamic validation
-async def validate_api_key(key: str) -> dict | None:
-    """Validate API key against database."""
-    from your_app.db import get_api_key_info
-    
-    key_info = await get_api_key_info(key)
-    if key_info and key_info.is_active:
-        return {
-            "user_id": key_info.user_id,
-            "tier": key_info.tier,
-            "scopes": key_info.scopes,
-        }
-    return None
-
-backend = APIKeyAuthBackend(validator=validate_api_key)
-```
-
----
-
-## Caching
-
-### Basic Caching
-
-```python
-from fastMiddleware import CacheMiddleware, CacheConfig
-
-config = CacheConfig(
-    default_max_age=300,  # 5 minutes
-    enable_etag=True,
-)
-
-app.add_middleware(CacheMiddleware, config=config)
-```
-
-### Path-Specific Cache Rules
-
-```python
-config = CacheConfig(
-    default_max_age=60,
-    path_rules={
-        # Static assets: long cache
-        "/static": {"max_age": 86400, "public": True},
-        "/assets": {"max_age": 31536000, "public": True, "immutable": True},
-        
-        # API data: short cache
-        "/api/public": {"max_age": 300, "public": True},
-        
-        # User data: no cache
-        "/api/user": {"no_store": True, "private": True},
-        
-        # Admin: no cache
-        "/admin": {"no_store": True, "no_cache": True},
-    },
-)
-```
-
-### Conditional Request Handling
-
-The cache middleware automatically handles conditional requests:
-
-```bash
-# First request
-curl -i https://api.example.com/data
-# Returns: ETag: "abc123"
-
-# Subsequent request
-curl -i -H "If-None-Match: \"abc123\"" https://api.example.com/data
-# Returns: 304 Not Modified (if unchanged)
-```
-
----
-
-## Health Checks
-
-### Basic Health Check
-
-```python
-from fastMiddleware import HealthCheckMiddleware, HealthConfig
-
-config = HealthConfig(
-    version="1.0.0",
-    service_name="my-api",
-)
-
-app.add_middleware(HealthCheckMiddleware, config=config)
-```
-
-### With Dependency Checks
-
-```python
-from your_app.db import database
-from your_app.cache import redis
-
-async def check_database() -> bool:
-    """Check database connection."""
-    try:
-        await database.execute("SELECT 1")
-        return True
-    except Exception:
-        return False
-
-async def check_redis() -> bool:
-    """Check Redis connection."""
-    try:
-        await redis.ping()
-        return True
-    except Exception:
-        return False
-
-async def check_external_api() -> bool:
-    """Check external API availability."""
-    import httpx
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://api.example.com/health",
-                timeout=5.0
-            )
-            return response.status_code == 200
-    except Exception:
-        return False
-
-config = HealthConfig(
-    version=os.environ.get("APP_VERSION", "0.0.0"),
-    service_name="my-api",
-    custom_checks={
-        "database": check_database,
-        "redis": check_redis,
-        "external_api": check_external_api,
-    },
-)
-```
-
-### Kubernetes Probes
-
-```yaml
-# kubernetes/deployment.yaml
-spec:
-  containers:
-    - name: my-api
-      livenessProbe:
-        httpGet:
-          path: /live
-          port: 8000
-        initialDelaySeconds: 10
-        periodSeconds: 10
-        failureThreshold: 3
-      
-      readinessProbe:
-        httpGet:
-          path: /ready
-          port: 8000
-        initialDelaySeconds: 5
-        periodSeconds: 5
-        failureThreshold: 3
-      
-      startupProbe:
-        httpGet:
-          path: /health
-          port: 8000
-        initialDelaySeconds: 0
-        periodSeconds: 5
-        failureThreshold: 30
-```
-
----
-
-## Metrics & Monitoring
-
-### Basic Metrics
-
-```python
-from fastMiddleware import MetricsMiddleware
-
-app.add_middleware(MetricsMiddleware)
-```
-
-### Custom Path Normalization
-
-```python
-from fastMiddleware import MetricsMiddleware, MetricsConfig
-
-config = MetricsConfig(
-    metrics_path="/prometheus",
-    path_patterns={
-        r"/users/\d+": "/users/{id}",
-        r"/orders/[a-f0-9-]+": "/orders/{uuid}",
-        r"/products/\w+": "/products/{slug}",
-    },
-)
-
-app.add_middleware(MetricsMiddleware, config=config)
-```
-
-### Prometheus Setup
-
-```yaml
-# prometheus.yml
-scrape_configs:
-  - job_name: 'my-api'
-    static_configs:
-      - targets: ['my-api:8000']
-    metrics_path: /metrics
-    scrape_interval: 15s
-```
-
-### Grafana Dashboard Query Examples
-
-```promql
-# Request rate
-rate(fastmvc_http_requests_total[5m])
-
-# Error rate
-rate(fastmvc_http_requests_total{status=~"5.."}[5m])
-  / rate(fastmvc_http_requests_total[5m])
-
-# Latency (95th percentile)
-histogram_quantile(0.95, 
-  rate(fastmvc_http_request_duration_seconds_bucket[5m])
-)
-
-# Current in-flight requests
-fastmvc_http_in_flight_requests
-
-# Uptime
-fastmvc_uptime_seconds
-```
-
----
-
-## Maintenance Mode
-
-### Basic Maintenance
-
-```python
-from fastMiddleware import MaintenanceMiddleware, MaintenanceConfig
-
-config = MaintenanceConfig(
-    enabled=False,  # Toggle to enable
-    message="We're upgrading our systems. Please try again in a few minutes.",
-    retry_after=1800,  # 30 minutes
-    allowed_paths={"/health", "/metrics"},
-)
-
-middleware = MaintenanceMiddleware(app, config=config)
-```
-
-### Dynamic Toggle
+Configuration for a microservice with distributed tracing.
 
 ```python
 from fastapi import FastAPI
-from fastMiddleware import MaintenanceMiddleware, MaintenanceConfig
-
-app = FastAPI()
-config = MaintenanceConfig(enabled=False)
-maintenance = MaintenanceMiddleware(app, config=config)
-
-# Admin endpoints to control maintenance
-@app.post("/admin/maintenance/enable")
-async def enable_maintenance(
-    message: str = "Service temporarily unavailable",
-    retry_after: int = 300,
-):
-    maintenance.enable(message=message, retry_after=retry_after)
-    return {"status": "enabled"}
-
-@app.post("/admin/maintenance/disable")
-async def disable_maintenance():
-    maintenance.disable()
-    return {"status": "disabled"}
-
-@app.get("/admin/maintenance/status")
-async def maintenance_status():
-    return {
-        "enabled": maintenance.is_enabled(),
-        "message": maintenance.config.message,
-        "retry_after": maintenance.config.retry_after,
-    }
-```
-
-### Admin Bypass
-
-```python
-config = MaintenanceConfig(
-    enabled=True,
-    message="Scheduled maintenance in progress",
-    bypass_token="super-secret-admin-token",
-    allowed_ips={"10.0.0.1", "192.168.1.1"},
-)
-
-# Admin can bypass with header:
-# curl -H "X-Maintenance-Bypass: super-secret-admin-token" https://api.example.com/
-```
-
-### Custom HTML Page
-
-```python
-MAINTENANCE_HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Maintenance</title>
-    <style>
-        body { font-family: system-ui; text-align: center; padding: 50px; }
-        h1 { color: #333; }
-        p { color: #666; }
-    </style>
-</head>
-<body>
-    <h1>🔧 Under Maintenance</h1>
-    <p>{message}</p>
-    <p>We'll be back in approximately {retry_minutes} minutes.</p>
-</body>
-</html>
-"""
-
-config = MaintenanceConfig(
-    enabled=True,
-    use_html=True,
-    html_template=MAINTENANCE_HTML,
-    message="Upgrading database",
-    retry_after=900,
-)
-```
-
----
-
-## Production Configuration
-
-### Full Production Setup
-
-```python
-import os
-import logging
-from fastapi import FastAPI
 from fastMiddleware import (
-    # Security
-    CORSMiddleware,
-    SecurityHeadersMiddleware,
-    TrustedHostMiddleware,
-    AuthenticationMiddleware,
-    JWTAuthBackend,
-    AuthConfig,
-    
-    # Observability
-    LoggingMiddleware,
-    TimingMiddleware,
-    RequestIDMiddleware,
-    RequestContextMiddleware,
-    MetricsMiddleware,
-    
-    # Resilience
-    RateLimitMiddleware,
-    RateLimitConfig,
-    ErrorHandlerMiddleware,
-    IdempotencyMiddleware,
-    
-    # Performance
-    CompressionMiddleware,
-    CacheMiddleware,
-    CacheConfig,
-    
-    # Operations
+    RequestIDPropagationMiddleware,
+    CorrelationMiddleware,
+    ServerTimingMiddleware,
+    CircuitBreakerMiddleware,
+    TimeoutMiddleware,
+    GracefulShutdownMiddleware,
     HealthCheckMiddleware,
-    HealthConfig,
-    MaintenanceMiddleware,
-    MaintenanceConfig,
-)
-
-# Configuration from environment
-DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "").split(",")
-JWT_SECRET = os.environ["JWT_SECRET"]
-APP_VERSION = os.environ.get("APP_VERSION", "0.0.0")
-
-app = FastAPI(
-    title="My API",
-    version=APP_VERSION,
-    debug=DEBUG,
-)
-
-# 1. Compression (outermost)
-app.add_middleware(CompressionMiddleware, minimum_size=1000)
-
-# 2. Timing
-app.add_middleware(TimingMiddleware)
-
-# 3. Logging
-app.add_middleware(
+    MetricsMiddleware,
     LoggingMiddleware,
-    exclude_paths={"/health", "/ready", "/live", "/metrics"},
+    get_correlation_id,
+    get_request_ids,
+    timing,
 )
+import httpx
 
-# 4. Error handling
+app = FastAPI(title="User Service")
+
+# Graceful shutdown
+shutdown_mw = GracefulShutdownMiddleware(app, timeout=30.0)
+
+# Middleware stack
+app.add_middleware(ServerTimingMiddleware)
+app.add_middleware(LoggingMiddleware)
 app.add_middleware(
-    ErrorHandlerMiddleware,
-    include_traceback=DEBUG,
-    log_exceptions=True,
+    TimeoutMiddleware,
+    timeout=10.0,
+    path_timeouts={"/api/slow": 60.0},
+)
+app.add_middleware(
+    CircuitBreakerMiddleware,
+    failure_threshold=5,
+    recovery_timeout=30,
+)
+app.add_middleware(RequestIDPropagationMiddleware)
+app.add_middleware(CorrelationMiddleware)
+app.add_middleware(
+    HealthCheckMiddleware,
+    version="2.1.0",
+)
+app.add_middleware(MetricsMiddleware, endpoint="/metrics")
+
+@app.get("/api/users/{user_id}")
+async def get_user(user_id: int):
+    correlation_id = get_correlation_id()
+    
+    with timing("database", "User lookup"):
+        user = await db.get_user(user_id)
+    
+    with timing("orders_service", "Fetch orders"):
+        async with httpx.AsyncClient() as client:
+            orders = await client.get(
+                f"http://orders-service/api/users/{user_id}/orders",
+                headers={"X-Correlation-ID": correlation_id},
+            )
+    
+    return {"user": user, "orders": orders.json()}
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await shutdown_mw.shutdown()
+```
+
+---
+
+## Multi-Tenant SaaS Application
+
+SaaS application with tenant isolation.
+
+```python
+from fastapi import FastAPI, Request
+from fastMiddleware import (
+    TenantMiddleware,
+    SessionMiddleware,
+    RateLimitMiddleware,
+    QuotaMiddleware,
+    AuditMiddleware,
+    FeatureFlagMiddleware,
+    get_tenant_id,
+    is_feature_enabled,
 )
 
-# 5. Metrics
-app.add_middleware(MetricsMiddleware)
+app = FastAPI(title="SaaS Platform")
 
-# 6. Security headers
+# Tenant-aware rate limiting
+app.add_middleware(
+    RateLimitMiddleware,
+    key_func=lambda req: f"{get_tenant_id()}:{req.client.host}",
+    requests_per_minute=100,
+)
+
+# Usage quotas per tenant
+app.add_middleware(
+    QuotaMiddleware,
+    quotas={
+        "free": {"requests_per_day": 1000},
+        "pro": {"requests_per_day": 100000},
+        "enterprise": {"requests_per_day": -1},  # Unlimited
+    },
+)
+
+# Audit logging for compliance
+app.add_middleware(
+    AuditMiddleware,
+    log_request_body=True,
+    sensitive_headers={"Authorization", "Cookie"},
+)
+
+# Feature flags per tenant
+app.add_middleware(
+    FeatureFlagMiddleware,
+    flags={
+        "new_dashboard": True,
+        "advanced_analytics": False,
+    },
+)
+
+# Session management
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="session-secret",
+)
+
+# Tenant identification (subdomain-based)
+app.add_middleware(
+    TenantMiddleware,
+    use_subdomain=True,
+)
+
+@app.get("/api/dashboard")
+async def dashboard(request: Request):
+    tenant_id = get_tenant_id()
+    
+    if is_feature_enabled("new_dashboard"):
+        return await new_dashboard(tenant_id)
+    return await old_dashboard(tenant_id)
+
+@app.get("/api/data")
+async def get_data():
+    tenant_id = get_tenant_id()
+    # All queries automatically scoped to tenant
+    return await db.query(
+        "SELECT * FROM data WHERE tenant_id = ?",
+        [tenant_id],
+    )
+```
+
+---
+
+## High-Traffic API
+
+Configuration for handling high traffic with protection.
+
+```python
+from fastapi import FastAPI
+from fastMiddleware import (
+    RateLimitMiddleware,
+    BulkheadMiddleware,
+    LoadSheddingMiddleware,
+    CircuitBreakerMiddleware,
+    ResponseCacheMiddleware,
+    RequestDedupMiddleware,
+    RequestCoalescingMiddleware,
+    CompressionMiddleware,
+    TimeoutMiddleware,
+)
+
+app = FastAPI(title="High-Traffic API")
+
+# Response caching
+cache_mw = ResponseCacheMiddleware(
+    app,
+    default_ttl=60,
+    max_size=10000,
+    path_ttls={
+        "/api/static": 3600,    # 1 hour
+        "/api/trending": 30,     # 30 seconds
+    },
+)
+
+# Compress large responses
+app.add_middleware(CompressionMiddleware, minimum_size=500)
+
+# Coalesce identical concurrent requests
+app.add_middleware(
+    RequestCoalescingMiddleware,
+    window=0.05,  # 50ms
+)
+
+# Deduplicate requests
+app.add_middleware(
+    RequestDedupMiddleware,
+    window=0.1,  # 100ms
+)
+
+# Request timeout
+app.add_middleware(
+    TimeoutMiddleware,
+    timeout=5.0,
+)
+
+# Circuit breaker for downstream services
+app.add_middleware(
+    CircuitBreakerMiddleware,
+    failure_threshold=10,
+    recovery_timeout=60,
+)
+
+# Load shedding under pressure
+app.add_middleware(
+    LoadSheddingMiddleware,
+    max_concurrent=5000,
+    shed_probability=0.5,
+)
+
+# Bulkhead for isolation
+app.add_middleware(
+    BulkheadMiddleware,
+    max_concurrent=1000,
+    max_waiting=500,
+)
+
+# Rate limiting
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=1000,
+    burst_size=100,
+)
+
+@app.get("/api/popular")
+async def get_popular():
+    # This response will be cached
+    return await fetch_popular_items()
+
+# Cache invalidation
+@app.post("/api/invalidate")
+async def invalidate():
+    cache_mw.invalidate("/api/popular")
+    return {"invalidated": True}
+```
+
+---
+
+## Secure Financial API
+
+Security-focused configuration for financial applications.
+
+```python
+from fastapi import FastAPI
+from fastMiddleware import (
+    SecurityHeadersMiddleware,
+    HTTPSRedirectMiddleware,
+    CSRFMiddleware,
+    IPFilterMiddleware,
+    ReplayPreventionMiddleware,
+    RequestSigningMiddleware,
+    IdempotencyMiddleware,
+    AuditMiddleware,
+    DataMaskingMiddleware,
+    RateLimitMiddleware,
+    MaskingRule,
+)
+
+app = FastAPI(title="Financial API")
+
+# Mask sensitive data in logs
+app.add_middleware(
+    DataMaskingMiddleware,
+    rules=[
+        MaskingRule(field="card_number", mask="****-****-****-{last4}"),
+        MaskingRule(field="ssn", mask="XXX-XX-{last4}"),
+        MaskingRule(field="password", mask="***"),
+        MaskingRule(field="pin", mask="****"),
+    ],
+)
+
+# Comprehensive audit logging
+app.add_middleware(
+    AuditMiddleware,
+    log_request_body=True,
+    log_response_body=True,
+)
+
+# Idempotency for payment requests
+app.add_middleware(
+    IdempotencyMiddleware,
+    header_name="Idempotency-Key",
+    ttl=86400,  # 24 hours
+)
+
+# Rate limiting
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=60,
+)
+
+# Replay attack prevention
+app.add_middleware(
+    ReplayPreventionMiddleware,
+    max_age=300,  # 5 minutes
+)
+
+# Request signature validation
+app.add_middleware(
+    RequestSigningMiddleware,
+    secret_key="hmac-secret-key",
+    algorithm="sha256",
+    exclude_paths={"/health"},
+)
+
+# CSRF protection
+app.add_middleware(
+    CSRFMiddleware,
+    secret_key="csrf-secret",
+    exclude_paths={"/api/webhooks"},
+)
+
+# IP whitelist for admin
+app.add_middleware(
+    IPFilterMiddleware,
+    whitelist={"10.0.0.0/8"},  # Internal network only
+    exclude_paths={"/api/public"},
+)
+
+# Force HTTPS
+app.add_middleware(HTTPSRedirectMiddleware)
+
+# Security headers
 app.add_middleware(
     SecurityHeadersMiddleware,
-    enable_hsts=not DEBUG,
-    content_security_policy="default-src 'self'" if not DEBUG else None,
+    enable_hsts=True,
+    hsts_preload=True,
+    content_security_policy="default-src 'none'; frame-ancestors 'none'",
 )
 
-# 7. Cache
-cache_config = CacheConfig(
-    default_max_age=60,
-    enable_etag=True,
-    path_rules={
-        "/api/public": {"max_age": 300, "public": True},
-        "/api/user": {"no_store": True},
-    },
-)
-app.add_middleware(CacheMiddleware, config=cache_config)
+@app.post("/api/transfer")
+async def transfer(request: Request):
+    # Idempotency key ensures no duplicate transfers
+    # Signature validates request integrity
+    # Audit log captures everything
+    return await process_transfer(request)
+```
 
-# 8. Rate limiting
-rate_config = RateLimitConfig(
-    requests_per_minute=100 if not DEBUG else 1000,
-    requests_per_hour=5000,
-)
-app.add_middleware(RateLimitMiddleware, config=rate_config)
+---
 
-# 9. Idempotency
-app.add_middleware(IdempotencyMiddleware)
+## API Gateway
 
-# 10. Authentication
-jwt_backend = JWTAuthBackend(secret=JWT_SECRET)
-auth_config = AuthConfig(
-    exclude_paths={
-        "/", "/health", "/ready", "/live", "/metrics",
-        "/docs", "/openapi.json", "/login", "/register",
-    },
-)
-app.add_middleware(
+API gateway configuration with routing and proxying.
+
+```python
+from fastapi import FastAPI
+from fastMiddleware import (
+    ProxyMiddleware,
+    ProxyRoute,
+    RateLimitMiddleware,
     AuthenticationMiddleware,
-    backend=jwt_backend,
-    config=auth_config,
+    APIKeyAuthBackend,
+    VersioningMiddleware,
+    VersionLocation,
+    PathRewriteMiddleware,
+    RewriteRule,
+    RedirectMiddleware,
+    RedirectRule,
+    CORSMiddleware,
+    RequestIDMiddleware,
+    LoggingMiddleware,
 )
 
-# 11. Request ID
+app = FastAPI(title="API Gateway")
+
+# Logging
+app.add_middleware(LoggingMiddleware)
+
+# Request ID propagation
 app.add_middleware(RequestIDMiddleware)
 
-# 12. Request context
-app.add_middleware(RequestContextMiddleware)
-
-# 13. Health checks
-health_config = HealthConfig(
-    version=APP_VERSION,
-    service_name="my-api",
+# API versioning
+app.add_middleware(
+    VersioningMiddleware,
+    location=VersionLocation.HEADER,
+    default_version="1.0",
 )
-app.add_middleware(HealthCheckMiddleware, config=health_config)
 
-# 14. Maintenance mode
-maintenance_config = MaintenanceConfig(
-    enabled=False,
-    allowed_paths={"/health", "/ready", "/live", "/metrics"},
+# Rate limiting
+app.add_middleware(
+    RateLimitMiddleware,
+    key_func=lambda req: req.headers.get("X-API-Key", req.client.host),
+    requests_per_minute=1000,
 )
-app.add_middleware(MaintenanceMiddleware, config=maintenance_config)
 
-# 15. Trusted hosts
-if ALLOWED_HOSTS and ALLOWED_HOSTS[0]:
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+# API key authentication
+app.add_middleware(
+    AuthenticationMiddleware,
+    backend=APIKeyAuthBackend(
+        api_keys={
+            "key-123": {"client": "mobile-app", "tier": "premium"},
+            "key-456": {"client": "web-app", "tier": "free"},
+        },
+    ),
+    exclude_paths={"/health", "/docs"},
+)
 
-# 16. CORS (last added = first executed)
-if ALLOWED_ORIGINS and ALLOWED_ORIGINS[0]:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=ALLOWED_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Redirects
+app.add_middleware(
+    RedirectMiddleware,
+    rules=[
+        RedirectRule("/old-api/*", "/api/v1/{path}", permanent=True),
+    ],
+)
+
+# Path rewriting
+app.add_middleware(
+    PathRewriteMiddleware,
+    rules=[
+        RewriteRule("/api/users", "/user-service/api/users"),
+        RewriteRule("/api/orders", "/order-service/api/orders"),
+    ],
+)
+
+# Proxy to backend services
+app.add_middleware(
+    ProxyMiddleware,
+    routes=[
+        ProxyRoute(
+            path_prefix="/user-service",
+            target="http://user-service:8000",
+            strip_prefix=True,
+        ),
+        ProxyRoute(
+            path_prefix="/order-service",
+            target="http://order-service:8000",
+            strip_prefix=True,
+        ),
+        ProxyRoute(
+            path_prefix="/payment-service",
+            target="http://payment-service:8000",
+            strip_prefix=True,
+            add_headers={"X-Gateway": "true"},
+        ),
+    ],
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+---
+
+## A/B Testing Platform
+
+A/B testing and feature flag configuration.
+
+```python
+from fastapi import FastAPI
+from fastMiddleware import (
+    ABTestMiddleware,
+    Experiment,
+    FeatureFlagMiddleware,
+    UserAgentMiddleware,
+    RequestSamplerMiddleware,
+    get_variant,
+    is_feature_enabled,
+    get_user_agent,
+    is_sampled,
+)
+
+app = FastAPI(title="A/B Testing Platform")
+
+# Request sampling for analytics
+app.add_middleware(
+    RequestSamplerMiddleware,
+    rate=0.1,  # 10% sampling
+)
+
+# User agent detection
+app.add_middleware(UserAgentMiddleware)
+
+# Feature flags
+app.add_middleware(
+    FeatureFlagMiddleware,
+    flags={
+        "new_checkout": True,
+        "dark_mode": False,
+        "beta_features": False,
+    },
+)
+
+# A/B experiments
+app.add_middleware(
+    ABTestMiddleware,
+    experiments=[
+        Experiment(
+            name="checkout_flow",
+            variants=["control", "simplified", "express"],
+            weights=[0.34, 0.33, 0.33],
+        ),
+        Experiment(
+            name="pricing_display",
+            variants=["monthly", "yearly", "both"],
+            weights=[0.4, 0.4, 0.2],
+        ),
+        Experiment(
+            name="cta_button",
+            variants=["blue", "green", "orange"],
+            weights=[0.33, 0.33, 0.34],
+        ),
+    ],
+)
+
+@app.get("/checkout")
+async def checkout():
+    variant = get_variant("checkout_flow")
+    ua = get_user_agent()
+    
+    # Mobile gets simplified by default
+    if ua["is_mobile"] and variant == "control":
+        variant = "simplified"
+    
+    if variant == "simplified":
+        return simplified_checkout()
+    elif variant == "express":
+        return express_checkout()
+    return standard_checkout()
+
+@app.get("/pricing")
+async def pricing():
+    if is_feature_enabled("new_checkout"):
+        pricing_variant = get_variant("pricing_display")
+        return render_pricing(pricing_variant)
+    return legacy_pricing()
+
+@app.post("/track")
+async def track_event(event: dict):
+    if is_sampled():
+        # Full tracking for sampled requests
+        await analytics.track_full(event, get_variant("checkout_flow"))
+    else:
+        # Minimal tracking
+        await analytics.track_minimal(event)
+    return {"tracked": True}
+```
+
+---
+
+## Monitoring Stack
+
+Complete monitoring and observability setup.
+
+```python
+from fastapi import FastAPI
+from fastMiddleware import (
+    MetricsMiddleware,
+    LoggingMiddleware,
+    RequestLoggerMiddleware,
+    ServerTimingMiddleware,
+    ResponseTimeMiddleware,
+    ResponseTimeSLA,
+    ProfilingMiddleware,
+    HealthCheckMiddleware,
+    RequestIDMiddleware,
+    CorrelationMiddleware,
+    CostTrackingMiddleware,
+    timing,
+    add_cost,
+)
+
+app = FastAPI(title="Monitored API")
+
+# Health endpoints
+app.add_middleware(
+    HealthCheckMiddleware,
+    health_path="/health",
+    ready_path="/ready",
+    live_path="/live",
+    version="3.0.0",
+)
+
+# Prometheus metrics
+app.add_middleware(
+    MetricsMiddleware,
+    endpoint="/metrics",
+    include_path_labels=True,
+)
+
+# Server-Timing for browser devtools
+app.add_middleware(ServerTimingMiddleware)
+
+# Response time SLA monitoring
+app.add_middleware(
+    ResponseTimeMiddleware,
+    slas=[
+        ResponseTimeSLA("/api/health", target_ms=10, warning_ms=50, critical_ms=100),
+        ResponseTimeSLA("/api/users", target_ms=100, warning_ms=500, critical_ms=1000),
+        ResponseTimeSLA("/api/search", target_ms=200, warning_ms=1000, critical_ms=2000),
+    ],
+)
+
+# Cost tracking
+app.add_middleware(
+    CostTrackingMiddleware,
+    path_costs={
+        "/api/ai": 10.0,
+        "/api/search": 2.0,
+    },
+    default_cost=1.0,
+)
+
+# Profiling (enable selectively)
+app.add_middleware(
+    ProfilingMiddleware,
+    enabled=True,
+    threshold_ms=100,  # Only profile slow requests
+)
+
+# Structured logging
+app.add_middleware(
+    RequestLoggerMiddleware,
+    format="json",
+)
+
+# Correlation and request IDs
+app.add_middleware(CorrelationMiddleware)
+app.add_middleware(RequestIDMiddleware)
+
+@app.get("/api/complex")
+async def complex_operation():
+    with timing("database", "Primary query"):
+        data = await db.query(...)
+        add_cost(0.5)
+    
+    with timing("cache", "Cache lookup"):
+        cached = await cache.get(...)
+    
+    with timing("external_api", "Third-party call"):
+        external = await call_external_api(...)
+        add_cost(5.0)  # External API cost
+    
+    with timing("processing", "Data processing"):
+        result = process(data, cached, external)
+    
+    return result
 ```
 
 ---
 
 ## Custom Middleware
 
-### Tenant Isolation
+Creating your own middleware.
 
 ```python
 from fastMiddleware import FastMVCMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
+from typing import Callable, Awaitable
 
-class TenantMiddleware(FastMVCMiddleware):
-    """Multi-tenant isolation middleware."""
+class CustomMiddleware(FastMVCMiddleware):
+    """Custom middleware example."""
     
-    async def dispatch(self, request: Request, call_next) -> Response:
+    def __init__(
+        self,
+        app,
+        custom_option: str = "default",
+        exclude_paths=None,
+    ):
+        super().__init__(app, exclude_paths=exclude_paths)
+        self.custom_option = custom_option
+    
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
+        # Skip if path excluded
         if self.should_skip(request):
             return await call_next(request)
         
-        # Extract tenant from subdomain or header
-        host = request.headers.get("Host", "")
-        tenant_id = host.split(".")[0] if "." in host else None
+        # Pre-processing
+        request.state.custom_data = self.custom_option
         
-        # Or from header
-        if not tenant_id:
-            tenant_id = request.headers.get("X-Tenant-ID")
-        
-        if not tenant_id:
-            return Response("Tenant not found", status_code=400)
-        
-        # Set tenant in state
-        request.state.tenant_id = tenant_id
-        
+        # Call next middleware/route
         response = await call_next(request)
-        response.headers["X-Tenant-ID"] = tenant_id
+        
+        # Post-processing
+        response.headers["X-Custom-Header"] = self.custom_option
         
         return response
 
-app.add_middleware(TenantMiddleware)
+# Use your custom middleware
+app.add_middleware(
+    CustomMiddleware,
+    custom_option="my-value",
+    exclude_paths={"/health"},
+)
 ```
-
-### Request Validation
-
-```python
-class RequestValidationMiddleware(FastMVCMiddleware):
-    """Validate incoming requests."""
-    
-    def __init__(self, app, max_body_size: int = 10_000_000):
-        super().__init__(app)
-        self.max_body_size = max_body_size
-    
-    async def dispatch(self, request: Request, call_next) -> Response:
-        if self.should_skip(request):
-            return await call_next(request)
-        
-        # Check content length
-        content_length = request.headers.get("Content-Length")
-        if content_length:
-            if int(content_length) > self.max_body_size:
-                return Response(
-                    "Request too large",
-                    status_code=413,
-                )
-        
-        # Validate content type for POST/PUT
-        if request.method in ("POST", "PUT", "PATCH"):
-            content_type = request.headers.get("Content-Type", "")
-            if not content_type.startswith(("application/json", "multipart/form-data")):
-                return Response(
-                    "Unsupported content type",
-                    status_code=415,
-                )
-        
-        return await call_next(request)
-```
-
-### IP Blocking
-
-```python
-class IPBlockMiddleware(FastMVCMiddleware):
-    """Block requests from specific IPs."""
-    
-    def __init__(self, app, blocked_ips: set[str] = None):
-        super().__init__(app)
-        self.blocked_ips = blocked_ips or set()
-    
-    def add_ip(self, ip: str):
-        self.blocked_ips.add(ip)
-    
-    def remove_ip(self, ip: str):
-        self.blocked_ips.discard(ip)
-    
-    async def dispatch(self, request: Request, call_next) -> Response:
-        client_ip = self.get_client_ip(request)
-        
-        if client_ip in self.blocked_ips:
-            return Response(
-                "Access denied",
-                status_code=403,
-            )
-        
-        return await call_next(request)
-
-# Usage
-ip_blocker = IPBlockMiddleware(app)
-
-@app.post("/admin/block-ip")
-async def block_ip(ip: str):
-    ip_blocker.add_ip(ip)
-    return {"blocked": ip}
-```
-
-### Request Tracing (OpenTelemetry Style)
-
-```python
-import uuid
-from contextvars import ContextVar
-
-trace_id_var: ContextVar[str] = ContextVar("trace_id")
-span_id_var: ContextVar[str] = ContextVar("span_id")
-
-class TracingMiddleware(FastMVCMiddleware):
-    """Distributed tracing middleware."""
-    
-    async def dispatch(self, request: Request, call_next) -> Response:
-        # Extract or generate trace ID
-        trace_id = request.headers.get("X-Trace-ID", str(uuid.uuid4()))
-        parent_span_id = request.headers.get("X-Span-ID")
-        span_id = str(uuid.uuid4())[:16]
-        
-        # Set context
-        trace_id_var.set(trace_id)
-        span_id_var.set(span_id)
-        
-        # Store in request state
-        request.state.trace_id = trace_id
-        request.state.span_id = span_id
-        request.state.parent_span_id = parent_span_id
-        
-        response = await call_next(request)
-        
-        # Add to response headers
-        response.headers["X-Trace-ID"] = trace_id
-        response.headers["X-Span-ID"] = span_id
-        
-        return response
-
-def get_trace_id() -> str | None:
-    return trace_id_var.get(None)
-
-def get_span_id() -> str | None:
-    return span_id_var.get(None)
-```
-

@@ -1,583 +1,370 @@
-# FastMVC Middleware API Reference
+# API Reference
 
-This document provides detailed API documentation for all middleware components.
+Complete API reference for FastMVC Middleware v0.5.0.
 
-## Table of Contents
+## Installation
 
-- [Base Class](#base-class)
-- [Security Middlewares](#security-middlewares)
-- [Observability Middlewares](#observability-middlewares)
-- [Resilience Middlewares](#resilience-middlewares)
-- [Performance Middlewares](#performance-middlewares)
-- [Operations Middlewares](#operations-middlewares)
-- [Helper Functions](#helper-functions)
-
----
-
-## Base Class
-
-### `FastMVCMiddleware`
-
-Base class for all FastMVC middlewares.
-
-```python
-from fastMiddleware import FastMVCMiddleware
-
-class FastMVCMiddleware(BaseHTTPMiddleware):
-    """Base middleware class with common functionality."""
-    
-    def __init__(
-        self,
-        app,
-        exclude_paths: Set[str] | None = None,
-        exclude_methods: Set[str] | None = None,
-    ) -> None:
-        """Initialize the middleware.
-        
-        Args:
-            app: The ASGI application to wrap.
-            exclude_paths: Set of paths to skip middleware processing.
-            exclude_methods: Set of HTTP methods to skip.
-        """
+```bash
+pip install fastmvc-middleware           # Core
+pip install fastmvc-middleware[jwt]      # With JWT support
+pip install fastmvc-middleware[proxy]    # With proxy support
+pip install fastmvc-middleware[all]      # All dependencies
 ```
 
-**Methods:**
-
-| Method | Description |
-|--------|-------------|
-| `dispatch(request, call_next)` | Abstract method to process requests |
-| `should_skip(request)` | Check if request should skip processing |
-| `get_client_ip(request)` | Get client IP, respecting X-Forwarded-For |
-
-**Example - Creating Custom Middleware:**
-
-```python
-class MyMiddleware(FastMVCMiddleware):
-    async def dispatch(self, request, call_next):
-        if self.should_skip(request):
-            return await call_next(request)
-        
-        # Your logic here
-        response = await call_next(request)
-        return response
-```
-
----
-
-## Security Middlewares
-
-### `SecurityHeadersMiddleware`
-
-Adds security headers to all responses.
-
-```python
-from fastMiddleware import SecurityHeadersMiddleware, SecurityHeadersConfig
-```
-
-**Class: `SecurityHeadersConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `enable_hsts` | `bool` | `False` | Enable HSTS header |
-| `hsts_max_age` | `int` | `31536000` | HSTS max-age in seconds |
-| `hsts_preload` | `bool` | `False` | Add preload directive |
-| `hsts_include_subdomains` | `bool` | `True` | Include subdomains |
-| `content_security_policy` | `str \| None` | `None` | CSP header value |
-| `x_frame_options` | `str` | `"DENY"` | X-Frame-Options value |
-| `x_content_type_options` | `str` | `"nosniff"` | X-Content-Type-Options |
-| `referrer_policy` | `str` | `"strict-origin-when-cross-origin"` | Referrer-Policy |
-| `permissions_policy` | `str \| None` | `None` | Permissions-Policy |
-| `cross_origin_opener_policy` | `str` | `"same-origin"` | COOP value |
-| `cross_origin_resource_policy` | `str` | `"same-origin"` | CORP value |
-
-**Class: `SecurityHeadersMiddleware`**
-
-```python
-SecurityHeadersMiddleware(
-    app,
-    config: SecurityHeadersConfig | None = None,
-    enable_hsts: bool | None = None,
-    content_security_policy: str | None = None,
-    x_frame_options: str | None = None,
-    exclude_paths: Set[str] | None = None,
-    exclude_methods: Set[str] | None = None,
-)
-```
-
----
-
-### `TrustedHostMiddleware`
-
-Validates the Host header against allowed hosts.
-
-```python
-from fastMiddleware import TrustedHostMiddleware, TrustedHostConfig
-```
-
-**Class: `TrustedHostConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `allowed_hosts` | `Sequence[str]` | `["*"]` | Allowed host patterns |
-| `www_redirect` | `bool` | `False` | Redirect www to non-www |
-| `redirect_to_primary` | `bool` | `False` | Redirect to primary host |
-| `primary_host` | `str \| None` | `None` | Primary host for redirects |
-
-**Host Patterns:**
-- `"example.com"` - Exact match
-- `"*.example.com"` - Wildcard subdomain
-- `"*"` - Allow any host (development only)
-
----
-
-### `CORSMiddleware`
-
-Cross-Origin Resource Sharing support.
-
-```python
-from fastMiddleware import CORSMiddleware
-```
-
-**Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `allow_origins` | `list[str]` | `[]` | Allowed origins |
-| `allow_methods` | `list[str]` | `["GET", "POST", ...]` | Allowed HTTP methods |
-| `allow_headers` | `list[str]` | `["*"]` | Allowed headers |
-| `allow_credentials` | `bool` | `True` | Allow cookies/auth |
-| `expose_headers` | `list[str]` | `[]` | Headers to expose |
-| `max_age` | `int` | `600` | Preflight cache time |
-
----
-
-### `AuthenticationMiddleware`
-
-Pluggable authentication middleware.
+## Quick Import
 
 ```python
 from fastMiddleware import (
-    AuthenticationMiddleware,
-    AuthConfig,
-    JWTAuthBackend,
-    APIKeyAuthBackend,
-)
-```
-
-**Class: `AuthConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `exclude_paths` | `Set[str]` | Health/docs paths | Paths without auth |
-| `exclude_methods` | `Set[str]` | `{"OPTIONS"}` | Methods without auth |
-| `header_name` | `str` | `"Authorization"` | Auth header name |
-| `header_scheme` | `str` | `"Bearer"` | Auth scheme |
-| `error_message` | `str` | `"Authentication required"` | Error message |
-| `error_status_code` | `int` | `401` | Error status code |
-
-**Class: `JWTAuthBackend`**
-
-```python
-JWTAuthBackend(
-    secret: str,
-    algorithm: str = "HS256",
-    verify_exp: bool = True,
-    audience: str | None = None,
-    issuer: str | None = None,
-)
-```
-
-| Method | Description |
-|--------|-------------|
-| `authenticate(token)` | Returns decoded payload or None |
-
-**Class: `APIKeyAuthBackend`**
-
-```python
-APIKeyAuthBackend(
-    valid_keys: Set[str] | None = None,
-    validator: Callable[[str], Awaitable[dict | None]] | None = None,
-    header_name: str = "X-API-Key",
-)
-```
-
----
-
-## Observability Middlewares
-
-### `LoggingMiddleware`
-
-Request/response logging.
-
-```python
-from fastMiddleware import LoggingMiddleware
-```
-
-**Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `log_level` | `int` | `logging.INFO` | Log level |
-| `log_request_body` | `bool` | `False` | Log request bodies |
-| `log_response_body` | `bool` | `False` | Log response bodies |
-| `log_request_headers` | `bool` | `False` | Log request headers |
-| `log_response_headers` | `bool` | `False` | Log response headers |
-| `custom_logger` | `Logger \| None` | `None` | Custom logger instance |
-| `exclude_paths` | `Set[str]` | Health/metrics | Paths to skip |
-
----
-
-### `TimingMiddleware`
-
-Adds processing time header.
-
-```python
-from fastMiddleware import TimingMiddleware
-```
-
-**Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `header_name` | `str` | `"X-Process-Time"` | Response header name |
-| `include_unit` | `bool` | `True` | Include "ms" suffix |
-| `precision` | `int` | `2` | Decimal precision |
-
----
-
-### `RequestIDMiddleware`
-
-Generates/propagates request IDs.
-
-```python
-from fastMiddleware import RequestIDMiddleware
-```
-
-**Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `header_name` | `str` | `"X-Request-ID"` | Header name |
-| `generator` | `Callable` | UUID4 | ID generator |
-| `trust_incoming` | `bool` | `True` | Trust incoming IDs |
-
-**Request State:**
-- `request.state.request_id` - The request ID
-
----
-
-### `RequestContextMiddleware`
-
-Async-safe request context.
-
-```python
-from fastMiddleware import (
-    RequestContextMiddleware,
-    get_request_id,
-    get_request_context,
-)
-```
-
-**Helper Functions:**
-
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `get_request_id()` | `str \| None` | Current request ID |
-| `get_request_context()` | `dict` | Full context dict |
-
-**Context Keys:**
-- `request_id` - Request identifier
-- `start_time` - Request start (datetime)
-- `client_ip` - Client IP address
-- `method` - HTTP method
-- `path` - Request path
-
----
-
-### `MetricsMiddleware`
-
-Prometheus metrics collection.
-
-```python
-from fastMiddleware import MetricsMiddleware, MetricsConfig, MetricsCollector
-```
-
-**Class: `MetricsConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `metrics_path` | `str` | `"/metrics"` | Metrics endpoint path |
-| `histogram_buckets` | `tuple` | `(0.01, ...)` | Latency buckets |
-| `enable_latency_histogram` | `bool` | `True` | Track latency |
-| `enable_request_count` | `bool` | `True` | Count requests |
-| `enable_response_size` | `bool` | `True` | Track response size |
-| `path_patterns` | `dict` | `{}` | Path normalization |
-
-**Class: `MetricsCollector`**
-
-| Method | Description |
-|--------|-------------|
-| `record_request(method, path, status, latency, size)` | Record a request |
-| `get_metrics()` | Get Prometheus format |
-| `get_json_metrics()` | Get JSON format |
-
----
-
-## Resilience Middlewares
-
-### `RateLimitMiddleware`
-
-Rate limiting with sliding window.
-
-```python
-from fastMiddleware import (
+    # Most commonly used
+    CORSMiddleware,
+    SecurityHeadersMiddleware,
     RateLimitMiddleware,
-    RateLimitConfig,
-    RateLimitStore,
-    InMemoryRateLimitStore,
-)
-```
-
-**Class: `RateLimitConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `requests_per_minute` | `int` | `60` | Requests per minute |
-| `requests_per_hour` | `int \| None` | `None` | Requests per hour |
-| `burst_limit` | `int \| None` | `None` | Burst limit |
-| `key_func` | `Callable` | IP-based | Key extraction |
-| `error_message` | `str` | `"Rate limit exceeded"` | Error message |
-
-**Abstract Class: `RateLimitStore`**
-
-| Method | Description |
-|--------|-------------|
-| `check_rate_limit(key, limit, window)` | Check if rate limited |
-| `record_request(key)` | Record a request |
-| `get_remaining(key, limit, window)` | Get remaining requests |
-
----
-
-### `ErrorHandlerMiddleware`
-
-Centralized error handling.
-
-```python
-from fastMiddleware import ErrorHandlerMiddleware, ErrorConfig
-```
-
-**Class: `ErrorConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `include_traceback` | `bool` | `False` | Include stack trace |
-| `include_exception_type` | `bool` | `False` | Include exception class |
-| `log_exceptions` | `bool` | `True` | Log exceptions |
-| `default_message` | `str` | `"An internal error occurred"` | Default message |
-| `status_code` | `int` | `500` | Default status code |
-| `error_handlers` | `dict` | `{}` | Custom exception handlers |
-
-**Custom Handlers:**
-
-```python
-config = ErrorConfig()
-config.error_handlers[ValueError] = (400, "Invalid value")
-config.error_handlers[PermissionError] = (403, "Forbidden")
-```
-
----
-
-### `IdempotencyMiddleware`
-
-Idempotency key support.
-
-```python
-from fastMiddleware import (
-    IdempotencyMiddleware,
-    IdempotencyConfig,
-    IdempotencyStore,
-    InMemoryIdempotencyStore,
-)
-```
-
-**Class: `IdempotencyConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `header_name` | `str` | `"Idempotency-Key"` | Header name |
-| `ttl_seconds` | `int` | `86400` | Cache TTL |
-| `require_key` | `bool` | `False` | Require key |
-| `required_methods` | `Set[str]` | POST/PUT/PATCH | Methods to apply |
-
-**Response Headers:**
-- `X-Idempotent-Replayed: true` - When returning cached response
-
----
-
-## Performance Middlewares
-
-### `CompressionMiddleware`
-
-GZip response compression.
-
-```python
-from fastMiddleware import CompressionMiddleware, CompressionConfig
-```
-
-**Class: `CompressionConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `minimum_size` | `int` | `500` | Minimum bytes |
-| `compression_level` | `int` | `6` | GZip level (1-9) |
-| `compressible_types` | `tuple` | JSON/HTML/etc | MIME types |
-
----
-
-### `CacheMiddleware`
-
-HTTP caching with ETags.
-
-```python
-from fastMiddleware import CacheMiddleware, CacheConfig, InMemoryCacheStore
-```
-
-**Class: `CacheConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `default_max_age` | `int` | `0` | Default cache time |
-| `enable_etag` | `bool` | `True` | Generate ETags |
-| `private` | `bool` | `False` | Private cache |
-| `no_store` | `bool` | `False` | No caching |
-| `vary_headers` | `tuple` | Accept headers | Vary headers |
-| `path_rules` | `dict` | `{}` | Path-specific rules |
-| `cacheable_methods` | `Set[str]` | GET/HEAD | Cacheable methods |
-| `cacheable_status_codes` | `Set[int]` | 200/301/etc | Cacheable codes |
-
-**Path Rules:**
-
-```python
-config = CacheConfig(
-    path_rules={
-        "/static": {"max_age": 86400, "public": True},
-        "/api": {"no_store": True},
-    }
+    AuthenticationMiddleware,
+    LoggingMiddleware,
+    HealthCheckMiddleware,
+    CompressionMiddleware,
 )
 ```
 
 ---
 
-## Operations Middlewares
+## All Exports
 
-### `HealthCheckMiddleware`
+### Base Class
 
-Health check endpoints.
+| Export | Type | Description |
+|--------|------|-------------|
+| `FastMVCMiddleware` | Class | Base class for custom middleware |
 
-```python
-from fastMiddleware import HealthCheckMiddleware, HealthConfig
-```
+### Security (14)
 
-**Class: `HealthConfig`**
+| Export | Type | Description |
+|--------|------|-------------|
+| `SecurityHeadersMiddleware` | Middleware | Security headers |
+| `SecurityHeadersConfig` | Dataclass | Config for SecurityHeadersMiddleware |
+| `CORSMiddleware` | Middleware | Cross-origin resource sharing |
+| `CSRFMiddleware` | Middleware | CSRF protection |
+| `CSRFConfig` | Dataclass | Config for CSRFMiddleware |
+| `HTTPSRedirectMiddleware` | Middleware | HTTP to HTTPS redirect |
+| `HTTPSRedirectConfig` | Dataclass | Config for HTTPSRedirectMiddleware |
+| `IPFilterMiddleware` | Middleware | IP whitelist/blacklist |
+| `IPFilterConfig` | Dataclass | Config for IPFilterMiddleware |
+| `TrustedHostMiddleware` | Middleware | Host header validation |
+| `OriginMiddleware` | Middleware | Origin header validation |
+| `OriginConfig` | Dataclass | Config for OriginMiddleware |
+| `WebhookMiddleware` | Middleware | Webhook signature validation |
+| `WebhookConfig` | Dataclass | Config for WebhookMiddleware |
+| `ReferrerPolicyMiddleware` | Middleware | Referrer-Policy header |
+| `ReferrerPolicyConfig` | Dataclass | Config for ReferrerPolicyMiddleware |
+| `PermissionsPolicyMiddleware` | Middleware | Permissions-Policy header |
+| `PermissionsPolicyConfig` | Dataclass | Config for PermissionsPolicyMiddleware |
+| `CSPReportMiddleware` | Middleware | CSP violation reports |
+| `CSPReportConfig` | Dataclass | Config for CSPReportMiddleware |
+| `HoneypotMiddleware` | Middleware | Honeypot traps |
+| `HoneypotConfig` | Dataclass | Config for HoneypotMiddleware |
+| `SanitizationMiddleware` | Middleware | Input sanitization |
+| `SanitizationConfig` | Dataclass | Config for SanitizationMiddleware |
+| `ReplayPreventionMiddleware` | Middleware | Replay attack prevention |
+| `ReplayPreventionConfig` | Dataclass | Config for ReplayPreventionMiddleware |
+| `RequestSigningMiddleware` | Middleware | HMAC request signing |
+| `RequestSigningConfig` | Dataclass | Config for RequestSigningMiddleware |
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `health_path` | `str` | `"/health"` | Health endpoint |
-| `ready_path` | `str` | `"/ready"` | Readiness endpoint |
-| `live_path` | `str` | `"/live"` | Liveness endpoint |
-| `version` | `str \| None` | `None` | Service version |
-| `service_name` | `str \| None` | `None` | Service name |
-| `include_details` | `bool` | `True` | Include details |
-| `custom_checks` | `dict` | `{}` | Custom health checks |
+### Authentication (10)
 
-**Custom Checks:**
+| Export | Type | Description |
+|--------|------|-------------|
+| `AuthenticationMiddleware` | Middleware | Pluggable auth |
+| `AuthConfig` | Dataclass | Config for AuthenticationMiddleware |
+| `AuthBackend` | ABC | Auth backend interface |
+| `JWTAuthBackend` | Class | JWT auth backend |
+| `APIKeyAuthBackend` | Class | API key auth backend |
+| `BasicAuthMiddleware` | Middleware | HTTP Basic auth |
+| `BasicAuthConfig` | Dataclass | Config for BasicAuthMiddleware |
+| `BearerAuthMiddleware` | Middleware | Bearer token auth |
+| `BearerAuthConfig` | Dataclass | Config for BearerAuthMiddleware |
+| `ScopeMiddleware` | Middleware | OAuth scope validation |
+| `ScopeConfig` | Dataclass | Config for ScopeMiddleware |
+| `RouteAuthMiddleware` | Middleware | Per-route auth |
+| `RouteAuthConfig` | Dataclass | Config for RouteAuthMiddleware |
+| `RouteAuth` | Dataclass | Route auth requirement |
 
-```python
-async def check_database():
-    return await db.is_connected()
+### Session & Context (20+)
 
-config = HealthConfig(
-    custom_checks={"database": check_database}
-)
-```
+| Export | Type | Description |
+|--------|------|-------------|
+| `SessionMiddleware` | Middleware | Server-side sessions |
+| `SessionConfig` | Dataclass | Config |
+| `SessionStore` | ABC | Session store interface |
+| `InMemorySessionStore` | Class | In-memory session store |
+| `Session` | Class | Session object |
+| `RequestContextMiddleware` | Middleware | Async context |
+| `get_request_id` | Function | Get current request ID |
+| `get_request_context` | Function | Get request context |
+| `CorrelationMiddleware` | Middleware | Correlation IDs |
+| `CorrelationConfig` | Dataclass | Config |
+| `get_correlation_id` | Function | Get correlation ID |
+| `TenantMiddleware` | Middleware | Multi-tenancy |
+| `TenantConfig` | Dataclass | Config |
+| `get_tenant` | Function | Get tenant object |
+| `get_tenant_id` | Function | Get tenant ID |
+| `ContextMiddleware` | Middleware | Shared context |
+| `ContextConfig` | Dataclass | Config |
+| `get_context` | Function | Get full context |
+| `get_context_value` | Function | Get context value |
+| `set_context_value` | Function | Set context value |
+| `RequestIDPropagationMiddleware` | Middleware | ID propagation |
+| `RequestIDPropagationConfig` | Dataclass | Config |
+| `get_request_ids` | Function | Get ID chain |
+| `get_trace_header` | Function | Get trace header value |
 
-**Endpoints:**
+### Rate Limiting & Protection (10)
 
-| Endpoint | Success | Failure | Description |
-|----------|---------|---------|-------------|
-| `/health` | 200 | 503 | Full health status |
-| `/ready` | 200 | 503 | Readiness status |
-| `/live` | 200 | - | Always returns 200 |
+| Export | Type | Description |
+|--------|------|-------------|
+| `RateLimitMiddleware` | Middleware | Rate limiting |
+| `RateLimitConfig` | Dataclass | Config |
+| `RateLimitStore` | ABC | Store interface |
+| `InMemoryRateLimitStore` | Class | In-memory store |
+| `QuotaMiddleware` | Middleware | Usage quotas |
+| `QuotaConfig` | Dataclass | Config |
+| `LoadSheddingMiddleware` | Middleware | Load shedding |
+| `LoadSheddingConfig` | Dataclass | Config |
+| `BulkheadMiddleware` | Middleware | Bulkhead pattern |
+| `BulkheadConfig` | Dataclass | Config |
+| `RequestDedupMiddleware` | Middleware | Request dedup |
+| `RequestDedupConfig` | Dataclass | Config |
+| `RequestCoalescingMiddleware` | Middleware | Request coalescing |
+| `CoalescingConfig` | Dataclass | Config |
+
+### Observability (20+)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `LoggingMiddleware` | Middleware | Request logging |
+| `TimingMiddleware` | Middleware | Response timing |
+| `RequestIDMiddleware` | Middleware | Request ID |
+| `MetricsMiddleware` | Middleware | Prometheus metrics |
+| `MetricsConfig` | Dataclass | Config |
+| `MetricsCollector` | Class | Metrics collector |
+| `ProfilingMiddleware` | Middleware | Profiling |
+| `ProfilingConfig` | Dataclass | Config |
+| `AuditMiddleware` | Middleware | Audit logging |
+| `AuditConfig` | Dataclass | Config |
+| `AuditEvent` | Dataclass | Audit event |
+| `ResponseTimeMiddleware` | Middleware | SLA monitoring |
+| `ResponseTimeConfig` | Dataclass | Config |
+| `ResponseTimeSLA` | Dataclass | SLA definition |
+| `ServerTimingMiddleware` | Middleware | Server-Timing |
+| `ServerTimingConfig` | Dataclass | Config |
+| `timing` | Function | Timing context manager |
+| `add_timing` | Function | Add timing entry |
+| `RequestLoggerMiddleware` | Middleware | Access logging |
+| `RequestLoggerConfig` | Dataclass | Config |
+| `CostTrackingMiddleware` | Middleware | Cost tracking |
+| `CostTrackingConfig` | Dataclass | Config |
+| `get_request_cost` | Function | Get request cost |
+| `add_cost` | Function | Add cost |
+| `RequestSamplerMiddleware` | Middleware | Request sampling |
+| `RequestSamplerConfig` | Dataclass | Config |
+| `is_sampled` | Function | Check if sampled |
+
+### Performance (15)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `CompressionMiddleware` | Middleware | GZip compression |
+| `CompressionConfig` | Dataclass | Config |
+| `CacheMiddleware` | Middleware | HTTP caching |
+| `CacheConfig` | Dataclass | Config |
+| `ETagMiddleware` | Middleware | ETag generation |
+| `ETagConfig` | Dataclass | Config |
+| `ResponseCacheMiddleware` | Middleware | In-memory cache |
+| `ResponseCacheConfig` | Dataclass | Config |
+| `BandwidthMiddleware` | Middleware | Bandwidth throttling |
+| `BandwidthConfig` | Dataclass | Config |
+| `NoCacheMiddleware` | Middleware | No-cache headers |
+| `NoCacheConfig` | Dataclass | Config |
+| `ConditionalRequestMiddleware` | Middleware | If-None-Match |
+| `ConditionalRequestConfig` | Dataclass | Config |
+| `EarlyHintsMiddleware` | Middleware | HTTP 103 |
+| `EarlyHintsConfig` | Dataclass | Config |
+| `EarlyHint` | Dataclass | Hint definition |
+| `ResponseSignatureMiddleware` | Middleware | Response signing |
+| `ResponseSignatureConfig` | Dataclass | Config |
+| `HATEOASMiddleware` | Middleware | Hypermedia links |
+| `HATEOASConfig` | Dataclass | Config |
+| `Link` | Dataclass | Hypermedia link |
+
+### Error Handling (5)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `ErrorHandlerMiddleware` | Middleware | Error formatting |
+| `ErrorConfig` | Dataclass | Config |
+| `CircuitBreakerMiddleware` | Middleware | Circuit breaker |
+| `CircuitBreakerConfig` | Dataclass | Config |
+| `CircuitState` | Enum | Circuit states |
+| `ExceptionHandlerMiddleware` | Middleware | Exception handlers |
+| `ExceptionHandlerConfig` | Dataclass | Config |
+
+### Operations (10)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `HealthCheckMiddleware` | Middleware | Health endpoints |
+| `HealthConfig` | Dataclass | Config |
+| `MaintenanceMiddleware` | Middleware | Maintenance mode |
+| `MaintenanceConfig` | Dataclass | Config |
+| `WarmupMiddleware` | Middleware | Container warmup |
+| `WarmupConfig` | Dataclass | Config |
+| `GracefulShutdownMiddleware` | Middleware | Graceful shutdown |
+| `GracefulShutdownConfig` | Dataclass | Config |
+| `ChaosMiddleware` | Middleware | Chaos engineering |
+| `ChaosConfig` | Dataclass | Config |
+| `SlowResponseMiddleware` | Middleware | Artificial delays |
+| `SlowResponseConfig` | Dataclass | Config |
+
+### API Management (12)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `VersioningMiddleware` | Middleware | API versioning |
+| `VersioningConfig` | Dataclass | Config |
+| `VersionLocation` | Enum | Version location |
+| `get_api_version` | Function | Get API version |
+| `DeprecationMiddleware` | Middleware | Deprecation |
+| `DeprecationConfig` | Dataclass | Config |
+| `DeprecationInfo` | Dataclass | Deprecation info |
+| `RetryAfterMiddleware` | Middleware | Retry-After |
+| `RetryAfterConfig` | Dataclass | Config |
+| `APIVersionHeaderMiddleware` | Middleware | Version headers |
+| `APIVersionHeaderConfig` | Dataclass | Config |
+| `ContentNegotiationMiddleware` | Middleware | Content negotiation |
+| `ContentNegotiationConfig` | Dataclass | Config |
+| `get_negotiated_type` | Function | Get content type |
+| `JSONSchemaMiddleware` | Middleware | JSON Schema |
+| `JSONSchemaConfig` | Dataclass | Config |
+
+### Detection (10)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `BotDetectionMiddleware` | Middleware | Bot detection |
+| `BotConfig` | Dataclass | Config |
+| `BotAction` | Enum | Bot actions |
+| `UserAgentMiddleware` | Middleware | UA parsing |
+| `UserAgentConfig` | Dataclass | Config |
+| `UserAgentInfo` | Dataclass | Parsed UA |
+| `get_user_agent` | Function | Get UA info |
+| `GeoIPMiddleware` | Middleware | GeoIP |
+| `GeoIPConfig` | Dataclass | Config |
+| `get_geo_data` | Function | Get geo data |
+| `ClientHintsMiddleware` | Middleware | Client Hints |
+| `ClientHintsConfig` | Dataclass | Config |
+| `get_client_hints` | Function | Get hints |
+| `RequestFingerprintMiddleware` | Middleware | Fingerprinting |
+| `FingerprintConfig` | Dataclass | Config |
+| `get_fingerprint` | Function | Get fingerprint |
+
+### Feature Management (8)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `FeatureFlagMiddleware` | Middleware | Feature flags |
+| `FeatureFlagConfig` | Dataclass | Config |
+| `get_feature_flags` | Function | Get all flags |
+| `is_feature_enabled` | Function | Check flag |
+| `ABTestMiddleware` | Middleware | A/B testing |
+| `ABTestConfig` | Dataclass | Config |
+| `Experiment` | Dataclass | Experiment definition |
+| `get_variant` | Function | Get variant |
+
+### Localization (6)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `LocaleMiddleware` | Middleware | Locale detection |
+| `LocaleConfig` | Dataclass | Config |
+| `get_locale` | Function | Get locale |
+| `AcceptLanguageMiddleware` | Middleware | Language negotiation |
+| `AcceptLanguageConfig` | Dataclass | Config |
+| `get_language` | Function | Get language |
+
+### Routing (12)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `RedirectMiddleware` | Middleware | Redirects |
+| `RedirectConfig` | Dataclass | Config |
+| `RedirectRule` | Dataclass | Redirect rule |
+| `PathRewriteMiddleware` | Middleware | Path rewriting |
+| `PathRewriteConfig` | Dataclass | Config |
+| `RewriteRule` | Dataclass | Rewrite rule |
+| `ProxyMiddleware` | Middleware | Reverse proxy |
+| `ProxyConfig` | Dataclass | Config |
+| `ProxyRoute` | Dataclass | Proxy route |
+| `MethodOverrideMiddleware` | Middleware | Method override |
+| `MethodOverrideConfig` | Dataclass | Config |
+| `TrailingSlashMiddleware` | Middleware | Trailing slash |
+| `TrailingSlashConfig` | Dataclass | Config |
+| `SlashAction` | Enum | Slash actions |
+| `HeaderTransformMiddleware` | Middleware | Header transform |
+| `HeaderTransformConfig` | Dataclass | Config |
+| `ContentTypeMiddleware` | Middleware | Content-Type |
+| `ContentTypeConfig` | Dataclass | Config |
+
+### IP & Proxy (4)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `RealIPMiddleware` | Middleware | Real IP |
+| `RealIPConfig` | Dataclass | Config |
+| `get_real_ip` | Function | Get real IP |
+| `XFFTrustMiddleware` | Middleware | XFF trust |
+| `XFFTrustConfig` | Dataclass | Config |
+
+### Request Processing (15)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `TimeoutMiddleware` | Middleware | Timeout |
+| `TimeoutConfig` | Dataclass | Config |
+| `RequestLimitMiddleware` | Middleware | Body size limit |
+| `RequestLimitConfig` | Dataclass | Config |
+| `PayloadSizeMiddleware` | Middleware | Payload limits |
+| `PayloadSizeConfig` | Dataclass | Config |
+| `RequestValidatorMiddleware` | Middleware | Request validation |
+| `RequestValidatorConfig` | Dataclass | Config |
+| `ValidationRule` | Dataclass | Validation rule |
+| `RequestFingerprintMiddleware` | Middleware | Fingerprinting |
+| `FingerprintConfig` | Dataclass | Config |
+| `get_fingerprint` | Function | Get fingerprint |
+| `RequestPriorityMiddleware` | Middleware | Priority |
+| `PriorityConfig` | Dataclass | Config |
+| `Priority` | Enum | Priority levels |
+
+### Other (10)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `IdempotencyMiddleware` | Middleware | Idempotency |
+| `IdempotencyConfig` | Dataclass | Config |
+| `IdempotencyStore` | ABC | Store interface |
+| `InMemoryIdempotencyStore` | Class | In-memory store |
+| `DataMaskingMiddleware` | Middleware | Data masking |
+| `DataMaskingConfig` | Dataclass | Config |
+| `MaskingRule` | Dataclass | Masking rule |
 
 ---
 
-### `MaintenanceMiddleware`
-
-Maintenance mode control.
+## Module Metadata
 
 ```python
-from fastMiddleware import MaintenanceMiddleware, MaintenanceConfig
+import fastMiddleware
+
+print(fastMiddleware.__version__)  # "0.5.0"
+print(fastMiddleware.__author__)   # "Shiv"
+print(fastMiddleware.__email__)    # "shiv@hyyre.dev"
+print(fastMiddleware.__license__)  # "MIT"
+print(fastMiddleware.__url__)      # "https://github.com/hyyre/fastmvc-middleware"
 ```
-
-**Class: `MaintenanceConfig`**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `enabled` | `bool` | `False` | Enable maintenance |
-| `message` | `str` | Default message | User-facing message |
-| `retry_after` | `int` | `300` | Retry-After seconds |
-| `allowed_paths` | `Set[str]` | `/health` etc | Bypassed paths |
-| `allowed_ips` | `Set[str]` | `set()` | Bypassed IPs |
-| `bypass_token` | `str \| None` | `None` | Bypass token |
-| `bypass_header` | `str` | `"X-Maintenance-Bypass"` | Bypass header |
-| `use_html` | `bool` | `False` | Return HTML |
-| `html_template` | `str \| None` | `None` | Custom template |
-
-**Dynamic Control:**
-
-```python
-middleware = MaintenanceMiddleware(app, config=config)
-
-# Enable/disable at runtime
-middleware.enable(message="Deploying", retry_after=600)
-middleware.disable()
-middleware.is_enabled()
-```
-
----
-
-## Helper Functions
-
-### Request Context Helpers
-
-```python
-from fastMiddleware import get_request_id, get_request_context
-```
-
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `get_request_id()` | `str \| None` | Current request ID |
-| `get_request_context()` | `dict` | Full request context |
-
-**Usage:**
-
-```python
-async def my_service():
-    request_id = get_request_id()
-    ctx = get_request_context()
-    
-    logger.info(f"Processing {request_id}", extra=ctx)
-```
-
----
-
-## Version Information
-
-```python
-from fastMiddleware import __version__, __author__, __license__
-
-print(__version__)  # "0.1.0"
-print(__author__)   # "Shiv"
-print(__license__)  # "MIT"
-```
-
