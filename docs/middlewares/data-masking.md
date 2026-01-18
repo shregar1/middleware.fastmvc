@@ -6,6 +6,7 @@ Mask sensitive data in logs and responses.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -24,6 +25,7 @@ app.add_middleware(
         MaskingRule(field="credit_card", mask="****-****-****-{last4}"),
     ],
 )
+
 ```
 
 ## Configuration
@@ -33,6 +35,7 @@ app.add_middleware(
 |`rules`|`list[MaskingRule]`|`[]`|Masking rules to apply|
 |`mask_in_logs`|`bool`|`True`|Mask in log output|
 |`mask_in_response`|`bool`|`False`|Mask in responses|
+
 ## MaskingRule Options
 
 |Field|Type|Description|
@@ -40,6 +43,7 @@ app.add_middleware(
 |`field`|`str`|Field name to mask|
 |`mask`|`str`|Mask pattern|
 |`pattern`|`str`|Regex pattern for value matching|
+
 ## Examples
 
 ### Basic Field Masking
@@ -54,7 +58,9 @@ app.add_middleware(
 )
 
 # Input: {"password": "secret123", "username": "john"}
+
 # Logged: {"password": "[REDACTED]", "username": "john"}
+
 ```
 
 ### Partial Masking
@@ -70,8 +76,11 @@ app.add_middleware(
 )
 
 # email: "john@example.com" -> "joh***@example.com"
+
 # phone: "555-123-4567" -> "***-***-4567"
+
 # ssn: "123-45-6789" -> "XXX-XX-6789"
+
 ```
 
 ### Credit Card Masking
@@ -89,6 +98,7 @@ app.add_middleware(
 )
 
 # card_number: "4111-1111-1111-1234" -> "****-****-****-1234"
+
 ```
 
 ### Regex Pattern Matching
@@ -109,6 +119,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Mask in Responses
@@ -123,6 +134,7 @@ app.add_middleware(
 )
 
 # Response body is also masked before sending
+
 ```
 
 ### Nested Field Masking
@@ -137,6 +149,7 @@ app.add_middleware(
 )
 
 # {"user": {"password": "xxx"}} -> {"user": {"password": "***"}}
+
 ```
 
 ## Use Cases

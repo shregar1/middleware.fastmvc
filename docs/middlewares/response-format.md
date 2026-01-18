@@ -6,6 +6,7 @@ Standardize response format across all endpoints.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(
     success_key="data",
     error_key="error",
 )
+
 ```
 
 ## Configuration
@@ -49,6 +51,7 @@ app.add_middleware(
         "duration_ms": 45.2
     }
 }
+
 ```
 
 ### Error Response
@@ -65,6 +68,7 @@ app.add_middleware(
         "timestamp": "2025-01-18T10:30:00Z"
     }
 }
+
 ```
 
 ## Examples
@@ -82,7 +86,9 @@ async def get_user():
     return {"id": 1, "name": "John"}
 
 # Response:
+
 # {"data": {"id": 1, "name": "John"}, "metadata": {...}}
+
 ```
 
 ### Without Metadata
@@ -95,7 +101,9 @@ app.add_middleware(
 )
 
 # Response:
+
 # {"data": {"id": 1, "name": "John"}}
+
 ```
 
 ### Custom Keys
@@ -108,7 +116,9 @@ app.add_middleware(
 )
 
 # Response:
+
 # {"result": {...}, "metadata": {...}}
+
 ```
 
 ### Exclude Paths
@@ -122,6 +132,7 @@ config = ResponseFormatConfig(
 )
 
 app.add_middleware(ResponseFormatMiddleware, config=config)
+
 ```
 
 ### With Pagination
@@ -131,7 +142,7 @@ app.add_middleware(ResponseFormatMiddleware, config=config)
 async def list_users(page: int = 1, limit: int = 10):
     users = await db.get_users(page, limit)
     total = await db.count_users()
-    
+
     return {
         "items": users,
         "page": page,
@@ -140,15 +151,25 @@ async def list_users(page: int = 1, limit: int = 10):
     }
 
 # Response:
+
 # {
+
 #     "data": {
+
 #         "items": [...],
+
 #         "page": 1,
+
 #         "limit": 10,
+
 #         "total": 100
+
 #     },
+
 #     "metadata": {...}
+
 # }
+
 ```
 
 ### Custom Metadata
@@ -166,6 +187,7 @@ class CustomFormatMiddleware(ResponseFormatMiddleware):
         }
 
 app.add_middleware(CustomFormatMiddleware)
+
 ```
 
 ## Use Cases

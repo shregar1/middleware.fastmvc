@@ -10,6 +10,7 @@ Graceful shutdown with request draining.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -34,6 +35,7 @@ async def shutdown_handler():
 @app.on_event("shutdown")
 async def on_shutdown():
     await shutdown_mw.shutdown()
+
 ```
 
 ## Configuration
@@ -56,11 +58,13 @@ Normal ──> Shutdown Called ──> Draining ──> Complete
                                   ▼
                          New requests: 503
                          In-flight: Continue
+
 ```
 
 ## Kubernetes Integration
 
 ```yaml
+
 # Deployment with graceful shutdown
 spec:
   terminationGracePeriodSeconds: 60
@@ -70,6 +74,7 @@ spec:
         preStop:
           exec:
             command: ["/bin/sh", "-c", "sleep 5"]
+
 ```
 
 ## Health Check During Shutdown
@@ -86,18 +91,23 @@ async def health():
             content={"status": "shutting_down"},
         )
     return {"status": "healthy"}
+
 ```
 
 ## Monitoring
 
 ```python
+
 # Check status
 print(f"Shutting down: {shutdown_mw.is_shutting_down}")
 print(f"In-flight requests: {shutdown_mw.in_flight_requests}")
 
 # Status endpoint
+
 # GET /_shutdown returns:
+
 # {"shutting_down": true, "in_flight": 5}
+
 ```
 
 ## Related Middlewares

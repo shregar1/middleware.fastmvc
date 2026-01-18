@@ -6,6 +6,7 @@ Detect and manage user locale for internationalization.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -26,6 +27,7 @@ app.add_middleware(
 async def handler():
     locale = get_locale()
     return {"locale": locale}
+
 ```
 
 ## Configuration
@@ -57,6 +59,7 @@ from fastmiddleware import get_locale
 async def content():
     locale = get_locale()
     return load_content(locale)
+
 ```
 
 ## Examples
@@ -71,7 +74,9 @@ app.add_middleware(
 )
 
 # Accept-Language: es,en;q=0.9
+
 # get_locale() returns: "es"
+
 ```
 
 ### With Region Codes
@@ -82,6 +87,7 @@ app.add_middleware(
     supported_locales=["en-US", "en-GB", "es-ES", "es-MX", "fr-FR", "fr-CA"],
     default_locale="en-US",
 )
+
 ```
 
 ### Persistent Locale (Cookie)
@@ -93,6 +99,7 @@ async def set_locale(locale: str, response: Response):
         response.set_cookie("locale", locale, max_age=31536000)
         return {"locale": locale}
     raise HTTPException(400, "Invalid locale")
+
 ```
 
 ### Translation Integration
@@ -117,6 +124,7 @@ async def messages():
         "welcome": _("Welcome"),
         "goodbye": _("Goodbye"),
     }
+
 ```
 
 ### Currency and Date Formatting
@@ -129,20 +137,25 @@ from fastmiddleware import get_locale
 async def product(id: str):
     locale = get_locale()
     product = await get_product(id)
-    
+
     return {
         "name": product.name,
         "price": numbers.format_currency(product.price, "USD", locale=locale),
         "created": dates.format_date(product.created, locale=locale),
     }
+
 ```
 
 ### Override via Query Parameter
 
 ```python
+
 # GET /page?lang=es
+
 # get_locale() returns: "es"
+
 # (even if Accept-Language is "en")
+
 ```
 
 ## Request State
@@ -150,6 +163,7 @@ async def product(id: str):
 ```python
 request.state.locale      # The detected locale
 request.state.locale_source  # "query", "cookie", "header", or "default"
+
 ```
 
 ## Related Middlewares

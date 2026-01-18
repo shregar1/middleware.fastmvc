@@ -10,6 +10,7 @@ Redirects HTTP requests to HTTPS.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -37,6 +38,7 @@ config = HTTPSRedirectConfig(
     exclude_hosts={"localhost", "127.0.0.1"},
 )
 app.add_middleware(HTTPSRedirectMiddleware, config=config)
+
 ```
 
 ## Configuration

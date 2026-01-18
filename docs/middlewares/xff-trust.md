@@ -6,6 +6,7 @@ Handle X-Forwarded-For headers securely.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     trusted_proxies=["10.0.0.0/8", "172.16.0.0/12"],
     depth=2,
 )
+
 ```
 
 ## Configuration
@@ -34,11 +36,14 @@ app.add_middleware(
 ## How It Works
 
 X-Forwarded-For contains a chain of IPs:
+
 ```http
 X-Forwarded-For: client, proxy1, proxy2
+
 ```
 
 The middleware:
+
 1. Validates the rightmost IPs are trusted proxies
 2. Extracts the real client IP from the chain
 3. Sets `request.client.host` to the real IP
@@ -55,7 +60,9 @@ app.add_middleware(
 )
 
 # X-Forwarded-For: 203.0.113.50, 10.0.0.1
+
 # Real IP: 203.0.113.50
+
 ```
 
 ### Behind Multiple Proxies
@@ -68,12 +75,15 @@ app.add_middleware(
 )
 
 # X-Forwarded-For: 203.0.113.50, 10.0.0.1, 10.0.0.2
+
 # Real IP: 203.0.113.50
+
 ```
 
 ### Cloud Load Balancers
 
 ```python
+
 # AWS ALB
 app.add_middleware(
     XFFTrustMiddleware,
@@ -99,6 +109,7 @@ app.add_middleware(
     ],
     depth=1,
 )
+
 ```
 
 ### Trust All Private IPs
@@ -114,6 +125,7 @@ app.add_middleware(
     ],
     depth=3,
 )
+
 ```
 
 ### With Rate Limiting
@@ -133,6 +145,7 @@ app.add_middleware(
     RateLimitMiddleware,
     requests_per_minute=100,
 )
+
 ```
 
 ## Security Warning
@@ -140,8 +153,10 @@ app.add_middleware(
 ⚠️ **Never trust X-Forwarded-For without validation!**
 
 An attacker can spoof the header:
+
 ```http
 X-Forwarded-For: fake-ip, attacker-ip
+
 ```
 
 Only trust the rightmost IPs from known proxies.
@@ -151,6 +166,7 @@ Only trust the rightmost IPs from known proxies.
 ```python
 request.state.original_client_ip  # Original client IP
 request.state.xff_chain  # Full XFF chain
+
 ```
 
 ## Related Middlewares

@@ -6,6 +6,7 @@ Adds request processing time to response headers for performance monitoring and 
 
 ```python
 from fastmiddleware import TimingMiddleware
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import TimingMiddleware
 app = FastAPI()
 
 app.add_middleware(TimingMiddleware)
+
 ```
 
 ## Configuration
@@ -30,8 +32,10 @@ app.add_middleware(TimingMiddleware)
 ## Response Header
 
 Default format:
+
 ```http
 X-Process-Time: 12.34ms
+
 ```
 
 ## Examples
@@ -42,6 +46,7 @@ X-Process-Time: 12.34ms
 app.add_middleware(TimingMiddleware)
 
 # Response header: X-Process-Time: 12.34ms
+
 ```
 
 ### Custom Header Name
@@ -53,6 +58,7 @@ app.add_middleware(
 )
 
 # Response header: X-Response-Time: 12.34ms
+
 ```
 
 ### Without Unit
@@ -64,6 +70,7 @@ app.add_middleware(
 )
 
 # Response header: X-Process-Time: 12.34
+
 ```
 
 ### Higher Precision
@@ -75,6 +82,7 @@ app.add_middleware(
 )
 
 # Response header: X-Process-Time: 12.3456ms
+
 ```
 
 ### Server-Timing Header
@@ -89,6 +97,7 @@ app.add_middleware(
 )
 
 # Response header: Server-Timing: 12.34
+
 ```
 
 ## Use Cases
@@ -96,12 +105,14 @@ app.add_middleware(
 ### Performance Monitoring
 
 ```python
+
 # In your monitoring system
 response = requests.get("https://api.example.com/data")
 process_time = float(response.headers["X-Process-Time"].rstrip("ms"))
 
 if process_time > 1000:  # Over 1 second
     alert("Slow response detected")
+
 ```
 
 ### Load Balancer Health Checks
@@ -109,11 +120,13 @@ if process_time > 1000:  # Over 1 second
 Some load balancers can use response time for routing:
 
 ```nginx
+
 # nginx upstream health check
 upstream backend {
     server backend1:8000 max_fails=3 fail_timeout=30s;
     server backend2:8000 max_fails=3 fail_timeout=30s;
 }
+
 ```
 
 ### Client-Side Performance Tracking
@@ -127,16 +140,23 @@ fetch('/api/data')
         analytics.track('api_latency', { time: processTime });
         return response.json();
     });
+
 ```
 
 ## What's Measured
 
 The timing includes:
+
 - ✅ Route handler execution
+
 - ✅ Dependency injection
+
 - ✅ Response serialization
+
 - ❌ Network latency (client to server)
+
 - ❌ TLS handshake
+
 - ❌ Reverse proxy overhead
 
 ## Placement in Middleware Stack
@@ -144,7 +164,9 @@ The timing includes:
 For accurate timing, place TimingMiddleware early (it's executed late due to middleware order):
 
 ```python
+
 # First added = last executed
+
 # Last added = first executed
 
 # Add early in the list
@@ -153,6 +175,7 @@ app.add_middleware(LoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(AuthenticationMiddleware)
 app.add_middleware(CORSMiddleware)  # Add last
+
 ```
 
 This ensures timing measures the entire request lifecycle.
@@ -166,6 +189,7 @@ app.add_middleware(
     TimingMiddleware,
     exclude_paths={"/health", "/metrics"},
 )
+
 ```
 
 ## Combining with Logging
@@ -174,15 +198,19 @@ app.add_middleware(
 from fastmiddleware import TimingMiddleware, LoggingMiddleware
 
 # TimingMiddleware will add the header
+
 # LoggingMiddleware will log it
 app.add_middleware(LoggingMiddleware, log_response_headers=True)
 app.add_middleware(TimingMiddleware)
+
 ```
 
 Log output:
+
 ```text
 ← ✓ GET /api/users [200] 12.34ms
   Headers: {"x-process-time": "12.34ms", ...}
+
 ```
 
 ## Best Practices

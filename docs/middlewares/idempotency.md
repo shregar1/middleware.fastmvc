@@ -6,6 +6,7 @@ Provides idempotency key support for safe request retries, preventing duplicate 
 
 ```python
 from fastmiddleware import IdempotencyMiddleware, IdempotencyConfig, InMemoryIdempotencyStore
+
 ```
 
 ## Quick Start
@@ -16,6 +17,7 @@ from fastmiddleware import IdempotencyMiddleware
 
 app = FastAPI()
 app.add_middleware(IdempotencyMiddleware)
+
 ```
 
 ## Configuration
@@ -33,13 +35,16 @@ app.add_middleware(IdempotencyMiddleware)
 
 ```python
 app.add_middleware(IdempotencyMiddleware)
+
 ```
 
 Client usage:
+
 ```bash
 curl -X POST /api/payments \
   -H "Idempotency-Key: payment-123" \
   -d '{"amount": 100}'
+
 ```
 
 ### Require Idempotency Key
@@ -47,6 +52,7 @@ curl -X POST /api/payments \
 ```python
 config = IdempotencyConfig(require_key=True)
 app.add_middleware(IdempotencyMiddleware, config=config)
+
 ```
 
 ### Custom TTL
@@ -54,6 +60,7 @@ app.add_middleware(IdempotencyMiddleware, config=config)
 ```python
 config = IdempotencyConfig(ttl_seconds=3600)  # 1 hour
 app.add_middleware(IdempotencyMiddleware, config=config)
+
 ```
 
 ## Response Headers

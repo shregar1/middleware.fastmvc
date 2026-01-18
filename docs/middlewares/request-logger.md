@@ -6,6 +6,7 @@ Access logging in various standard formats.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     format="combined",
     skip_paths={"/health", "/metrics"},
 )
+
 ```
 
 ## Configuration
@@ -37,12 +39,14 @@ app.add_middleware(
 
 ```text
 192.168.1.100 - john [18/Jan/2025:10:30:00 +0000] "GET /api/users HTTP/1.1" 200 1234 "https://example.com" "Mozilla/5.0..."
+
 ```
 
 ### Common (Apache)
 
 ```text
 192.168.1.100 - john [18/Jan/2025:10:30:00 +0000] "GET /api/users HTTP/1.1" 200 1234
+
 ```
 
 ### JSON
@@ -58,6 +62,7 @@ app.add_middleware(
     "duration_ms": 45.2,
     "user_agent": "Mozilla/5.0..."
 }
+
 ```
 
 ## Examples
@@ -69,6 +74,7 @@ app.add_middleware(
     RequestLoggerMiddleware,
     format="combined",
 )
+
 ```
 
 ### JSON Format
@@ -78,6 +84,7 @@ app.add_middleware(
     RequestLoggerMiddleware,
     format="json",
 )
+
 ```
 
 ### Skip Health Checks
@@ -88,6 +95,7 @@ app.add_middleware(
     format="combined",
     skip_paths={"/health", "/ready", "/live", "/metrics"},
 )
+
 ```
 
 ### Custom Logger
@@ -105,6 +113,7 @@ app.add_middleware(
     format="combined",
     logger=access_logger,
 )
+
 ```
 
 ### With Request ID
@@ -120,6 +129,7 @@ app.add_middleware(
     RequestLoggerMiddleware,
     format="json",
 )
+
 ```
 
 ### Filter by Status Code
@@ -132,6 +142,7 @@ class ErrorOnlyLogger(RequestLoggerMiddleware):
         return response.status_code >= 400
 
 app.add_middleware(ErrorOnlyLogger, format="json")
+
 ```
 
 ## Format Reference

@@ -6,6 +6,7 @@ Control browser feature permissions via Permissions-Policy header.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -24,6 +25,7 @@ app.add_middleware(
         "geolocation": ["self"],
     },
 )
+
 ```
 
 ## Configuration
@@ -71,6 +73,7 @@ app.add_middleware(
         "usb": [],
     },
 )
+
 ```
 
 ### Allow for Same Origin
@@ -85,6 +88,7 @@ app.add_middleware(
         "fullscreen": ["self"],
     },
 )
+
 ```
 
 ### Specific Origins
@@ -97,6 +101,7 @@ app.add_middleware(
         "payment": ["self", "https://stripe.com"],
     },
 )
+
 ```
 
 ### Video Conferencing App
@@ -113,6 +118,7 @@ app.add_middleware(
         "payment": [],
     },
 )
+
 ```
 
 ### E-commerce Site
@@ -127,12 +133,14 @@ app.add_middleware(
         "microphone": [],
     },
 )
+
 ```
 
 ## Response Header
 
 ```http
 Permissions-Policy: camera=(), microphone=(), geolocation=(self)
+
 ```
 
 ## Browser Support

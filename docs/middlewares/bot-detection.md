@@ -6,6 +6,7 @@ Detect and handle bot traffic based on User-Agent and behavior patterns.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     action=BotAction.TAG,
     block_malicious=True,
 )
+
 ```
 
 ## Configuration
@@ -56,6 +58,7 @@ async def handler(request: Request):
     is_bot = getattr(request.state, "is_bot", False)
     bot_name = getattr(request.state, "bot_name", None)
     return {"is_bot": is_bot, "bot": bot_name}
+
 ```
 
 ### Block All Bots
@@ -66,6 +69,7 @@ app.add_middleware(
     action=BotAction.BLOCK,
     allow_good_bots=set(),  # Block all bots
 )
+
 ```
 
 ### Allow Search Engine Bots
@@ -76,6 +80,7 @@ app.add_middleware(
     action=BotAction.BLOCK,
     allow_good_bots={"googlebot", "bingbot", "duckduckbot", "yandexbot"},
 )
+
 ```
 
 ### Custom Bot Patterns
@@ -89,6 +94,7 @@ app.add_middleware(
         r"monitoring-service",
     ],
 )
+
 ```
 
 ### Throttle Bots
@@ -100,6 +106,7 @@ app.add_middleware(
 )
 
 # Bots get stricter rate limits applied
+
 ```
 
 ## Request State
@@ -110,6 +117,7 @@ After middleware processes the request:
 request.state.is_bot       # bool - Is this a bot?
 request.state.bot_name     # str | None - Bot identifier
 request.state.bot_category # str - "search", "social", "monitoring", "malicious"
+
 ```
 
 ## Detected Bot Categories

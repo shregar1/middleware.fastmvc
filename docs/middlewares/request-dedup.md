@@ -6,6 +6,7 @@ Deduplicate identical requests within a time window.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     RequestDedupMiddleware,
     window=1.0,  # 1 second window
 )
+
 ```
 
 ## Configuration
@@ -48,6 +50,7 @@ app.add_middleware(
 )
 
 # Double-click protection for form submissions
+
 ```
 
 ### Longer Window
@@ -57,6 +60,7 @@ app.add_middleware(
     RequestDedupMiddleware,
     window=5.0,  # 5 seconds
 )
+
 ```
 
 ### Include GET Requests
@@ -67,6 +71,7 @@ app.add_middleware(
     window=1.0,
     methods={"GET", "POST", "PUT", "DELETE"},
 )
+
 ```
 
 ### Exclude Certain Paths
@@ -77,6 +82,7 @@ app.add_middleware(
     window=1.0,
     exclude_paths={"/api/poll", "/api/events"},
 )
+
 ```
 
 ### With Idempotency Keys
@@ -95,15 +101,21 @@ app.add_middleware(
     IdempotencyMiddleware,
     ttl=3600,
 )
+
 ```
 
 ## Request Fingerprint
 
 The fingerprint includes:
+
 - HTTP method
+
 - Path
+
 - Query parameters (sorted)
+
 - Body hash
+
 - Client IP (optional)
 
 ## Duplicate Response
@@ -114,6 +126,7 @@ The fingerprint includes:
     "detail": "This request was already processed within the last 1.0 seconds",
     "status_code": 429
 }
+
 ```
 
 With `Retry-After` header.

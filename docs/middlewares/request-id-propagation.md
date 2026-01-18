@@ -6,6 +6,7 @@ Propagate request IDs across service boundaries.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(RequestIDPropagationMiddleware)
 async def handler():
     ids = get_request_ids()
     return {"trace": ids}
+
 ```
 
 ## Configuration
@@ -46,6 +48,7 @@ async def handler():
     ids = get_request_ids()
     # ["original-id", "gateway-id", "service-id"]
     return {"trace_chain": ids}
+
 ```
 
 ### `get_trace_header() -> str`
@@ -60,6 +63,7 @@ async def call_downstream():
     headers = {"X-Trace-ID": get_trace_header()}
     response = await httpx.get("http://other-service/api", headers=headers)
     return response.json()
+
 ```
 
 ## Examples
@@ -70,7 +74,9 @@ async def call_downstream():
 app.add_middleware(RequestIDPropagationMiddleware)
 
 # Incoming: X-Request-ID: abc-123
+
 # Adds: X-Trace-ID: abc-123,def-456 (original + new)
+
 ```
 
 ### Custom Header Names
@@ -81,6 +87,7 @@ app.add_middleware(
     header_name="X-Correlation-ID",
     trace_header="X-B3-TraceId",
 )
+
 ```
 
 ### Forward to Downstream Services
@@ -92,19 +99,20 @@ from fastmiddleware import get_trace_header, get_request_ids
 @app.get("/aggregate")
 async def aggregate():
     trace = get_trace_header()
-    
+
     async with httpx.AsyncClient() as client:
         # Forward trace to downstream services
         headers = {"X-Trace-ID": trace}
-        
+
         users = await client.get("http://users-service/api", headers=headers)
         orders = await client.get("http://orders-service/api", headers=headers)
-    
+
     return {
         "users": users.json(),
         "orders": orders.json(),
         "trace_chain": get_request_ids(),
     }
+
 ```
 
 ### Logging with Trace
@@ -121,6 +129,7 @@ class TraceFilter(logging.Filter):
         return True
 
 # All logs include trace_id and span_id
+
 ```
 
 ### OpenTelemetry Integration
@@ -132,12 +141,13 @@ from opentelemetry import trace
 @app.get("/traced")
 async def traced():
     request_ids = get_request_ids()
-    
+
     # Set trace context
     current_span = trace.get_current_span()
     current_span.set_attribute("request.trace_chain", request_ids)
-    
+
     return {"traced": True}
+
 ```
 
 ## Header Flow
@@ -159,6 +169,7 @@ Service A:
 Service B:
   Receives: X-Trace-ID: abc,gw-123,svc-a-456
   get_request_ids() → ["abc", "gw-123", "svc-a-456", "svc-b-789"]
+
 ```
 
 ## Related Middlewares

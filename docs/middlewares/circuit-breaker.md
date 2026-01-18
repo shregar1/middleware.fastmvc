@@ -10,6 +10,7 @@ Circuit breaker pattern implementation for resilience.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -35,6 +36,7 @@ config = CircuitBreakerConfig(
     failure_status_codes={500, 502, 503, 504},
 )
 app.add_middleware(CircuitBreakerMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -62,6 +64,7 @@ CLOSED --[failure_threshold reached]--> OPEN
 OPEN --[recovery_timeout elapsed]--> HALF_OPEN
 HALF_OPEN --[request succeeds]--> CLOSED
 HALF_OPEN --[request fails]--> OPEN
+
 ```
 
 ## Response Codes

@@ -10,6 +10,7 @@ Honeypot trap middleware for detecting attackers.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -44,6 +45,7 @@ config = HoneypotConfig(
     fake_delay=2.0,  # Waste attacker time
 )
 app.add_middleware(HoneypotMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -72,6 +74,7 @@ app.add_middleware(HoneypotMiddleware, config=config)
     "/db.sql",
     "/api/v1/admin/debug",
 }
+
 ```
 
 ## How It Works
@@ -86,6 +89,7 @@ app.add_middleware(HoneypotMiddleware, config=config)
 
 ```text
 WARNING: Honeypot accessed: /.env from 192.168.1.100
+
 ```
 
 ## Getting Access Logs
@@ -95,7 +99,9 @@ honeypot = HoneypotMiddleware(app, honeypot_paths={...})
 
 # Get access log
 access_log = honeypot._access_log
+
 # [{"timestamp": 1704067200, "ip": "192.168.1.100", "path": "/.env", ...}]
+
 ```
 
 ## Blocked IPs
@@ -107,6 +113,7 @@ After accessing a honeypot, the IP receives 403 on all requests:
   "error": true,
   "message": "Access denied"
 }
+
 ```
 
 ## Best Practices

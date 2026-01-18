@@ -24,6 +24,7 @@ This document describes how to publish the `fastmvc-middleware` package to PyPI.
 ```bash
 export TWINE_USERNAME=__token__
 export TWINE_PASSWORD=pypi-your-token-here
+
 ```
 
 ### Option 2: Using `~/.pypirc` File
@@ -44,11 +45,14 @@ password = pypi-your-token-here
 repository = https://test.pypi.org/legacy/
 username = __token__
 password = pypi-your-test-token-here
+
 ```
 
 **Secure the file:**
+
 ```bash
 chmod 600 ~/.pypirc
+
 ```
 
 ## Publishing Steps
@@ -56,7 +60,9 @@ chmod 600 ~/.pypirc
 ### 1. Update Version
 
 Update the version in:
+
 - `pyproject.toml` (line: `version = "X.Y.Z"`)
+
 - `fastmiddleware/__init__.py` (line: `__version__ = "X.Y.Z"`)
 
 ### 2. Update Changelog
@@ -67,49 +73,63 @@ Add release notes to `CHANGELOG.md`
 
 ```bash
 make test
+
 # or
 pytest --cov=fastmiddleware
+
 ```
 
 ### 4. Build the Package
 
 ```bash
 make build
+
 # or
 python -m build
+
 ```
 
 This creates:
+
 - `dist/fastmvc_middleware-X.Y.Z-py3-none-any.whl` (wheel)
+
 - `dist/fastmvc_middleware-X.Y.Z.tar.gz` (source distribution)
 
 ### 5. Verify the Package
 
 ```bash
 make check
+
 # or
 twine check dist/*
+
 ```
 
 ### 6. Test on TestPyPI (Recommended)
 
 ```bash
 make publish-test
+
 # or
 twine upload --repository testpypi dist/*
+
 ```
 
 Test installation:
+
 ```bash
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ fastmvc-middleware
+
 ```
 
 ### 7. Publish to PyPI
 
 ```bash
 make publish
+
 # or
 twine upload dist/*
+
 ```
 
 ## Post-Publishing
@@ -119,13 +139,17 @@ twine upload dist/*
 ```bash
 git tag -a v0.5.0 -m "Release v0.5.0"
 git push origin v0.5.0
+
 ```
 
 ### 2. Create GitHub Release
 
 Go to https://github.com/shregar1/fastmvc-middleware/releases/new and:
+
 - Select the tag
+
 - Add release notes from CHANGELOG.md
+
 - Upload the dist files
 
 ### 3. Verify Installation
@@ -133,6 +157,7 @@ Go to https://github.com/shregar1/fastmvc-middleware/releases/new and:
 ```bash
 pip install fastmvc-middleware
 python -c "import fastmiddleware; print(fastmiddleware.__version__)"
+
 ```
 
 ## Troubleshooting
@@ -177,20 +202,21 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install dependencies
         run: pip install build
-      
+
       - name: Build package
         run: python -m build
-      
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
 ```
 
 This uses PyPI's trusted publishing (no API token needed).

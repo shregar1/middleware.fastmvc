@@ -6,6 +6,7 @@ Validate Origin header for cross-origin requests.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     allowed_origins={"https://example.com", "https://app.example.com"},
     block_null_origin=True,
 )
+
 ```
 
 ## Configuration
@@ -42,7 +44,9 @@ app.add_middleware(
 )
 
 # Origin: https://example.com → OK
+
 # Origin: https://evil.com → 403 Forbidden
+
 ```
 
 ### Multiple Origins
@@ -56,6 +60,7 @@ app.add_middleware(
         "https://staging.example.com",
     },
 )
+
 ```
 
 ### Block Null Origin
@@ -66,6 +71,7 @@ app.add_middleware(
     allowed_origins={"https://example.com"},
     block_null_origin=True,  # Block sandboxed iframes, file:// URLs
 )
+
 ```
 
 ### Require Origin Header
@@ -76,6 +82,7 @@ app.add_middleware(
     allowed_origins={"https://example.com"},
     allow_no_origin=False,  # Reject requests without Origin header
 )
+
 ```
 
 ### Development vs Production
@@ -93,6 +100,7 @@ app.add_middleware(
     OriginMiddleware,
     allowed_origins=origins,
 )
+
 ```
 
 ### With CORS
@@ -111,6 +119,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://example.com"],
 )
+
 ```
 
 ## Error Response
@@ -121,6 +130,7 @@ app.add_middleware(
     "detail": "Origin 'https://evil.com' is not allowed",
     "status_code": 403
 }
+
 ```
 
 ## Use Cases

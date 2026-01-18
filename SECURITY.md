@@ -8,6 +8,7 @@ We release patches for security vulnerabilities for the following versions:
 | ------- | ------------------ |
 |0.5.x|:white_check_mark:|
 |< 0.5|:x:|
+
 ## Reporting a Vulnerability
 
 **Please do not report security vulnerabilities through public GitHub issues.**
@@ -46,6 +47,7 @@ When using this middleware package:
 ### Secret Management
 
 ```python
+
 # ❌ Never hardcode secrets
 app.add_middleware(AuthMiddleware, secret_key="my-secret-key")
 
@@ -55,11 +57,13 @@ app.add_middleware(
     AuthMiddleware,
     secret_key=os.environ["JWT_SECRET_KEY"]
 )
+
 ```
 
 ### HTTPS Only
 
 ```python
+
 # Always use HTTPS in production
 app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(
@@ -67,26 +71,31 @@ app.add_middleware(
     enable_hsts=True,
     hsts_preload=True,
 )
+
 ```
 
 ### Rate Limiting
 
 ```python
+
 # Protect against DDoS
 app.add_middleware(
     RateLimitMiddleware,
     requests_per_minute=100,
 )
+
 ```
 
 ### Input Validation
 
 ```python
+
 # Validate all inputs
 app.add_middleware(
     JSONSchemaMiddleware,
     schemas={"/api/users": user_schema},
 )
+
 ```
 
 ### Secure Headers
@@ -103,6 +112,7 @@ The `SecurityHeadersMiddleware` adds these headers by default:
 ### Recommended Middleware Stack
 
 ```python
+
 # Production security stack
 app.add_middleware(CompressionMiddleware)
 app.add_middleware(LoggingMiddleware)
@@ -114,6 +124,7 @@ app.add_middleware(CSRFMiddleware, secret_key=os.environ["CSRF_SECRET"])
 app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["example.com"])
 app.add_middleware(RequestIDMiddleware)
+
 ```
 
 ## Known Security Considerations
@@ -156,6 +167,7 @@ Run locally:
 
 ```bash
 make security  # Runs bandit
+
 ```
 
 ## Security Updates

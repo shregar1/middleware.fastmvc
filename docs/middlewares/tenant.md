@@ -10,6 +10,7 @@ Multi-tenancy middleware for SaaS applications.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -38,6 +39,7 @@ app.add_middleware(
     use_path=True,
     path_prefix="/tenant/",
 )
+
 ```
 
 ## Configuration
@@ -57,20 +59,25 @@ app.add_middleware(
 
 ```bash
 curl -H "X-Tenant-ID: acme-corp" https://api.example.com/data
+
 ```
 
 ### From Subdomain
 
 ```bash
 curl https://acme-corp.api.example.com/data
+
 # Tenant ID: "acme-corp"
+
 ```
 
 ### From Path
 
 ```bash
 curl https://api.example.com/tenant/acme-corp/data
+
 # Tenant ID: "acme-corp"
+
 ```
 
 ## Getting Tenant
@@ -82,7 +89,7 @@ from fastmiddleware import get_tenant_id, get_tenant
 async def get_data():
     tenant_id = get_tenant_id()
     tenant = get_tenant()  # Full tenant object
-    
+
     return await fetch_tenant_data(tenant_id)
 
 # Or from request state
@@ -90,6 +97,7 @@ async def get_data():
 async def get_info(request: Request):
     tenant_id = request.state.tenant_id
     return {"tenant": tenant_id}
+
 ```
 
 ## Custom Tenant Loading
@@ -110,6 +118,7 @@ app.add_middleware(
 async def handler():
     tenant = get_tenant()  # Returns loaded tenant object
     return {"name": tenant.name}
+
 ```
 
 ## Response Codes
@@ -126,6 +135,7 @@ async def handler():
 async def get_items():
     tenant_id = get_tenant_id()
     return await db.items.find({"tenant_id": tenant_id})
+
 ```
 
 ## Related Middlewares

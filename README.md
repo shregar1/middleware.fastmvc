@@ -13,13 +13,16 @@ A comprehensive set of **94+ battle-tested, configurable middleware components**
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 **Optional dependencies:**
+
 ```bash
 pip install fastmvc-middleware[jwt]    # JWT authentication
 pip install fastmvc-middleware[proxy]  # Proxy middleware (httpx)
 pip install fastmvc-middleware[all]    # All optional dependencies
+
 ```
 
 ## 🚀 Quick Start
@@ -46,6 +49,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["https://example.com"])
 @app.get("/")
 async def root():
     return {"message": "Hello, World!"}
+
 ```
 
 ---
@@ -64,6 +68,7 @@ from fastmiddleware import (
     TimingMiddleware,        # Response timing headers
     RequestIDMiddleware,     # Unique request ID generation
 )
+
 ```
 
 ### Security Middlewares
@@ -76,27 +81,28 @@ from fastmiddleware import (
     ReferrerPolicyMiddleware, ReferrerPolicyConfig,
     PermissionsPolicyMiddleware, PermissionsPolicyConfig,
     CSPReportMiddleware, CSPReportConfig,
-    
+
     # CSRF & Origin
     CSRFMiddleware, CSRFConfig,
     OriginMiddleware, OriginConfig,
-    
+
     # Network Security
     HTTPSRedirectMiddleware, HTTPSRedirectConfig,
     IPFilterMiddleware, IPFilterConfig,
     XFFTrustMiddleware, XFFTrustConfig,
     RealIPMiddleware, RealIPConfig, get_real_ip,
-    
+
     # Webhook & Signing
     WebhookMiddleware, WebhookConfig,
     RequestSigningMiddleware, RequestSigningConfig,
     ReplayPreventionMiddleware, ReplayPreventionConfig,
     ResponseSignatureMiddleware, ResponseSignatureConfig,
-    
+
     # Protection
     HoneypotMiddleware, HoneypotConfig,
     SanitizationMiddleware, SanitizationConfig,
 )
+
 ```
 
 ### Rate Limiting & Protection
@@ -110,6 +116,7 @@ from fastmiddleware import (
     RequestDedupMiddleware, RequestDedupConfig,
     RequestCoalescingMiddleware, CoalescingConfig,
 )
+
 ```
 
 ### Authentication & Authorization
@@ -119,15 +126,16 @@ from fastmiddleware import (
     # JWT & API Key
     AuthenticationMiddleware, AuthConfig, AuthBackend,
     JWTAuthBackend, APIKeyAuthBackend,
-    
+
     # Basic & Bearer
     BasicAuthMiddleware, BasicAuthConfig,
     BearerAuthMiddleware, BearerAuthConfig,
-    
+
     # Scopes & Routes
     ScopeMiddleware, ScopeConfig,
     RouteAuthMiddleware, RouteAuthConfig, RouteAuth,
 )
+
 ```
 
 ### Session & Context
@@ -136,16 +144,17 @@ from fastmiddleware import (
 from fastmiddleware import (
     # Session
     SessionMiddleware, SessionConfig, SessionStore, InMemorySessionStore, Session,
-    
+
     # Request Context
     RequestContextMiddleware, get_request_id, get_request_context,
     CorrelationMiddleware, CorrelationConfig, get_correlation_id,
     ContextMiddleware, ContextConfig, get_context, get_context_value, set_context_value,
     RequestIDPropagationMiddleware, RequestIDPropagationConfig, get_request_ids, get_trace_header,
-    
+
     # Multi-tenancy
     TenantMiddleware, TenantConfig, get_tenant, get_tenant_id,
 )
+
 ```
 
 ### Response Handling
@@ -159,16 +168,17 @@ from fastmiddleware import (
     ResponseCacheMiddleware, ResponseCacheConfig,
     NoCacheMiddleware, NoCacheConfig,
     ConditionalRequestMiddleware, ConditionalRequestConfig,
-    
+
     # Response Formatting
     ResponseFormatMiddleware, ResponseFormatConfig,
     DataMaskingMiddleware, DataMaskingConfig, MaskingRule,
     HATEOASMiddleware, HATEOASConfig, Link,
-    
+
     # Performance
     BandwidthMiddleware, BandwidthConfig,
     EarlyHintsMiddleware, EarlyHintsConfig, EarlyHint,
 )
+
 ```
 
 ### Error Handling
@@ -179,6 +189,7 @@ from fastmiddleware import (
     ExceptionHandlerMiddleware, ExceptionHandlerConfig,
     CircuitBreakerMiddleware, CircuitBreakerConfig, CircuitState,
 )
+
 ```
 
 ### Health & Monitoring
@@ -187,23 +198,24 @@ from fastmiddleware import (
 from fastmiddleware import (
     # Health Checks
     HealthCheckMiddleware, HealthConfig,
-    
+
     # Metrics & Profiling
     MetricsMiddleware, MetricsConfig, MetricsCollector,
     ProfilingMiddleware, ProfilingConfig,
-    
+
     # Audit & Logging
     AuditMiddleware, AuditConfig, AuditEvent,
     RequestLoggerMiddleware, RequestLoggerConfig,
-    
+
     # Timing & Performance
     ServerTimingMiddleware, ServerTimingConfig, timing, add_timing,
     ResponseTimeMiddleware, ResponseTimeConfig, ResponseTimeSLA,
-    
+
     # Cost & Sampling
     CostTrackingMiddleware, CostTrackingConfig, get_request_cost, add_cost,
     RequestSamplerMiddleware, RequestSamplerConfig, is_sampled,
 )
+
 ```
 
 ### Idempotency
@@ -212,6 +224,7 @@ from fastmiddleware import (
 from fastmiddleware import (
     IdempotencyMiddleware, IdempotencyConfig, IdempotencyStore, InMemoryIdempotencyStore,
 )
+
 ```
 
 ### Maintenance & Lifecycle
@@ -224,6 +237,7 @@ from fastmiddleware import (
     ChaosMiddleware, ChaosConfig,
     SlowResponseMiddleware, SlowResponseConfig,
 )
+
 ```
 
 ### Request Processing
@@ -237,16 +251,17 @@ from fastmiddleware import (
     ContentTypeMiddleware, ContentTypeConfig,
     RequestValidatorMiddleware, RequestValidatorConfig, ValidationRule,
     JSONSchemaMiddleware, JSONSchemaConfig,
-    
+
     # URL Processing
     TrailingSlashMiddleware, TrailingSlashConfig, SlashAction,
     MethodOverrideMiddleware, MethodOverrideConfig,
-    
+
     # Headers & Fingerprinting
     HeaderTransformMiddleware, HeaderTransformConfig,
     RequestFingerprintMiddleware, FingerprintConfig, get_fingerprint,
     RequestPriorityMiddleware, PriorityConfig, Priority,
 )
+
 ```
 
 ### URL & Routing
@@ -257,6 +272,7 @@ from fastmiddleware import (
     PathRewriteMiddleware, PathRewriteConfig, RewriteRule,
     ProxyMiddleware, ProxyConfig, ProxyRoute,  # Requires: pip install fastmvc-middleware[proxy]
 )
+
 ```
 
 ### API Management
@@ -269,6 +285,7 @@ from fastmiddleware import (
     APIVersionHeaderMiddleware, APIVersionHeaderConfig,
     ContentNegotiationMiddleware, ContentNegotiationConfig, get_negotiated_type,
 )
+
 ```
 
 ### Detection & Analytics
@@ -281,6 +298,7 @@ from fastmiddleware import (
     ClientHintsMiddleware, ClientHintsConfig, get_client_hints,
     RequestFingerprintMiddleware, FingerprintConfig, get_fingerprint,
 )
+
 ```
 
 ### Feature Management & Testing
@@ -290,6 +308,7 @@ from fastmiddleware import (
     FeatureFlagMiddleware, FeatureFlagConfig, get_feature_flags, is_feature_enabled,
     ABTestMiddleware, ABTestConfig, Experiment, get_variant,
 )
+
 ```
 
 ### Localization
@@ -299,12 +318,14 @@ from fastmiddleware import (
     LocaleMiddleware, LocaleConfig, get_locale,
     AcceptLanguageMiddleware, AcceptLanguageConfig, get_language,
 )
+
 ```
 
 ### Import All (Not Recommended for Production)
 
 ```python
 from fastmiddleware import *
+
 ```
 
 ---
@@ -509,6 +530,7 @@ config = SecurityHeadersConfig(
     x_xss_protection="1; mode=block",
 )
 app.add_middleware(SecurityHeadersMiddleware, config=config)
+
 ```
 
 **Headers added:** `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Strict-Transport-Security`, `Content-Security-Policy`, `Referrer-Policy`, `Permissions-Policy`
@@ -530,6 +552,7 @@ app.add_middleware(
     allow_credentials=True,
     max_age=3600,
 )
+
 ```
 
 ---
@@ -547,6 +570,7 @@ app.add_middleware(
     cookie_name="csrf_token",
     header_name="X-CSRF-Token",
 )
+
 ```
 
 **Usage:** Token is set in cookie, client must include in header for POST/PUT/DELETE.
@@ -565,6 +589,7 @@ app.add_middleware(
     permanent=True,  # 301 vs 307
     exclude_paths={"/health"},
 )
+
 ```
 
 ---
@@ -587,6 +612,7 @@ app.add_middleware(
     IPFilterMiddleware,
     blacklist={"192.168.1.100", "10.0.0.50"},
 )
+
 ```
 
 ---
@@ -602,6 +628,7 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["example.com", "*.example.com"],
 )
+
 ```
 
 ---
@@ -618,6 +645,7 @@ app.add_middleware(
     allowed_origins={"https://example.com", "https://app.example.com"},
     block_null_origin=True,
 )
+
 ```
 
 ---
@@ -635,6 +663,7 @@ app.add_middleware(
     signature_header="X-Webhook-Signature",
     paths={"/webhooks/stripe", "/webhooks/github"},
 )
+
 ```
 
 ---
@@ -650,6 +679,7 @@ app.add_middleware(
     ReferrerPolicyMiddleware,
     policy="strict-origin-when-cross-origin",
 )
+
 ```
 
 **Valid policies:** `no-referrer`, `no-referrer-when-downgrade`, `origin`, `origin-when-cross-origin`, `same-origin`, `strict-origin`, `strict-origin-when-cross-origin`, `unsafe-url`
@@ -672,6 +702,7 @@ app.add_middleware(
         "fullscreen": ["self", "https://youtube.com"],
     },
 )
+
 ```
 
 ---
@@ -692,6 +723,7 @@ csp_reporter = CSPReportMiddleware(
 
 # Get stored reports
 reports = csp_reporter.get_reports()
+
 ```
 
 ---
@@ -709,6 +741,7 @@ app.add_middleware(
     block_on_access=True,
     block_duration=3600,  # 1 hour
 )
+
 ```
 
 ---
@@ -726,6 +759,7 @@ app.add_middleware(
     strip_tags=True,
     remove_null_bytes=True,
 )
+
 ```
 
 ---
@@ -743,6 +777,7 @@ app.add_middleware(
     timestamp_header="X-Timestamp",
     nonce_header="X-Nonce",
 )
+
 ```
 
 **Client must include:** `X-Timestamp` (Unix timestamp) and `X-Nonce` (unique string)
@@ -762,6 +797,7 @@ app.add_middleware(
     signature_header="X-Signature",
     algorithm="sha256",
 )
+
 ```
 
 **Signature format:** `HMAC-SHA256(secret, "{timestamp}.{method}.{path}.{body}")`
@@ -795,6 +831,7 @@ app.add_middleware(
         header_name="X-API-Key",
     ),
 )
+
 ```
 
 **Prerequisites:** `pip install fastmvc-middleware[jwt]` for JWT support
@@ -813,6 +850,7 @@ app.add_middleware(
     users={"admin": "secret123", "user": "password"},
     realm="API",
 )
+
 ```
 
 ---
@@ -835,6 +873,7 @@ app.add_middleware(
 # Or with custom validation
 middleware = BearerAuthMiddleware(app)
 middleware.set_validate_func(lambda token: validate_with_db(token))
+
 ```
 
 ---
@@ -854,6 +893,7 @@ app.add_middleware(
     },
     require_all=False,  # Any matching scope is sufficient
 )
+
 ```
 
 ---
@@ -873,6 +913,7 @@ app.add_middleware(
         RouteAuth("/api/admin", require_auth=True, required_roles=["admin"]),
     ],
 )
+
 ```
 
 ---
@@ -892,6 +933,7 @@ app.add_middleware(
     log_response_body=False,
     exclude_paths={"/health", "/metrics"},
 )
+
 ```
 
 ---
@@ -904,7 +946,9 @@ Adds processing time to response headers.
 from fastmiddleware import TimingMiddleware
 
 app.add_middleware(TimingMiddleware)
+
 # Response includes: X-Process-Time: 0.0234
+
 ```
 
 ---
@@ -921,6 +965,7 @@ app.add_middleware(
     header_name="X-Request-ID",
     include_in_response=True,
 )
+
 ```
 
 ---
@@ -939,6 +984,7 @@ async def handler():
     request_id = get_request_id()
     context = get_request_context()
     return {"request_id": request_id}
+
 ```
 
 ---
@@ -955,6 +1001,7 @@ app.add_middleware(
     endpoint="/metrics",
     include_path_labels=True,
 )
+
 ```
 
 **Metrics exposed:** `http_requests_total`, `http_request_duration_seconds`, `http_requests_in_progress`
@@ -973,6 +1020,7 @@ app.add_middleware(
     enabled=True,
     threshold_ms=100,  # Only profile requests > 100ms
 )
+
 ```
 
 ---
@@ -990,6 +1038,7 @@ app.add_middleware(
     log_response_body=False,
     sensitive_headers={"Authorization", "Cookie"},
 )
+
 ```
 
 ---
@@ -1007,11 +1056,12 @@ app.add_middleware(ServerTimingMiddleware)
 async def handler():
     with timing("db", "Database query"):
         result = await db.query(...)
-    
+
     with timing("render"):
         output = render(result)
-    
+
     return output
+
 ```
 
 ---
@@ -1028,6 +1078,7 @@ app.add_middleware(
     format="combined",  # "combined", "common", "json"
     skip_paths={"/health", "/metrics"},
 )
+
 ```
 
 ---
@@ -1049,6 +1100,7 @@ app.add_middleware(
 async def handler():
     add_cost(5.0)  # External API call
     return {"cost": get_request_cost()}
+
 ```
 
 ---
@@ -1071,6 +1123,7 @@ async def handler():
     if is_sampled():
         log_detailed_metrics()
     return {"sampled": is_sampled()}
+
 ```
 
 ---
@@ -1096,6 +1149,7 @@ config = RateLimitConfig(
     key_func=lambda req: req.headers.get("X-API-Key", req.client.host),
 )
 app.add_middleware(RateLimitMiddleware, config=config)
+
 ```
 
 **Response headers:** `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
@@ -1115,6 +1169,7 @@ app.add_middleware(
     recovery_timeout=30,
     half_open_requests=3,
 )
+
 ```
 
 **States:** `CLOSED` (normal), `OPEN` (failing), `HALF_OPEN` (testing)
@@ -1134,6 +1189,7 @@ app.add_middleware(
     max_waiting=50,
     timeout=30.0,
 )
+
 ```
 
 ---
@@ -1150,6 +1206,7 @@ app.add_middleware(
     max_concurrent=1000,
     shed_probability=0.5,  # Shed 50% when over limit
 )
+
 ```
 
 ---
@@ -1166,6 +1223,7 @@ app.add_middleware(
     timeout=30.0,  # 30 seconds
     exclude_paths={"/upload"},
 )
+
 ```
 
 ---
@@ -1182,6 +1240,7 @@ app.add_middleware(
     include_traceback=False,  # True for development
     default_message="Internal server error",
 )
+
 ```
 
 ---
@@ -1198,6 +1257,7 @@ handler = ExceptionHandlerMiddleware(app, debug=False)
 @handler.register(ValueError)
 def handle_value_error(exc):
     return JSONResponse(status_code=400, content={"error": str(exc)})
+
 ```
 
 ---
@@ -1213,6 +1273,7 @@ shutdown_mw = GracefulShutdownMiddleware(app, timeout=30.0)
 
 # When receiving SIGTERM
 await shutdown_mw.shutdown()
+
 ```
 
 ---
@@ -1228,6 +1289,7 @@ app.add_middleware(
     RequestDedupMiddleware,
     window=1.0,  # 1 second window
 )
+
 ```
 
 ---
@@ -1243,6 +1305,7 @@ app.add_middleware(
     RequestCoalescingMiddleware,
     window=0.1,  # 100ms window
 )
+
 ```
 
 ---
@@ -1261,6 +1324,7 @@ app.add_middleware(
     minimum_size=500,  # Only compress responses > 500 bytes
     compresslevel=6,
 )
+
 ```
 
 ---
@@ -1278,6 +1342,7 @@ app.add_middleware(
     stale_while_revalidate=60,
     private=False,
 )
+
 ```
 
 ---
@@ -1293,6 +1358,7 @@ app.add_middleware(
     ETagMiddleware,
     weak=True,
 )
+
 ```
 
 ---
@@ -1314,6 +1380,7 @@ cache = ResponseCacheMiddleware(
 # Invalidate cache
 cache.invalidate("/api/users")
 cache.clear()
+
 ```
 
 ---
@@ -1329,6 +1396,7 @@ app.add_middleware(
     BandwidthMiddleware,
     bytes_per_second=512 * 1024,  # 512 KB/s
 )
+
 ```
 
 ---
@@ -1344,6 +1412,7 @@ app.add_middleware(
     NoCacheMiddleware,
     paths={"/api/user", "/api/session"},
 )
+
 ```
 
 ---
@@ -1356,7 +1425,9 @@ If-None-Match / If-Modified-Since handling.
 from fastmiddleware import ConditionalRequestMiddleware
 
 app.add_middleware(ConditionalRequestMiddleware)
+
 # Returns 304 Not Modified when appropriate
+
 ```
 
 ---
@@ -1375,6 +1446,7 @@ app.add_middleware(
         EarlyHint("/static/js/app.js", as_type="script"),
     ],
 )
+
 ```
 
 ---
@@ -1391,6 +1463,7 @@ app.add_middleware(
     secret_key="your-secret",
     signature_header="X-Response-Signature",
 )
+
 ```
 
 ---
@@ -1411,14 +1484,23 @@ app.add_middleware(
 )
 
 # Responses become:
+
 # {
+
 #     "data": { ... },
+
 #     "metadata": {
+
 #         "request_id": "...",
+
 #         "timestamp": "...",
+
 #         "duration_ms": 12.5
+
 #     }
+
 # }
+
 ```
 
 ---
@@ -1439,6 +1521,7 @@ app.add_middleware(
     live_path="/live",
     version="1.0.0",
 )
+
 ```
 
 ---
@@ -1461,6 +1544,7 @@ maint = MaintenanceMiddleware(
 # Enable maintenance mode
 maint.enable()
 maint.disable()
+
 ```
 
 ---
@@ -1480,6 +1564,7 @@ warmup = WarmupMiddleware(
 
 # Mark as ready
 warmup.set_ready(True)
+
 ```
 
 ---
@@ -1499,6 +1584,7 @@ app.add_middleware(
     min_latency=0.5,
     max_latency=5.0,
 )
+
 ```
 
 ⚠️ **Never enable in production!**
@@ -1518,6 +1604,7 @@ app.add_middleware(
     min_delay=1.0,
     max_delay=3.0,
 )
+
 ```
 
 ---
@@ -1542,6 +1629,7 @@ app.add_middleware(
 async def handler():
     version = get_api_version()
     return {"version": version}
+
 ```
 
 ---
@@ -1563,6 +1651,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 **Response headers:** `Deprecation`, `Sunset`, `Link` (to replacement)
@@ -1580,6 +1669,7 @@ app.add_middleware(
     RetryAfterMiddleware,
     default_retry_after=60,
 )
+
 ```
 
 ---
@@ -1597,6 +1687,7 @@ app.add_middleware(
     min_version="1.5.0",
     sunset_date="2025-12-31",
 )
+
 ```
 
 ---
@@ -1620,6 +1711,7 @@ async def handler():
     if content_type == "application/xml":
         return xml_response()
     return json_response()
+
 ```
 
 ---
@@ -1645,6 +1737,7 @@ app.add_middleware(
     schemas={"/api/users": user_schema},
     strict=True,
 )
+
 ```
 
 ---
@@ -1665,6 +1758,7 @@ app.add_middleware(
         ],
     },
 )
+
 ```
 
 ---
@@ -1683,6 +1777,7 @@ app.add_middleware(
     action=BotAction.TAG,  # TAG, BLOCK, CHALLENGE
     block_malicious=True,
 )
+
 ```
 
 ---
@@ -1705,6 +1800,7 @@ async def handler():
         "is_mobile": ua["is_mobile"],
         "is_bot": ua["is_bot"],
     }
+
 ```
 
 ---
@@ -1725,6 +1821,7 @@ async def handler():
         "country": geo.get("country"),
         "city": geo.get("city"),
     }
+
 ```
 
 ---
@@ -1748,6 +1845,7 @@ async def handler():
         "dpr": hints.get("dpr"),
         "save_data": hints.get("save_data"),
     }
+
 ```
 
 ---
@@ -1764,6 +1862,7 @@ app.add_middleware(RequestFingerprintMiddleware)
 @app.get("/")
 async def handler():
     return {"fingerprint": get_fingerprint()}
+
 ```
 
 ---
@@ -1790,6 +1889,7 @@ async def handler():
     if is_feature_enabled("new_dashboard"):
         return new_dashboard()
     return old_dashboard()
+
 ```
 
 ---
@@ -1816,6 +1916,7 @@ app.add_middleware(
 async def handler():
     variant = get_variant("checkout_flow")
     return {"variant": variant}
+
 ```
 
 ---
@@ -1839,6 +1940,7 @@ app.add_middleware(
 async def handler():
     locale = get_locale()
     return get_translations(locale)
+
 ```
 
 ---
@@ -1860,6 +1962,7 @@ app.add_middleware(
 async def handler():
     lang = get_language()
     return {"language": lang}
+
 ```
 
 ---
@@ -1880,6 +1983,7 @@ app.add_middleware(
         RedirectRule("/legacy/*", "/api/v2/{path}"),
     ],
 )
+
 ```
 
 ---
@@ -1898,6 +2002,7 @@ app.add_middleware(
         RewriteRule(r"/users/(\d+)", r"/api/users/\1", is_regex=True),
     ],
 )
+
 ```
 
 ---
@@ -1919,6 +2024,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 **Prerequisites:** `pip install fastmvc-middleware[proxy]`
@@ -1933,8 +2039,11 @@ HTTP method override.
 from fastmiddleware import MethodOverrideMiddleware
 
 app.add_middleware(MethodOverrideMiddleware)
+
 # POST /resource?_method=DELETE becomes DELETE /resource
+
 # POST /resource with X-HTTP-Method-Override: DELETE becomes DELETE /resource
+
 ```
 
 ---
@@ -1950,6 +2059,7 @@ app.add_middleware(
     TrailingSlashMiddleware,
     action=SlashAction.STRIP,  # STRIP, ADD, REDIRECT
 )
+
 ```
 
 ---
@@ -1967,6 +2077,7 @@ app.add_middleware(
     add_response_headers={"X-Powered-By": "FastMVC"},
     remove_response_headers={"Server"},
 )
+
 ```
 
 ---
@@ -1986,6 +2097,7 @@ app.add_middleware(
     cookie_name="session_id",
     max_age=3600,
 )
+
 ```
 
 ---
@@ -2006,6 +2118,7 @@ app.add_middleware(
 async def handler():
     tenant_id = get_tenant_id()
     return {"tenant": tenant_id}
+
 ```
 
 ---
@@ -2025,6 +2138,7 @@ app.add_middleware(
 @app.get("/")
 async def handler():
     return {"correlation_id": get_correlation_id()}
+
 ```
 
 ---
@@ -2042,6 +2156,7 @@ app.add_middleware(RequestIDPropagationMiddleware)
 async def handler():
     ids = get_request_ids()  # Chain of IDs from upstream services
     return {"request_chain": ids}
+
 ```
 
 ---
@@ -2063,6 +2178,7 @@ async def handler():
     user_id = get_context_value("user_id")
     set_context_value("processed", True)
     return {"user_id": user_id}
+
 ```
 
 ---
@@ -2079,6 +2195,7 @@ app.add_middleware(RealIPMiddleware)
 @app.get("/")
 async def handler():
     return {"ip": get_real_ip()}
+
 ```
 
 ---
@@ -2095,6 +2212,7 @@ app.add_middleware(
     trusted_proxies=["10.0.0.0/8", "172.16.0.0/12"],
     depth=2,  # Skip 2 rightmost proxies
 )
+
 ```
 
 ---
@@ -2115,6 +2233,7 @@ app.add_middleware(
         MaskingRule(field="ssn", mask="XXX-XX-****"),
     ],
 )
+
 ```
 
 ---
@@ -2133,6 +2252,7 @@ app.add_middleware(
         "pro": {"requests_per_day": 100000},
     },
 )
+
 ```
 
 ---
@@ -2149,6 +2269,7 @@ app.add_middleware(
     header_name="Idempotency-Key",
     ttl=3600,
 )
+
 ```
 
 ---
@@ -2164,6 +2285,7 @@ app.add_middleware(
     RequestLimitMiddleware,
     max_size=10 * 1024 * 1024,  # 10 MB
 )
+
 ```
 
 ---
@@ -2180,6 +2302,7 @@ app.add_middleware(
     max_request_size=10 * 1024 * 1024,
     max_response_size=50 * 1024 * 1024,
 )
+
 ```
 
 ---
@@ -2195,6 +2318,7 @@ app.add_middleware(
     ContentTypeMiddleware,
     allowed_types=["application/json", "application/xml"],
 )
+
 ```
 
 ---
@@ -2218,6 +2342,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ---
@@ -2236,6 +2361,7 @@ app.add_middleware(
         ResponseTimeSLA("/api/search", target_ms=500, warning_ms=1000, critical_ms=2000),
     ],
 )
+
 ```
 
 ---
@@ -2255,6 +2381,7 @@ app.add_middleware(
         "/api/reports": Priority.LOW,
     },
 )
+
 ```
 
 ---
@@ -2278,6 +2405,7 @@ CustomHeaderMiddleware = create_middleware("custom_header", add_custom_header)
 
 app.add_middleware(CustomHeaderMiddleware)
 app.add_middleware(CustomHeaderMiddleware)  # Skipped - already added!
+
 ```
 
 ### Method 2: Decorator Style
@@ -2295,6 +2423,7 @@ async def request_timer(request, call_next):
     return response
 
 app.add_middleware(request_timer)
+
 ```
 
 ### Method 3: Builder Pattern (Most Flexible)
@@ -2315,6 +2444,7 @@ RequestTimingMiddleware = (
 )
 
 app.add_middleware(RequestTimingMiddleware)
+
 ```
 
 ### Method 4: Quick One-liner
@@ -2330,6 +2460,7 @@ LoggingMiddleware = quick_middleware(
 )
 
 app.add_middleware(LoggingMiddleware)
+
 ```
 
 ### Method 5: Extend Base Class (Full Control)
@@ -2356,6 +2487,7 @@ class MyCustomMiddleware(FastMVCMiddleware):
         return response
 
 app.add_middleware(MyCustomMiddleware, my_option="hello")
+
 ```
 
 ### Preventing Duplicate Middleware
@@ -2372,6 +2504,7 @@ print(added)  # True
 # Second call - skipped (already exists)
 added = add_middleware_once(app, CORSMiddleware, allow_origins=["*"])
 print(added)  # False
+
 ```
 
 ### Factory Utilities Reference

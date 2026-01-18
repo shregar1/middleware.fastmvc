@@ -6,6 +6,7 @@ Add deprecation warnings to API endpoints.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -26,6 +27,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ## Configuration
@@ -50,6 +52,7 @@ Deprecation: true
 Sunset: Wed, 31 Dec 2025 00:00:00 GMT
 Link: </api/v2/users>; rel="successor-version"
 X-Deprecation-Notice: This endpoint is deprecated. Use /api/v2/users instead.
+
 ```
 
 ## Examples
@@ -67,6 +70,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Multiple Deprecations
@@ -92,6 +96,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Custom Message
@@ -107,6 +112,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Path Pattern Matching
@@ -117,14 +123,15 @@ app.add_middleware(
     deprecations=[
         # Exact match
         DeprecationInfo(path="/api/v1/users", ...),
-        
+
         # Wildcard
         DeprecationInfo(path="/api/v1/*", ...),
-        
+
         # Regex pattern
         DeprecationInfo(path=r"/api/v1/users/\d+", ...),
     ],
 )
+
 ```
 
 ### With Version Header
@@ -148,13 +155,17 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ## Client Handling
 
 Clients should watch for:
+
 - `Deprecation: true` header
+
 - `Sunset` header for removal date
+
 - `Link` header with `rel="successor-version"`
 
 ```javascript
@@ -162,6 +173,7 @@ if (response.headers.get('Deprecation') === 'true') {
     console.warn('API endpoint deprecated:', response.headers.get('X-Deprecation-Notice'));
     console.warn('Sunset date:', response.headers.get('Sunset'));
 }
+
 ```
 
 ## Related Middlewares

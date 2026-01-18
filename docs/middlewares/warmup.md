@@ -10,6 +10,7 @@ Container warmup/readiness middleware for orchestration platforms.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -33,6 +34,7 @@ async def startup():
     await initialize_database()
     await load_ml_model()
     warmup.set_ready(True)
+
 ```
 
 ## Configuration
@@ -52,6 +54,7 @@ App Starts ──> Warming Up ──> Ready
                   ▼              ▼
          Returns 503       Returns 200
          for all requests  for all requests
+
 ```
 
 ## Warmup Endpoint Response
@@ -63,11 +66,13 @@ App Starts ──> Warming Up ──> Ready
   "uptime": 5.234,
   "warmup_time": 5.0
 }
+
 ```
 
 ## Kubernetes Integration
 
 ```yaml
+
 # Deployment with readiness probe
 spec:
   containers:
@@ -78,6 +83,7 @@ spec:
           port: 8000
         initialDelaySeconds: 5
         periodSeconds: 5
+
 ```
 
 ## Google App Engine
@@ -85,20 +91,24 @@ spec:
 Uses `/_ah/warmup` automatically:
 
 ```yaml
+
 # app.yaml
 inbound_services:
   - warmup
+
 ```
 
 ## Manual Control
 
 ```python
+
 # Set not ready (for maintenance)
 warmup.set_ready(False)
 
 # Check status
 if warmup._is_ready():
     print("Ready to serve traffic")
+
 ```
 
 ## Response Codes

@@ -10,6 +10,7 @@ Feature flag management middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -39,6 +40,7 @@ config = FeatureFlagConfig(
     header_overrides=True,  # Allow X-Feature-Flags header
 )
 app.add_middleware(FeatureFlagMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -65,6 +67,7 @@ async def dashboard():
 async def features():
     flags = get_feature_flags()
     return {"features": flags}
+
 ```
 
 ## Header Overrides
@@ -73,6 +76,7 @@ For testing, clients can override flags:
 
 ```bash
 curl -H "X-Feature-Flags: new_dashboard=true,dark_mode=true" https://api.example.com/
+
 ```
 
 ## Dynamic Flags
@@ -86,6 +90,7 @@ middleware.set_flag("old_feature", False)
 
 # Get current flags
 current = middleware.get_flags()
+
 ```
 
 ## Accessing in Request
@@ -95,6 +100,7 @@ current = middleware.get_flags()
 async def handler(request: Request):
     flags = request.state.feature_flags
     return {"dark_mode": flags.get("dark_mode", False)}
+
 ```
 
 ## Related Middlewares

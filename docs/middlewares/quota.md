@@ -6,6 +6,7 @@ Enforce usage quotas per user or API key.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app.add_middleware(
         "pro": {"requests_per_day": 100000},
     },
 )
+
 ```
 
 ## Configuration
@@ -56,6 +58,7 @@ app.add_middleware(
         "enterprise": {"requests_per_day": 1000000},
     },
 )
+
 ```
 
 ### Multiple Limits
@@ -76,6 +79,7 @@ app.add_middleware(
         },
     },
 )
+
 ```
 
 ### Custom Tier Detection
@@ -96,6 +100,7 @@ config = QuotaConfig(
 )
 
 app.add_middleware(QuotaMiddleware, config=config)
+
 ```
 
 ### Path-Specific Costs
@@ -112,6 +117,7 @@ app.add_middleware(
         "/api/export": 20,     # Costs 20 requests
     },
 )
+
 ```
 
 ### With Billing Integration
@@ -120,7 +126,7 @@ app.add_middleware(
 @app.middleware("http")
 async def track_quota(request, call_next):
     response = await call_next(request)
-    
+
     # Get quota usage from request state
     usage = getattr(request.state, "quota_usage", None)
     if usage:
@@ -128,8 +134,9 @@ async def track_quota(request, call_next):
             user_id=request.state.user_id,
             usage=usage,
         )
-    
+
     return response
+
 ```
 
 ## Response Headers
@@ -138,6 +145,7 @@ async def track_quota(request, call_next):
 X-Quota-Limit: 1000
 X-Quota-Remaining: 750
 X-Quota-Reset: 2025-01-19T00:00:00Z
+
 ```
 
 ## Error Response (Quota Exceeded)
@@ -150,6 +158,7 @@ X-Quota-Reset: 2025-01-19T00:00:00Z
     "reset": "2025-01-19T00:00:00Z",
     "status_code": 429
 }
+
 ```
 
 ## Related Middlewares

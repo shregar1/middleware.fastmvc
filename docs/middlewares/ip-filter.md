@@ -10,6 +10,7 @@ IP-based access control with whitelist and blacklist support.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -40,6 +41,7 @@ config = IPFilterConfig(
     trust_proxy=True,
 )
 app.add_middleware(IPFilterMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -63,6 +65,7 @@ whitelist={
     "10.0.0.0/8",         # Class A network
     "2001:db8::/32",      # IPv6 range
 }
+
 ```
 
 ## Response Codes

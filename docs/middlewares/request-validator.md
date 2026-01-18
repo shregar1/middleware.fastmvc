@@ -6,6 +6,7 @@ Validate request structure and content.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -28,6 +29,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ## Configuration
@@ -64,6 +66,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Validate JSON APIs
@@ -86,6 +89,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Require Authorization
@@ -101,6 +105,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Multiple Content Types
@@ -120,6 +125,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Size Limits by Path
@@ -140,6 +146,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ### Webhook Validation
@@ -156,6 +163,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ## Error Response
@@ -166,6 +174,7 @@ app.add_middleware(
     "detail": "Missing required header: Authorization",
     "status_code": 400
 }
+
 ```
 
 ```json
@@ -174,6 +183,7 @@ app.add_middleware(
     "detail": "Content-Type 'text/plain' not allowed. Expected: application/json",
     "status_code": 415
 }
+
 ```
 
 ## Related Middlewares

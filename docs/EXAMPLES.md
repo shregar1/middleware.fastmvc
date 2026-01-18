@@ -101,6 +101,7 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Hello, World!"}
+
 ```
 
 ---
@@ -156,22 +157,23 @@ app.add_middleware(MetricsMiddleware, endpoint="/metrics")
 @app.get("/api/users/{user_id}")
 async def get_user(user_id: int):
     correlation_id = get_correlation_id()
-    
+
     with timing("database", "User lookup"):
         user = await db.get_user(user_id)
-    
+
     with timing("orders_service", "Fetch orders"):
         async with httpx.AsyncClient() as client:
             orders = await client.get(
                 f"http://orders-service/api/users/{user_id}/orders",
                 headers={"X-Correlation-ID": correlation_id},
             )
-    
+
     return {"user": user, "orders": orders.json()}
 
 @app.on_event("shutdown")
 async def on_shutdown():
     await shutdown_mw.shutdown()
+
 ```
 
 ---
@@ -243,7 +245,7 @@ app.add_middleware(
 @app.get("/api/dashboard")
 async def dashboard(request: Request):
     tenant_id = get_tenant_id()
-    
+
     if is_feature_enabled("new_dashboard"):
         return await new_dashboard(tenant_id)
     return await old_dashboard(tenant_id)
@@ -256,6 +258,7 @@ async def get_data():
         "SELECT * FROM data WHERE tenant_id = ?",
         [tenant_id],
     )
+
 ```
 
 ---
@@ -350,6 +353,7 @@ async def get_popular():
 async def invalidate():
     cache_mw.invalidate("/api/popular")
     return {"invalidated": True}
+
 ```
 
 ---
@@ -452,6 +456,7 @@ async def transfer(request: Request):
     # Signature validates request integrity
     # Audit log captures everything
     return await process_transfer(request)
+
 ```
 
 ---
@@ -560,6 +565,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 ```
 
 ---
@@ -629,11 +635,11 @@ app.add_middleware(
 async def checkout():
     variant = get_variant("checkout_flow")
     ua = get_user_agent()
-    
+
     # Mobile gets simplified by default
     if ua["is_mobile"] and variant == "control":
         variant = "simplified"
-    
+
     if variant == "simplified":
         return simplified_checkout()
     elif variant == "express":
@@ -656,6 +662,7 @@ async def track_event(event: dict):
         # Minimal tracking
         await analytics.track_minimal(event)
     return {"tracked": True}
+
 ```
 
 ---
@@ -745,18 +752,19 @@ async def complex_operation():
     with timing("database", "Primary query"):
         data = await db.query(...)
         add_cost(0.5)
-    
+
     with timing("cache", "Cache lookup"):
         cached = await cache.get(...)
-    
+
     with timing("external_api", "Third-party call"):
         external = await call_external_api(...)
         add_cost(5.0)  # External API cost
-    
+
     with timing("processing", "Data processing"):
         result = process(data, cached, external)
-    
+
     return result
+
 ```
 
 ---
@@ -773,7 +781,7 @@ from typing import Callable, Awaitable
 
 class CustomMiddleware(FastMVCMiddleware):
     """Custom middleware example."""
-    
+
     def __init__(
         self,
         app,
@@ -782,7 +790,7 @@ class CustomMiddleware(FastMVCMiddleware):
     ):
         super().__init__(app, exclude_paths=exclude_paths)
         self.custom_option = custom_option
-    
+
     async def dispatch(
         self,
         request: Request,
@@ -791,16 +799,16 @@ class CustomMiddleware(FastMVCMiddleware):
         # Skip if path excluded
         if self.should_skip(request):
             return await call_next(request)
-        
+
         # Pre-processing
         request.state.custom_data = self.custom_option
-        
+
         # Call next middleware/route
         response = await call_next(request)
-        
+
         # Post-processing
         response.headers["X-Custom-Header"] = self.custom_option
-        
+
         return response
 
 # Use your custom middleware
@@ -809,4 +817,5 @@ app.add_middleware(
     custom_option="my-value",
     exclude_paths={"/health"},
 )
+
 ```

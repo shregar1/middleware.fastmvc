@@ -6,6 +6,7 @@ HTTP caching with ETag generation, conditional requests (304), and cache control
 
 ```python
 from fastmiddleware import CacheMiddleware, CacheConfig, InMemoryCacheStore
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import CacheMiddleware
 app = FastAPI()
 
 app.add_middleware(CacheMiddleware)
+
 ```
 
 ## Configuration
@@ -40,6 +42,7 @@ app.add_middleware(CacheMiddleware)
 Cache-Control: public, max-age=3600
 ETag: "a3f2b8c4d5e6..."
 Vary: Accept, Accept-Encoding
+
 ```
 
 ## Examples
@@ -55,6 +58,7 @@ config = CacheConfig(
 )
 
 app.add_middleware(CacheMiddleware, config=config)
+
 ```
 
 ### Path-Specific Rules
@@ -80,6 +84,7 @@ config = CacheConfig(
 )
 
 app.add_middleware(CacheMiddleware, config=config)
+
 ```
 
 ### Private Cache (User-Specific Data)
@@ -91,6 +96,7 @@ config = CacheConfig(
 )
 
 app.add_middleware(CacheMiddleware, config=config)
+
 ```
 
 ### No Store (Sensitive Data)
@@ -101,6 +107,7 @@ config = CacheConfig(
 )
 
 app.add_middleware(CacheMiddleware, config=config)
+
 ```
 
 ### Immutable Assets
@@ -115,6 +122,7 @@ config = CacheConfig(
         },
     },
 )
+
 ```
 
 ## Conditional Requests (304)
@@ -124,7 +132,7 @@ config = CacheConfig(
 1. First request:
    ```http
    GET /api/data HTTP/1.1
-   
+
    HTTP/1.1 200 OK
    ETag: "abc123"
    Content: {...}
@@ -134,7 +142,7 @@ config = CacheConfig(
    ```http
    GET /api/data HTTP/1.1
    If-None-Match: "abc123"
-   
+
    HTTP/1.1 304 Not Modified
    ETag: "abc123"
    ```
@@ -149,11 +157,14 @@ fetch('/api/data')
             // Use cached version
         }
     });
+
 ```
 
 ```bash
+
 # curl with conditional request
 curl -H "If-None-Match: \"abc123\"" https://api.example.com/data
+
 ```
 
 ## Cache-Control Directives
@@ -170,6 +181,7 @@ curl -H "If-None-Match: \"abc123\"" https://api.example.com/data
 ### Examples
 
 ```http
+
 # Public, cached for 1 hour
 Cache-Control: public, max-age=3600
 
@@ -181,6 +193,7 @@ Cache-Control: no-cache
 
 # Never cache (sensitive data)
 Cache-Control: no-store, no-cache, must-revalidate
+
 ```
 
 ## Custom Cache Store
@@ -193,21 +206,22 @@ from fastmiddleware import CacheStore
 class RedisCacheStore(CacheStore):
     def __init__(self, redis_client):
         self.redis = redis_client
-    
+
     async def get_etag(self, key: str) -> str | None:
         return await self.redis.get(f"etag:{key}")
-    
+
     async def set_etag(self, key: str, etag: str, ttl: int) -> None:
         await self.redis.setex(f"etag:{key}", ttl, etag)
-    
+
     async def get_response(self, key: str) -> bytes | None:
         return await self.redis.get(f"response:{key}")
-    
+
     async def set_response(self, key: str, data: bytes, ttl: int) -> None:
         await self.redis.setex(f"response:{key}", ttl, data)
 
 store = RedisCacheStore(redis_client)
 app.add_middleware(CacheMiddleware, store=store)
+
 ```
 
 ## Vary Headers
@@ -218,11 +232,15 @@ Control cache variants:
 config = CacheConfig(
     vary_headers=("Accept", "Accept-Encoding", "Accept-Language"),
 )
+
 ```
 
 This creates separate cached versions for:
+
 - Different Accept types (JSON vs XML)
+
 - Different encodings (gzip vs identity)
+
 - Different languages
 
 ## Path Exclusion
@@ -234,6 +252,7 @@ app.add_middleware(
     CacheMiddleware,
     exclude_paths={"/auth", "/admin", "/user"},
 )
+
 ```
 
 ## Best Practices
@@ -247,9 +266,13 @@ app.add_middleware(
 ## Cache Invalidation
 
 Options for cache invalidation:
+
 - Change URL (versioned assets)
+
 - Reduce max-age
+
 - Use no-cache (always revalidate)
+
 - Clear CDN cache manually
 
 ## Security Considerations

@@ -6,6 +6,7 @@ Throttle response bandwidth to control download speeds.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     BandwidthMiddleware,
     bytes_per_second=512 * 1024,  # 512 KB/s
 )
+
 ```
 
 ## Configuration
@@ -39,6 +41,7 @@ app.add_middleware(
     BandwidthMiddleware,
     bytes_per_second=100 * 1024,  # 100 KB/s
 )
+
 ```
 
 ### With Burst Allowance
@@ -49,6 +52,7 @@ app.add_middleware(
     bytes_per_second=256 * 1024,  # 256 KB/s sustained
     burst_size=1024 * 1024,  # Allow 1 MB burst
 )
+
 ```
 
 ### Exclude Static Files
@@ -59,6 +63,7 @@ app.add_middleware(
     bytes_per_second=512 * 1024,
     exclude_paths={"/static", "/assets"},
 )
+
 ```
 
 ### Per-Tier Bandwidth (with custom logic)
@@ -77,6 +82,7 @@ class TieredBandwidthMiddleware(BandwidthMiddleware):
         return limits.get(tier, limits["free"])
 
 app.add_middleware(TieredBandwidthMiddleware)
+
 ```
 
 ## Use Cases
@@ -91,6 +97,7 @@ app.add_middleware(TieredBandwidthMiddleware)
 ```http
 X-Bandwidth-Limit: 524288
 X-Bandwidth-Remaining: 423000
+
 ```
 
 ## Related Middlewares

@@ -6,6 +6,7 @@ Generates unique request identifiers for distributed tracing and request correla
 
 ```python
 from fastmiddleware import RequestIDMiddleware
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import RequestIDMiddleware
 app = FastAPI()
 
 app.add_middleware(RequestIDMiddleware)
+
 ```
 
 ## Configuration
@@ -31,6 +33,7 @@ app.add_middleware(RequestIDMiddleware)
 
 ```http
 X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
+
 ```
 
 ## Examples
@@ -41,6 +44,7 @@ X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
 app.add_middleware(RequestIDMiddleware)
 
 # Generates UUIDv4: X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
+
 ```
 
 ### Custom Header Name
@@ -50,6 +54,7 @@ app.add_middleware(
     RequestIDMiddleware,
     header_name="X-Correlation-ID",
 )
+
 ```
 
 ### Custom ID Generator
@@ -70,6 +75,7 @@ app.add_middleware(
 )
 
 # Result: X-Request-ID: 1704067200000-a1b2c3d4
+
 ```
 
 ### Short IDs
@@ -87,6 +93,7 @@ app.add_middleware(
 )
 
 # Result: X-Request-ID: Kj8_mX2pQvNt
+
 ```
 
 ### Don't Trust Incoming IDs
@@ -96,6 +103,7 @@ app.add_middleware(
     RequestIDMiddleware,
     trust_incoming=False,  # Always generate new ID
 )
+
 ```
 
 ### Propagate Incoming IDs
@@ -105,10 +113,13 @@ app.add_middleware(
     RequestIDMiddleware,
     trust_incoming=True,  # Use incoming ID if present
 )
+
 ```
 
 When `trust_incoming=True`:
+
 - If request has `X-Request-ID`: Use that ID
+
 - If no incoming ID: Generate new ID
 
 ## Accessing Request ID
@@ -122,6 +133,7 @@ from fastapi import Request
 async def root(request: Request):
     request_id = request.state.request_id
     return {"request_id": request_id}
+
 ```
 
 ### In Dependencies
@@ -135,6 +147,7 @@ def get_request_id(request: Request) -> str:
 @app.get("/")
 async def root(request_id: str = Depends(get_request_id)):
     return {"request_id": request_id}
+
 ```
 
 ### In Services/Repositories
@@ -145,6 +158,7 @@ from fastmiddleware import get_request_id
 async def my_service_function():
     request_id = get_request_id()
     logger.info(f"Processing request {request_id}")
+
 ```
 
 ## Use Cases
@@ -159,14 +173,15 @@ import httpx
 @app.get("/api/data")
 async def get_data(request: Request):
     request_id = request.state.request_id
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(
             "http://other-service/data",
             headers={"X-Request-ID": request_id},
         )
-    
+
     return response.json()
+
 ```
 
 ### Log Correlation
@@ -177,20 +192,21 @@ import logging
 @app.get("/api/users")
 async def get_users(request: Request):
     request_id = request.state.request_id
-    
+
     logging.info(
         f"Fetching users",
         extra={"request_id": request_id}
     )
-    
+
     users = await db.get_users()
-    
+
     logging.info(
         f"Found {len(users)} users",
         extra={"request_id": request_id}
     )
-    
+
     return users
+
 ```
 
 ### Error Tracking
@@ -199,14 +215,14 @@ async def get_users(request: Request):
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
-    
+
     # Log with request ID
     logging.error(
         f"Unhandled exception: {exc}",
         extra={"request_id": request_id},
         exc_info=True,
     )
-    
+
     # Return request ID to client for support
     return JSONResponse(
         status_code=500,
@@ -215,6 +231,7 @@ async def exception_handler(request: Request, exc: Exception):
             "request_id": request_id,
         },
     )
+
 ```
 
 ### Support Tickets
@@ -223,11 +240,12 @@ async def exception_handler(request: Request, exc: Exception):
 @app.get("/support/ticket")
 async def create_ticket(request: Request, issue: str):
     request_id = request.state.request_id
-    
+
     return {
         "message": f"Ticket created. Reference: {request_id}",
         "request_id": request_id,
     }
+
 ```
 
 ## Integration with Other Middlewares
@@ -241,6 +259,7 @@ app.add_middleware(LoggingMiddleware)
 app.add_middleware(RequestIDMiddleware)
 
 # Logs include request ID automatically
+
 ```
 
 ### With Request Context
@@ -252,6 +271,7 @@ app.add_middleware(RequestContextMiddleware)
 app.add_middleware(RequestIDMiddleware)
 
 # Request ID available via get_request_id()
+
 ```
 
 ## Best Practices

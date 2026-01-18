@@ -12,123 +12,207 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Major Expansion (90+ Middlewares!)
 
 #### Security (14 new)
+
 - **ReferrerPolicyMiddleware**: Control Referrer-Policy header
+
 - **PermissionsPolicyMiddleware**: Browser feature permissions
+
 - **CSPReportMiddleware**: CSP violation report handling
+
 - **ReplayPreventionMiddleware**: Prevent replay attacks with nonces
+
 - **RequestSigningMiddleware**: HMAC request signature validation
+
 - **HoneypotMiddleware**: Trap malicious requests with fake endpoints
+
 - **SanitizationMiddleware**: Input sanitization and XSS prevention
 
 #### Authentication (4 new)
+
 - **BasicAuthMiddleware**: HTTP Basic Authentication
+
 - **BearerAuthMiddleware**: Bearer token authentication
+
 - **ScopeMiddleware**: OAuth scope validation
+
 - **RouteAuthMiddleware**: Per-route authentication requirements
 
 #### Rate Limiting & Protection (4 new)
+
 - **BulkheadMiddleware**: Bulkhead pattern for isolation
+
 - **RequestDedupMiddleware**: Deduplicate concurrent requests
+
 - **RequestCoalescingMiddleware**: Coalesce identical requests
 
 #### Performance (8 new)
+
 - **ResponseCacheMiddleware**: In-memory response caching
+
 - **ResponseSignatureMiddleware**: Sign responses for verification
+
 - **BandwidthMiddleware**: Bandwidth throttling
+
 - **NoCacheMiddleware**: Disable caching headers
+
 - **ConditionalRequestMiddleware**: If-None-Match/If-Modified-Since
+
 - **EarlyHintsMiddleware**: HTTP 103 Early Hints support
+
 - **HATEOASMiddleware**: Hypermedia links in responses
 
 #### Observability (6 new)
+
 - **ResponseTimeMiddleware**: Response time SLA monitoring
+
 - **ServerTimingMiddleware**: Server-Timing header support
+
 - **RequestLoggerMiddleware**: Access logging in multiple formats
+
 - **CostTrackingMiddleware**: Request cost tracking for billing
+
 - **RequestSamplerMiddleware**: Request sampling for analytics
 
 #### Operations (4 new)
+
 - **WarmupMiddleware**: Container warmup handling
+
 - **GracefulShutdownMiddleware**: Graceful shutdown with draining
+
 - **ChaosMiddleware**: Chaos engineering fault injection
+
 - **SlowResponseMiddleware**: Artificial delays for testing
 
 #### Request Processing (8 new)
+
 - **RequestValidatorMiddleware**: Request structure validation
+
 - **JSONSchemaMiddleware**: JSON Schema validation
+
 - **PayloadSizeMiddleware**: Request/response size limits
+
 - **MethodOverrideMiddleware**: HTTP method override via header
+
 - **RequestFingerprintMiddleware**: Request fingerprinting
+
 - **RequestPriorityMiddleware**: Request prioritization
+
 - **RequestIDPropagationMiddleware**: Distributed request ID chain
 
 #### Routing (3 new)
+
 - **PathRewriteMiddleware**: URL path rewriting
+
 - **ProxyMiddleware**: Reverse proxy to other services
 
 #### API Management (2 new)
+
 - **APIVersionHeaderMiddleware**: API version headers
+
 - **ContentNegotiationMiddleware**: Accept header content negotiation
 
 #### Detection (3 new)
+
 - **UserAgentMiddleware**: User-Agent parsing and analysis
+
 - **ClientHintsMiddleware**: Client Hints support
+
 - **AcceptLanguageMiddleware**: Accept-Language negotiation
 
 #### Context (2 new)
+
 - **ContextMiddleware**: Shared request context
+
 - **RealIPMiddleware**: Real client IP extraction
+
 - **XFFTrustMiddleware**: X-Forwarded-For trust handling
 
 #### Error Handling (1 new)
+
 - **ExceptionHandlerMiddleware**: Custom exception handlers
 
 ### Changed
+
 - Updated version to 0.5.0
+
 - Renamed package from `src` to `fastmiddleware`
+
 - Expanded test suite to 316 tests
+
 - Improved documentation with examples for all middlewares
 
 ## [0.4.0] - 2026-01-18
 
 ### Added
+
 - **TimeoutMiddleware**: Request timeout enforcement
+
 - **IPFilterMiddleware**: IP whitelist/blacklist
+
 - **HTTPSRedirectMiddleware**: HTTPS enforcement
+
 - **TrailingSlashMiddleware**: URL trailing slash normalization
+
 - **RequestLimitMiddleware**: Request body size limits
+
 - **CSRFMiddleware**: CSRF protection
+
 - **SessionMiddleware**: Server-side sessions
+
 - **CorrelationMiddleware**: Correlation ID tracking
+
 - **VersioningMiddleware**: API versioning
+
 - **BotDetectionMiddleware**: Bot detection and blocking
+
 - **ProfilingMiddleware**: Request profiling
+
 - **CircuitBreakerMiddleware**: Circuit breaker pattern
 
 ### Changed
+
 - Updated test coverage
+
 - Improved error messages
 
 ## [0.3.0] - 2026-01-17
 
 ### Added
+
 - **QuotaMiddleware**: Usage quota enforcement
+
 - **LoadSheddingMiddleware**: Load shedding during overload
+
 - **FeatureFlagMiddleware**: Feature flag management
+
 - **ABTestMiddleware**: A/B testing support
+
 - **GeoIPMiddleware**: GeoIP data extraction
+
 - **DeprecationMiddleware**: API deprecation warnings
+
 - **LocaleMiddleware**: Locale detection
+
 - **WebhookMiddleware**: Webhook signature validation
+
 - **TenantMiddleware**: Multi-tenancy support
+
 - **AuditMiddleware**: Audit logging
+
 - **DataMaskingMiddleware**: Sensitive data masking
+
 - **RedirectMiddleware**: URL redirects
+
 - **HeaderTransformMiddleware**: Header manipulation
+
 - **ETagMiddleware**: ETag generation
+
 - **OriginMiddleware**: Origin validation
+
 - **RetryAfterMiddleware**: Retry-After headers
+
 - **ContentTypeMiddleware**: Content-Type validation
+
 - **ResponseFormatMiddleware**: Response formatting
 
 ## [0.2.0] - 2026-01-17

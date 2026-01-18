@@ -11,6 +11,7 @@ from fastmiddleware import (
     JWTAuthBackend,
     APIKeyAuthBackend,
 )
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app = FastAPI()
 
 backend = JWTAuthBackend(secret="your-secret-key")
 app.add_middleware(AuthenticationMiddleware, backend=backend)
+
 ```
 
 ## Configuration
@@ -52,6 +54,7 @@ backend = JWTAuthBackend(
     audience=None,
     issuer=None,
 )
+
 ```
 
 | Parameter | Type | Default | Description |
@@ -67,6 +70,7 @@ backend = JWTAuthBackend(
 API key authentication.
 
 ```python
+
 # Static keys
 backend = APIKeyAuthBackend(
     valid_keys={"key1", "key2", "key3"},
@@ -78,6 +82,7 @@ backend = APIKeyAuthBackend(
     validator=my_validator_func,
     header_name="X-API-Key",
 )
+
 ```
 
 | Parameter | Type | Default | Description |
@@ -115,6 +120,7 @@ app.add_middleware(
     backend=backend,
     config=config,
 )
+
 ```
 
 ### Accessing User Data
@@ -136,8 +142,9 @@ async def protected_route(request: Request):
     if not hasattr(request.state, "auth"):
         # This shouldn't happen if middleware is configured correctly
         raise HTTPException(401, "Not authenticated")
-    
+
     return {"message": f"Hello, {request.state.auth['sub']}"}
+
 ```
 
 ### API Key with Static Keys
@@ -154,6 +161,7 @@ backend = APIKeyAuthBackend(
 )
 
 app.add_middleware(AuthenticationMiddleware, backend=backend)
+
 ```
 
 ### API Key with Database Validation
@@ -162,9 +170,9 @@ app.add_middleware(AuthenticationMiddleware, backend=backend)
 async def validate_api_key(key: str) -> dict | None:
     """Validate API key against database."""
     from your_app.db import get_api_key
-    
+
     api_key = await get_api_key(key)
-    
+
     if api_key and api_key.is_active:
         return {
             "user_id": api_key.user_id,
@@ -172,10 +180,11 @@ async def validate_api_key(key: str) -> dict | None:
             "scopes": api_key.scopes,
             "rate_limit": api_key.rate_limit,
         }
-    
+
     return None
 
 backend = APIKeyAuthBackend(validator=validate_api_key)
+
 ```
 
 ### Combined JWT and API Key
@@ -183,27 +192,28 @@ backend = APIKeyAuthBackend(validator=validate_api_key)
 ```python
 class CombinedAuthBackend:
     """Support both JWT and API key authentication."""
-    
+
     def __init__(self, jwt_secret: str, api_keys: set[str]):
         self.jwt_backend = JWTAuthBackend(secret=jwt_secret)
         self.api_key_backend = APIKeyAuthBackend(valid_keys=api_keys)
-    
+
     async def authenticate(self, request: Request) -> dict | None:
         # Try JWT first
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             return await self.jwt_backend.authenticate(request)
-        
+
         # Try API key
         if "X-API-Key" in request.headers:
             return await self.api_key_backend.authenticate(request)
-        
+
         return None
 
 backend = CombinedAuthBackend(
     jwt_secret=os.environ["JWT_SECRET"],
     api_keys={"key1", "key2"},
 )
+
 ```
 
 ### Custom Error Response
@@ -213,13 +223,16 @@ config = AuthConfig(
     error_message="Please login to access this resource",
     error_status_code=401,
 )
+
 ```
 
 Response:
+
 ```json
 {
     "detail": "Please login to access this resource"
 }
+
 ```
 
 ## Request Flow
@@ -239,6 +252,7 @@ Response:
 {
     "detail": "Authentication required"
 }
+
 ```
 
 ### Invalid Token
@@ -247,6 +261,7 @@ Response:
 {
     "detail": "Invalid authentication credentials"
 }
+
 ```
 
 ### Expired Token
@@ -255,6 +270,7 @@ Response:
 {
     "detail": "Token has expired"
 }
+
 ```
 
 ## Best Practices

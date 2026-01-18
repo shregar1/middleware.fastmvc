@@ -6,6 +6,7 @@ Coalesce identical concurrent requests into a single execution.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     RequestCoalescingMiddleware,
     window=0.1,  # 100ms window
 )
+
 ```
 
 ## Configuration
@@ -48,6 +50,7 @@ app.add_middleware(
 )
 
 # 10 identical requests in 100ms → 1 backend call, 10 responses
+
 ```
 
 ### Longer Window
@@ -57,6 +60,7 @@ app.add_middleware(
     RequestCoalescingMiddleware,
     window=1.0,  # 1 second
 )
+
 ```
 
 ### Specific Paths
@@ -71,6 +75,7 @@ app.add_middleware(
         "/api/config",
     },
 )
+
 ```
 
 ### Exclude Dynamic Endpoints
@@ -84,6 +89,7 @@ app.add_middleware(
         "/api/cart",    # Session-specific
     },
 )
+
 ```
 
 ### With Caching
@@ -102,14 +108,19 @@ app.add_middleware(
     ResponseCacheMiddleware,
     default_ttl=60,
 )
+
 ```
 
 ## Request Identity
 
 Requests are considered identical if:
+
 - Same HTTP method
+
 - Same path
+
 - Same query parameters
+
 - Same body hash (for POST/PUT)
 
 ## Performance Benefits
@@ -124,6 +135,7 @@ Requests are considered identical if:
 ```http
 X-Coalesced: true
 X-Coalesced-Count: 15
+
 ```
 
 ## Use Cases

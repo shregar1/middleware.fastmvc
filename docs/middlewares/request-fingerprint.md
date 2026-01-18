@@ -6,6 +6,7 @@ Generate unique fingerprints for requests.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(RequestFingerprintMiddleware)
 @app.get("/")
 async def handler():
     return {"fingerprint": get_fingerprint()}
+
 ```
 
 ## Configuration
@@ -46,6 +48,7 @@ async def track():
     fp = get_fingerprint()
     await analytics.record(fp)
     return {"tracked": True}
+
 ```
 
 ## Examples
@@ -56,6 +59,7 @@ async def track():
 app.add_middleware(RequestFingerprintMiddleware)
 
 # Fingerprint: sha256 hash of IP + User-Agent
+
 ```
 
 ### Include Accept-Language
@@ -65,6 +69,7 @@ app.add_middleware(
     RequestFingerprintMiddleware,
     include_headers=["Accept-Language", "Accept-Encoding"],
 )
+
 ```
 
 ### Exclude IP (Privacy)
@@ -74,6 +79,7 @@ app.add_middleware(
     RequestFingerprintMiddleware,
     include_ip=False,
 )
+
 ```
 
 ### Custom Components
@@ -90,6 +96,7 @@ app.add_middleware(
         "Sec-CH-UA-Platform",
     ],
 )
+
 ```
 
 ### Device Tracking
@@ -102,13 +109,14 @@ app.add_middleware(RequestFingerprintMiddleware)
 @app.get("/session")
 async def session(request: Request):
     fp = get_fingerprint()
-    
+
     # Check if we've seen this device
     device = await db.get_device(fp)
     if not device:
         device = await db.create_device(fp)
-    
+
     return {"device_id": device.id}
+
 ```
 
 ### Fraud Detection
@@ -117,13 +125,14 @@ async def session(request: Request):
 @app.post("/purchase")
 async def purchase(data: PurchaseData):
     fp = get_fingerprint()
-    
+
     # Check for suspicious patterns
     recent_purchases = await db.get_purchases_by_fingerprint(fp, hours=24)
     if len(recent_purchases) > 10:
         raise HTTPException(429, "Too many purchases from this device")
-    
+
     return await process_purchase(data)
+
 ```
 
 ### Rate Limiting by Fingerprint
@@ -141,6 +150,7 @@ app.add_middleware(
     key_func=fingerprint_key,
     requests_per_minute=60,
 )
+
 ```
 
 ## Fingerprint Components
@@ -157,6 +167,7 @@ app.add_middleware(
 
 ```python
 request.state.fingerprint  # The computed fingerprint
+
 ```
 
 ## Privacy Considerations

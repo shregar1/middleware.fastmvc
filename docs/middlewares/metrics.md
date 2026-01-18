@@ -6,6 +6,7 @@ Prometheus-compatible metrics collection with request counts, latency histograms
 
 ```python
 from fastmiddleware import MetricsMiddleware, MetricsConfig, MetricsCollector
+
 ```
 
 ## Quick Start
@@ -16,6 +17,7 @@ from fastmiddleware import MetricsMiddleware
 
 app = FastAPI()
 app.add_middleware(MetricsMiddleware)
+
 ```
 
 ## Configuration
@@ -46,6 +48,7 @@ app.add_middleware(MetricsMiddleware)
 app.add_middleware(MetricsMiddleware)
 
 # Access metrics at /metrics
+
 ```
 
 ### Custom Path
@@ -53,6 +56,7 @@ app.add_middleware(MetricsMiddleware)
 ```python
 config = MetricsConfig(metrics_path="/prometheus")
 app.add_middleware(MetricsMiddleware, config=config)
+
 ```
 
 ### Path Normalization
@@ -64,6 +68,7 @@ config = MetricsConfig(
         r"/orders/[a-f0-9-]+": "/orders/{uuid}",
     },
 )
+
 ```
 
 ## Prometheus Config
@@ -74,11 +79,13 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:8000']
     metrics_path: /metrics
+
 ```
 
 ## Grafana Queries
 
 ```promql
+
 # Request rate
 rate(fastmvc_http_requests_total[5m])
 
@@ -87,4 +94,5 @@ rate(fastmvc_http_requests_total{status=~"5.."}[5m])
 
 # P95 latency
 histogram_quantile(0.95, rate(fastmvc_http_request_duration_seconds_bucket[5m]))
+
 ```

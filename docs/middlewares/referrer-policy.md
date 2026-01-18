@@ -6,6 +6,7 @@ Set Referrer-Policy header for privacy control.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     ReferrerPolicyMiddleware,
     policy="strict-origin-when-cross-origin",
 )
+
 ```
 
 ## Configuration
@@ -50,6 +52,7 @@ app.add_middleware(
     ReferrerPolicyMiddleware,
     policy="strict-origin-when-cross-origin",
 )
+
 ```
 
 ### No Referrer (Maximum Privacy)
@@ -59,6 +62,7 @@ app.add_middleware(
     ReferrerPolicyMiddleware,
     policy="no-referrer",
 )
+
 ```
 
 ### Same Origin Only
@@ -68,6 +72,7 @@ app.add_middleware(
     ReferrerPolicyMiddleware,
     policy="same-origin",
 )
+
 ```
 
 ### Origin Only
@@ -79,7 +84,9 @@ app.add_middleware(
 )
 
 # https://example.com/page?secret=123
+
 # Sends: https://example.com (path stripped)
+
 ```
 
 ## Policy Comparison
@@ -94,6 +101,7 @@ app.add_middleware(
 
 ```http
 Referrer-Policy: strict-origin-when-cross-origin
+
 ```
 
 ## Use Cases

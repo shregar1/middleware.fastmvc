@@ -6,6 +6,7 @@ Limit request body size.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     RequestLimitMiddleware,
     max_size=10 * 1024 * 1024,  # 10 MB
 )
+
 ```
 
 ## Configuration
@@ -38,6 +40,7 @@ app.add_middleware(
     RequestLimitMiddleware,
     max_size=5 * 1024 * 1024,  # 5 MB
 )
+
 ```
 
 ### Small JSON Limit
@@ -47,6 +50,7 @@ app.add_middleware(
     RequestLimitMiddleware,
     max_size=1 * 1024 * 1024,  # 1 MB for JSON APIs
 )
+
 ```
 
 ### Exclude Upload Paths
@@ -57,6 +61,7 @@ app.add_middleware(
     max_size=1 * 1024 * 1024,  # 1 MB default
     exclude_paths={"/upload", "/import"},
 )
+
 ```
 
 ### Multiple Limits (Custom)
@@ -73,6 +78,7 @@ class PathAwareLimit(RequestLimitMiddleware):
         return self.max_size
 
 app.add_middleware(PathAwareLimit, max_size=5 * 1024 * 1024)
+
 ```
 
 ## Error Response
@@ -83,6 +89,7 @@ app.add_middleware(PathAwareLimit, max_size=5 * 1024 * 1024)
     "detail": "Request body exceeds maximum size of 10485760 bytes",
     "status_code": 413
 }
+
 ```
 
 ## Use Cases

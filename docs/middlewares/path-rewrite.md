@@ -6,6 +6,7 @@ Rewrite request paths without redirecting.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app.add_middleware(
         RewriteRule(r"/users/(\d+)", r"/api/users/\1", is_regex=True),
     ],
 )
+
 ```
 
 ## Configuration
@@ -52,6 +54,7 @@ app.add_middleware(
 )
 
 # /old-api/users → /api/v2/users
+
 ```
 
 ### Regex Patterns
@@ -69,6 +72,7 @@ app.add_middleware(
 )
 
 # /users/123/profile → /api/v2/profiles/123
+
 ```
 
 ### API Version Rewriting
@@ -83,7 +87,9 @@ app.add_middleware(
 )
 
 # /v1/users → /api/v1/users
+
 # /v2/users → /api/v2/users
+
 ```
 
 ### Legacy URL Support
@@ -97,6 +103,7 @@ app.add_middleware(
         RewriteRule("/feed", "/api/rss"),
     ],
 )
+
 ```
 
 ### Complex Rewrites
@@ -121,7 +128,9 @@ app.add_middleware(
 )
 
 # /@johndoe → /api/users/by-username/johndoe
+
 # /archive/2024/01 → /api/posts?year=2024&month=01
+
 ```
 
 ### Microservice Routing
@@ -135,6 +144,7 @@ app.add_middleware(
         RewriteRule("/notifications/", "/api/notification-service/"),
     ],
 )
+
 ```
 
 ## Difference from Redirect

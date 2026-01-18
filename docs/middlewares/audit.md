@@ -6,6 +6,7 @@ Comprehensive audit logging for compliance and security tracking.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(
     log_response_body=False,
     sensitive_headers={"Authorization", "Cookie"},
 )
+
 ```
 
 ## Configuration
@@ -54,6 +56,7 @@ app.add_middleware(
     "request_body": {"name": "John", "email": "john@example.com"},
     "response_status": 201
 }
+
 ```
 
 ## Examples
@@ -65,6 +68,7 @@ app.add_middleware(
     AuditMiddleware,
     log_request_body=True,
 )
+
 ```
 
 ### Compliance-Ready Logging
@@ -77,6 +81,7 @@ app.add_middleware(
     sensitive_headers={"Authorization", "Cookie", "X-API-Key"},
     exclude_paths={"/health", "/metrics"},
 )
+
 ```
 
 ### Custom Audit Handler
@@ -92,6 +97,7 @@ app.add_middleware(
     AuditMiddleware,
     handler=custom_audit_handler,
 )
+
 ```
 
 ### With User Context
@@ -102,6 +108,7 @@ from fastmiddleware import AuditMiddleware, RequestContextMiddleware
 # Add context first to capture user info
 app.add_middleware(RequestContextMiddleware)
 app.add_middleware(AuditMiddleware)
+
 ```
 
 ## Use Cases

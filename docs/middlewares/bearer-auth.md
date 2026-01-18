@@ -10,6 +10,7 @@ Bearer token authentication middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -37,6 +38,7 @@ async def validate_token(token: str):
     return {"user_id": user.id, "role": user.role} if user else None
 
 middleware.set_validate_func(validate_token)
+
 ```
 
 ## Configuration
@@ -53,6 +55,7 @@ middleware.set_validate_func(validate_token)
 
 ```bash
 curl -H "Authorization: Bearer token123" https://api.example.com/protected
+
 ```
 
 ## Response Codes
@@ -69,6 +72,7 @@ async def handler(request: Request):
     user = request.state.user  # {"user_id": 1, "role": "admin"}
     token = request.state.token  # "token123"
     return {"user_id": user["user_id"]}
+
 ```
 
 ## Related Middlewares

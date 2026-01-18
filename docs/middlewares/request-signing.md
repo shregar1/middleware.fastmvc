@@ -6,6 +6,7 @@ Validate HMAC request signatures.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(
     signature_header="X-Signature",
     algorithm="sha256",
 )
+
 ```
 
 ## Configuration
@@ -39,6 +41,7 @@ The signature is computed as:
 
 ```text
 HMAC-SHA256(secret, "{timestamp}.{method}.{path}.{body}")
+
 ```
 
 ## Required Client Headers
@@ -46,6 +49,7 @@ HMAC-SHA256(secret, "{timestamp}.{method}.{path}.{body}")
 ```http
 X-Signature: sha256=a1b2c3d4e5f6...
 X-Timestamp: 1705574400
+
 ```
 
 ## Examples
@@ -57,6 +61,7 @@ app.add_middleware(
     RequestSigningMiddleware,
     secret_key="my-secret-key",
 )
+
 ```
 
 ### Exclude Public Endpoints
@@ -67,6 +72,7 @@ app.add_middleware(
     secret_key="my-secret-key",
     exclude_paths={"/health", "/public", "/docs"},
 )
+
 ```
 
 ### Different Algorithm
@@ -77,6 +83,7 @@ app.add_middleware(
     secret_key="my-secret-key",
     algorithm="sha512",
 )
+
 ```
 
 ### Client Implementation (Python)
@@ -103,6 +110,7 @@ def sign_request(method, path, body, secret):
 # Usage
 headers = sign_request("POST", "/api/data", '{"key": "value"}', "secret")
 requests.post("http://api/api/data", json={"key": "value"}, headers=headers)
+
 ```
 
 ### Client Implementation (JavaScript)
@@ -117,12 +125,13 @@ function signRequest(method, path, body, secret) {
         .createHmac('sha256', secret)
         .update(message)
         .digest('hex');
-    
+
     return {
         'X-Timestamp': timestamp,
         'X-Signature': `sha256=${signature}`,
     };
 }
+
 ```
 
 ### With Replay Prevention
@@ -141,6 +150,7 @@ app.add_middleware(
     RequestSigningMiddleware,
     secret_key="my-secret",
 )
+
 ```
 
 ## Error Responses
@@ -153,6 +163,7 @@ app.add_middleware(
     "detail": "Missing required header: X-Signature",
     "status_code": 400
 }
+
 ```
 
 ### Invalid Signature
@@ -163,6 +174,7 @@ app.add_middleware(
     "detail": "Invalid signature",
     "status_code": 401
 }
+
 ```
 
 ## Security Best Practices

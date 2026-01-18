@@ -7,8 +7,10 @@ This document describes how to configure branch protection rules for the `main` 
 Go to: **Repository Settings → Branches → Add branch protection rule**
 
 ### Branch name pattern
+
 ```text
 main
+
 ```
 
 ### Protection Rules (Enable these)
@@ -62,6 +64,7 @@ gh api repos/{owner}/{repo}/branches/main/protection \
   -f block_creations=false \
   -f required_linear_history=false \
   -f required_conversation_resolution=true
+
 ```
 
 Replace `{owner}` with `shregar1` and `{repo}` with `fastmvc-middleware`.
@@ -89,10 +92,12 @@ Go to: **Repository Settings → Rules → Rulesets → New ruleset**
 After setting up, verify by trying:
 
 ```bash
+
 # This should fail
 git push origin main
 
 # Error: remote: error: GH006: Protected branch update failed
+
 ```
 
 ## Notes

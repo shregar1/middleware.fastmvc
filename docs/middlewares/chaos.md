@@ -10,6 +10,7 @@ Chaos engineering middleware for fault injection testing.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## ⚠️ Warning
@@ -34,6 +35,7 @@ app.add_middleware(
     min_latency=0.5,     # 500ms minimum
     max_latency=5.0,     # 5 seconds maximum
 )
+
 ```
 
 ## Configuration
@@ -62,11 +64,13 @@ app.add_middleware(
   "message": "Chaos injection: 503",
   "chaos": true
 }
+
 ```
 
 ## Testing Resilience
 
 ```python
+
 # Test circuit breaker
 config = ChaosConfig(
     enabled=True,
@@ -87,16 +91,19 @@ config = ChaosConfig(
     failure_rate=0.3,
     affected_paths={"/api/external", "/api/database"},
 )
+
 ```
 
 ## Safe Environment Check
 
 ```python
+
 # Ensure chaos is never enabled in production
 import os
 
 if os.getenv("ENVIRONMENT") == "production":
     assert os.getenv("CHAOS_ENABLED") != "true", "Chaos must not be enabled in production!"
+
 ```
 
 ## Related Middlewares

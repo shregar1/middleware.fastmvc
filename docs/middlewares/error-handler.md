@@ -6,6 +6,7 @@ Centralized error handling with consistent error response formatting, exception 
 
 ```python
 from fastmiddleware import ErrorHandlerMiddleware, ErrorConfig
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import ErrorHandlerMiddleware
 app = FastAPI()
 
 app.add_middleware(ErrorHandlerMiddleware)
+
 ```
 
 ## Configuration
@@ -41,6 +43,7 @@ app.add_middleware(ErrorHandlerMiddleware)
     "status_code": 500,
     "request_id": "abc-123-def"
 }
+
 ```
 
 ### With Exception Type
@@ -53,6 +56,7 @@ app.add_middleware(ErrorHandlerMiddleware)
     "type": "ValueError",
     "request_id": "abc-123-def"
 }
+
 ```
 
 ### With Traceback (Development)
@@ -71,6 +75,7 @@ app.add_middleware(ErrorHandlerMiddleware)
         "ValueError: invalid literal for int()"
     ]
 }
+
 ```
 
 ## Examples
@@ -84,6 +89,7 @@ app.add_middleware(
     include_exception_type=False,
     log_exceptions=True,
 )
+
 ```
 
 ### Development Configuration
@@ -95,6 +101,7 @@ app.add_middleware(
     include_exception_type=True,
     log_exceptions=True,
 )
+
 ```
 
 ### Custom Error Message
@@ -104,6 +111,7 @@ app.add_middleware(
     ErrorHandlerMiddleware,
     default_message="Something went wrong. Please try again.",
 )
+
 ```
 
 ### Custom Exception Handlers
@@ -118,6 +126,7 @@ config.error_handlers[FileNotFoundError] = (404, "Resource not found")
 config.error_handlers[TimeoutError] = (504, "Request timed out")
 
 app.add_middleware(ErrorHandlerMiddleware, config=config)
+
 ```
 
 ### Handler with Custom Response
@@ -133,6 +142,7 @@ config = ErrorConfig()
 config.error_handlers[ValueError] = handle_validation_error
 
 app.add_middleware(ErrorHandlerMiddleware, config=config)
+
 ```
 
 ## Exception Mapping
@@ -159,10 +169,15 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 
 # Exceptions are logged with:
+
 # - Exception type
+
 # - Message
+
 # - Traceback
+
 # - Request ID (if available)
+
 ```
 
 ## Integration with Request ID
@@ -173,15 +188,18 @@ from fastmiddleware import ErrorHandlerMiddleware, RequestIDMiddleware
 # Request ID is included in error responses
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(RequestIDMiddleware)
+
 ```
 
 Response:
+
 ```json
 {
     "error": true,
     "message": "An internal error occurred",
     "request_id": "550e8400-e29b-41d4-a716-446655440000"
 }
+
 ```
 
 ## Custom Error Responses
@@ -198,6 +216,7 @@ class JSONAPIErrorMiddleware(ErrorHandlerMiddleware):
                 "detail": message,
             }]
         }
+
 ```
 
 ### Problem Details (RFC 7807)
@@ -212,6 +231,7 @@ class ProblemDetailsMiddleware(ErrorHandlerMiddleware):
             "detail": message,
             "instance": str(request.url),
         }
+
 ```
 
 ## Middleware Order
@@ -223,6 +243,7 @@ app.add_middleware(ErrorHandlerMiddleware)  # Add early
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(AuthenticationMiddleware)
 app.add_middleware(RateLimitMiddleware)
+
 ```
 
 ## Path Exclusion
@@ -234,6 +255,7 @@ app.add_middleware(
     ErrorHandlerMiddleware,
     exclude_paths={"/health"},
 )
+
 ```
 
 ## Best Practices
@@ -251,7 +273,9 @@ app.add_middleware(
   - Database queries
   - Internal variable values
   - Configuration details
+
 - Always disable in production
+
 - Sanitize error messages
 
 ## Related Middlewares

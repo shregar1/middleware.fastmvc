@@ -6,6 +6,7 @@ Handle trailing slashes in URLs.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     TrailingSlashMiddleware,
     action=SlashAction.STRIP,
 )
+
 ```
 
 ## Configuration
@@ -48,6 +50,7 @@ app.add_middleware(
 )
 
 # /api/users/ → /api/users
+
 ```
 
 ### Add Trailing Slashes
@@ -59,6 +62,7 @@ app.add_middleware(
 )
 
 # /api/users → /api/users/
+
 ```
 
 ### Redirect to Canonical
@@ -70,6 +74,7 @@ app.add_middleware(
 )
 
 # /api/users/ → 301 Redirect to /api/users
+
 ```
 
 ### Exclude Certain Paths
@@ -80,6 +85,7 @@ app.add_middleware(
     action=SlashAction.STRIP,
     exclude_paths={"/api/static/", "/api/downloads/"},
 )
+
 ```
 
 ### With Redirect Middleware
@@ -98,6 +104,7 @@ app.add_middleware(
     RedirectMiddleware,
     rules=[...],
 )
+
 ```
 
 ## Behavior by Action
@@ -107,6 +114,7 @@ app.add_middleware(
 ```text
 /api/users/ → /api/users (internally rewritten)
 /api/users  → /api/users (unchanged)
+
 ```
 
 ### ADD
@@ -114,6 +122,7 @@ app.add_middleware(
 ```text
 /api/users  → /api/users/ (internally rewritten)
 /api/users/ → /api/users/ (unchanged)
+
 ```
 
 ### REDIRECT
@@ -121,6 +130,7 @@ app.add_middleware(
 ```text
 /api/users/ → 301 Redirect to /api/users
 /api/users  → Normal response
+
 ```
 
 ## SEO Considerations

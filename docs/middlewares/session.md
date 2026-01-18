@@ -10,6 +10,7 @@ Server-side session management middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -36,6 +37,7 @@ config = SessionConfig(
     cookie_samesite="lax",
 )
 app.add_middleware(SessionMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -58,21 +60,22 @@ from fastapi import Request
 @app.get("/")
 async def handler(request: Request):
     session = request.state.session
-    
+
     # Get value
     user_id = session.get("user_id")
-    
+
     # Set value
     session.set("user_id", 123)
     session["visits"] = session.get("visits", 0) + 1
-    
+
     # Delete value
     session.delete("temp_data")
-    
+
     # Clear all
     session.clear()
-    
+
     return {"user_id": user_id}
+
 ```
 
 ## Session API
@@ -95,14 +98,14 @@ class RedisSessionStore(SessionStore):
     async def load(self, session_id: str) -> Session:
         data = await redis.get(f"session:{session_id}")
         return Session(session_id, json.loads(data) if data else {})
-    
+
     async def save(self, session: Session) -> None:
         await redis.set(
             f"session:{session.id}",
             json.dumps(session.data),
             ex=3600,
         )
-    
+
     async def delete(self, session_id: str) -> None:
         await redis.delete(f"session:{session_id}")
 
@@ -111,6 +114,7 @@ app.add_middleware(
     secret_key="secret",
     store=RedisSessionStore(),
 )
+
 ```
 
 ## Related Middlewares

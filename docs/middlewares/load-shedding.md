@@ -6,6 +6,7 @@ Shed load during high traffic to maintain system stability.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     max_concurrent=1000,
     shed_probability=0.5,
 )
+
 ```
 
 ## Configuration
@@ -48,6 +50,7 @@ app.add_middleware(
     max_concurrent=500,
     shed_probability=0.3,  # Shed 30% of excess requests
 )
+
 ```
 
 ### Protect Critical Paths
@@ -59,6 +62,7 @@ app.add_middleware(
     shed_probability=0.5,
     priority_paths={"/health", "/metrics", "/api/critical"},
 )
+
 ```
 
 ### Aggressive Shedding
@@ -69,11 +73,13 @@ app.add_middleware(
     max_concurrent=100,
     shed_probability=0.9,  # Shed 90% when overloaded
 )
+
 ```
 
 ### Gradual Shedding
 
 ```python
+
 # Custom implementation for gradual shedding
 from fastmiddleware import LoadSheddingMiddleware
 
@@ -81,12 +87,13 @@ class GradualLoadShedding(LoadSheddingMiddleware):
     def get_shed_probability(self, current_load: int) -> float:
         if current_load < self.max_concurrent:
             return 0.0
-        
+
         # Increase probability as load increases
         overload_ratio = current_load / self.max_concurrent
         return min(0.9, (overload_ratio - 1) * 0.5)
 
 app.add_middleware(GradualLoadShedding, max_concurrent=1000)
+
 ```
 
 ### With Circuit Breaker
@@ -107,6 +114,7 @@ app.add_middleware(
     failure_threshold=5,
     recovery_timeout=30,
 )
+
 ```
 
 ## Response on Shed
@@ -117,6 +125,7 @@ app.add_middleware(
     "detail": "Server is currently overloaded. Please retry later.",
     "status_code": 503
 }
+
 ```
 
 ## Response Headers
@@ -124,11 +133,13 @@ app.add_middleware(
 ```http
 Retry-After: 5
 X-Load-Shed: true
+
 ```
 
 ## Metrics
 
 ```python
+
 # Get current load metrics
 @app.get("/admin/load")
 async def get_load():
@@ -137,6 +148,7 @@ async def get_load():
         "max_concurrent": load_shedding.max_concurrent,
         "shed_count": load_shedding.shed_count,
     }
+
 ```
 
 ## Use Cases

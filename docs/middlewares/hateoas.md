@@ -10,6 +10,7 @@ Hypermedia as the Engine of Application State middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -34,6 +35,7 @@ app.add_middleware(
         ],
     },
 )
+
 ```
 
 ## Configuration
@@ -57,11 +59,14 @@ app.add_middleware(
 ## Response Format
 
 Original response:
+
 ```json
 {"id": 1, "name": "John"}
+
 ```
 
 With HATEOAS:
+
 ```json
 {
   "id": 1,
@@ -72,11 +77,13 @@ With HATEOAS:
     {"rel": "delete", "href": "https://api.example.com/api/users/1", "method": "DELETE"}
   ]
 }
+
 ```
 
 ## Collection Response
 
 Array responses are wrapped:
+
 ```json
 {
   "items": [{"id": 1}, {"id": 2}],
@@ -85,6 +92,7 @@ Array responses are wrapped:
     {"rel": "create", "href": "https://api.example.com/api/users", "method": "POST"}
   ]
 }
+
 ```
 
 ## Common Link Relations
@@ -110,7 +118,7 @@ For item-specific links, add them in your route handler:
 @app.get("/api/users/{user_id}")
 async def get_user(user_id: int, request: Request):
     user = await get_user_by_id(user_id)
-    
+
     return {
         **user,
         "_links": [
@@ -119,6 +127,7 @@ async def get_user(user_id: int, request: Request):
             {"rel": "update", "href": f"/api/users/{user_id}", "method": "PUT"},
         ],
     }
+
 ```
 
 ## Related Middlewares

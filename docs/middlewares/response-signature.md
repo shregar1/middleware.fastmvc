@@ -6,6 +6,7 @@ Sign responses for client verification.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     secret_key="your-secret",
     signature_header="X-Response-Signature",
 )
+
 ```
 
 ## Configuration
@@ -37,6 +39,7 @@ app.add_middleware(
 ```http
 X-Response-Signature: sha256=a1b2c3d4e5f6...
 X-Response-Timestamp: 1705574400
+
 ```
 
 ## Examples
@@ -48,6 +51,7 @@ app.add_middleware(
     ResponseSignatureMiddleware,
     secret_key="my-secret-key",
 )
+
 ```
 
 ### Include Headers in Signature
@@ -58,6 +62,7 @@ app.add_middleware(
     secret_key="my-secret-key",
     include_headers=["Content-Type", "X-Request-ID"],
 )
+
 ```
 
 ### Client Verification (Python)
@@ -85,6 +90,7 @@ if verify_response(body, timestamp, signature, "my-secret"):
     print("Response is authentic")
 else:
     print("Response may be tampered!")
+
 ```
 
 ### Client Verification (JavaScript)
@@ -98,9 +104,10 @@ function verifyResponse(body, timestamp, signature, secret) {
         .createHmac('sha256', secret)
         .update(message)
         .digest('hex');
-    
+
     return `sha256=${expected}` === signature;
 }
+
 ```
 
 ### Exclude Paths
@@ -114,16 +121,20 @@ config = ResponseSignatureConfig(
 )
 
 app.add_middleware(ResponseSignatureMiddleware, config=config)
+
 ```
 
 ## Signature Calculation
 
 ```text
 HMAC-SHA256(secret, "{timestamp}.{body}")
+
 ```
 
 Where:
+
 - `timestamp`: Unix timestamp
+
 - `body`: Response body content
 
 ## Use Cases

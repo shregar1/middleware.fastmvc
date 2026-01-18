@@ -10,6 +10,7 @@ HTTP Basic Authentication middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -33,6 +34,7 @@ config = BasicAuthConfig(
     exclude_methods={"OPTIONS"},
 )
 app.add_middleware(BasicAuthMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -47,11 +49,13 @@ app.add_middleware(BasicAuthMiddleware, config=config)
 ## Client Usage
 
 ```bash
+
 # curl
 curl -u admin:secret123 https://api.example.com/protected
 
 # With header
 curl -H "Authorization: Basic YWRtaW46c2VjcmV0MTIz" https://api.example.com/protected
+
 ```
 
 ## Response Codes
@@ -73,6 +77,7 @@ curl -H "Authorization: Basic YWRtaW46c2VjcmV0MTIz" https://api.example.com/prot
 async def handler(request: Request):
     username = request.state.user
     return {"user": username}
+
 ```
 
 ## Security Notes

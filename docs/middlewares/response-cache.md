@@ -6,6 +6,7 @@ In-memory response caching with TTL support.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ cache = ResponseCacheMiddleware(
     default_ttl=60,
     max_size=1000,
 )
+
 ```
 
 ## Configuration
@@ -40,6 +42,7 @@ Invalidate a specific cache entry.
 
 ```python
 cache.invalidate("/api/users/123")
+
 ```
 
 ### `clear() -> None`
@@ -48,6 +51,7 @@ Clear all cached responses.
 
 ```python
 cache.clear()
+
 ```
 
 ### `get_stats() -> dict`
@@ -56,7 +60,9 @@ Get cache statistics.
 
 ```python
 stats = cache.get_stats()
+
 # {"hits": 1500, "misses": 300, "size": 850}
+
 ```
 
 ## Examples
@@ -69,6 +75,7 @@ cache = ResponseCacheMiddleware(
     default_ttl=60,
     max_size=1000,
 )
+
 ```
 
 ### Path-Specific TTLs
@@ -83,6 +90,7 @@ cache = ResponseCacheMiddleware(
         "/api/realtime": 5,        # 5 seconds
     },
 )
+
 ```
 
 ### Exclude Dynamic Paths
@@ -97,6 +105,7 @@ cache = ResponseCacheMiddleware(
         "/api/cart",
     },
 )
+
 ```
 
 ### Cache Invalidation
@@ -107,12 +116,13 @@ cache = ResponseCacheMiddleware(app, default_ttl=300)
 @app.put("/api/users/{id}")
 async def update_user(id: str, data: UserUpdate):
     user = await db.update_user(id, data)
-    
+
     # Invalidate cached response
     cache.invalidate(f"/api/users/{id}")
     cache.invalidate("/api/users")
-    
+
     return user
+
 ```
 
 ### With Monitoring
@@ -126,6 +136,7 @@ async def cache_stats():
 async def clear_cache():
     cache.clear()
     return {"status": "cleared"}
+
 ```
 
 ### Conditional Caching
@@ -138,14 +149,15 @@ class ConditionalCache(ResponseCacheMiddleware):
         # Only cache successful responses
         if response.status_code != 200:
             return False
-        
+
         # Don't cache if no-cache header
         if request.headers.get("Cache-Control") == "no-cache":
             return False
-        
+
         return True
 
 cache = ConditionalCache(app, default_ttl=60)
+
 ```
 
 ## Response Headers
@@ -153,20 +165,26 @@ cache = ConditionalCache(app, default_ttl=60)
 ```http
 X-Cache: HIT
 X-Cache-TTL: 45
+
 ```
 
 or
 
 ```http
 X-Cache: MISS
+
 ```
 
 ## Cache Key
 
 Cache key is computed from:
+
 - Request method
+
 - Request path
+
 - Query parameters (sorted)
+
 - Vary headers (if configured)
 
 ## Use Cases

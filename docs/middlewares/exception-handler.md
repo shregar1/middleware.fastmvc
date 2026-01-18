@@ -6,6 +6,7 @@ Custom exception handling with registered handlers.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -25,6 +26,7 @@ def handle_value_error(exc: ValueError):
         status_code=400,
         content={"error": "Invalid value", "detail": str(exc)}
     )
+
 ```
 
 ## Configuration
@@ -51,6 +53,7 @@ def handle_key_error(exc):
 @handler.register(PermissionError)
 def handle_permission_error(exc):
     return JSONResponse(status_code=403, content={"error": "Forbidden"})
+
 ```
 
 ### Custom Exception Classes
@@ -89,26 +92,35 @@ def handle_validation(exc: ValidationError):
             "message": exc.message,
         }
     )
+
 ```
 
 ### Debug Mode
 
 ```python
+
 # Development
 handler = ExceptionHandlerMiddleware(app, debug=True)
 
 # Response includes traceback:
+
 # {
+
 #     "error": "ValueError",
+
 #     "detail": "...",
+
 #     "traceback": ["..."]
+
 # }
 
 # Production
 handler = ExceptionHandlerMiddleware(app, debug=False)
 
 # Response excludes traceback:
+
 # {"error": "ValueError", "detail": "..."}
+
 ```
 
 ### Async Handlers
@@ -118,11 +130,12 @@ handler = ExceptionHandlerMiddleware(app, debug=False)
 async def handle_db_error(exc: DatabaseError):
     await log_error(exc)
     await notify_oncall(exc)
-    
+
     return JSONResponse(
         status_code=503,
         content={"error": "Service temporarily unavailable"}
     )
+
 ```
 
 ### Exception Hierarchy
@@ -146,6 +159,7 @@ def handle_api_error(exc: APIError):
 @handler.register(AuthError)
 def handle_auth_error(exc: AuthError):
     return JSONResponse(status_code=401, content={"error": "Unauthorized"})
+
 ```
 
 ### Logging Exceptions
@@ -162,6 +176,7 @@ def handle_all(exc: Exception):
         status_code=500,
         content={"error": "Internal server error"}
     )
+
 ```
 
 ## Related Middlewares

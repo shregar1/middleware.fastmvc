@@ -10,6 +10,7 @@ Cross-Site Request Forgery protection middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -36,6 +37,7 @@ config = CSRFConfig(
     safe_methods={"GET", "HEAD", "OPTIONS"},
 )
 app.add_middleware(CSRFMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -75,6 +77,7 @@ fetch('/api/data', {
   credentials: 'include',
   body: JSON.stringify(data),
 });
+
 ```
 
 ## Response Codes

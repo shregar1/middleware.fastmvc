@@ -11,6 +11,7 @@ from fastmiddleware import (
     RateLimitStore,
     InMemoryRateLimitStore,
 )
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app = FastAPI()
 
 # Default: 60 requests per minute
 app.add_middleware(RateLimitMiddleware)
+
 ```
 
 ## Configuration
@@ -51,6 +53,7 @@ config = RateLimitConfig(
 )
 
 app.add_middleware(RateLimitMiddleware, config=config)
+
 ```
 
 ### Per-User Rate Limiting
@@ -63,7 +66,7 @@ def get_user_key(request: Request) -> str:
     if hasattr(request.state, "auth"):
         user_id = request.state.auth.get("user_id", "unknown")
         return f"user:{user_id}"
-    
+
     # Fall back to IP for unauthenticated requests
     return get_ip_key(request)
 
@@ -80,6 +83,7 @@ config = RateLimitConfig(
 )
 
 app.add_middleware(RateLimitMiddleware, config=config)
+
 ```
 
 ### API Key Based Limits
@@ -96,6 +100,7 @@ config = RateLimitConfig(
     requests_per_minute=1000,  # Higher limit for API keys
     key_func=get_api_key,
 )
+
 ```
 
 ### Tiered Rate Limits
@@ -112,9 +117,10 @@ def get_tier_key(request: Request) -> str:
     tier = "free"
     if hasattr(request.state, "auth"):
         tier = request.state.auth.get("tier", "free")
-    
+
     user_id = request.state.auth.get("user_id", "anon") if hasattr(request.state, "auth") else "anon"
     return f"{tier}:{user_id}"
+
 ```
 
 ### With Burst Limit
@@ -124,6 +130,7 @@ config = RateLimitConfig(
     requests_per_minute=60,
     burst_limit=10,  # Allow 10 requests instantly
 )
+
 ```
 
 ## Response Headers
@@ -144,6 +151,7 @@ HTTP/1.1 200 OK
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1704067200
+
 ```
 
 ### Rate Limited Response
@@ -159,6 +167,7 @@ Content-Type: application/json
 {
     "detail": "Rate limit exceeded. Try again in 30 seconds."
 }
+
 ```
 
 ## Custom Storage Backend
@@ -170,10 +179,10 @@ from fastmiddleware import RateLimitStore
 
 class RedisRateLimitStore(RateLimitStore):
     """Redis-backed rate limit storage."""
-    
+
     def __init__(self, redis_client):
         self.redis = redis_client
-    
+
     async def check_rate_limit(
         self,
         key: str,
@@ -184,7 +193,7 @@ class RedisRateLimitStore(RateLimitStore):
         pipe = self.redis.pipeline()
         now = time.time()
         window_start = now - window
-        
+
         # Remove old entries
         pipe.zremrangebyscore(key, 0, window_start)
         # Count current entries
@@ -193,16 +202,16 @@ class RedisRateLimitStore(RateLimitStore):
         pipe.zadd(key, {str(now): now})
         # Set expiration
         pipe.expire(key, window)
-        
+
         results = await pipe.execute()
         current_count = results[1]
-        
+
         allowed = current_count < limit
         remaining = max(0, limit - current_count - 1)
         reset_time = int(now + window)
-        
+
         return allowed, remaining, reset_time
-    
+
     async def record_request(self, key: str) -> None:
         """Record a request (already done in check_rate_limit)."""
         pass
@@ -218,6 +227,7 @@ app.add_middleware(
     store=store,
     config=RateLimitConfig(requests_per_minute=100),
 )
+
 ```
 
 ## Path Exclusion
@@ -229,6 +239,7 @@ app.add_middleware(
     RateLimitMiddleware,
     exclude_paths={"/health", "/metrics", "/docs"},
 )
+
 ```
 
 ## Best Practices
@@ -249,8 +260,11 @@ This middleware uses the **sliding window** algorithm:
 4. Reject with 429 if count >= limit
 
 Benefits over fixed window:
+
 - No burst at window boundaries
+
 - More accurate rate enforcement
+
 - Smoother rate limiting experience
 
 ## Related Middlewares

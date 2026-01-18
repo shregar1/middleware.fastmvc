@@ -6,6 +6,7 @@ Cross-Origin Resource Sharing (CORS) middleware for handling browser security re
 
 ```python
 from fastmiddleware import CORSMiddleware
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 ```
 
 ## Configuration
@@ -41,12 +43,14 @@ app.add_middleware(
 ### Development (Allow All)
 
 ```python
+
 # ⚠️ Development only!
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,  # Required when using "*"
 )
+
 ```
 
 ### Single Origin
@@ -57,6 +61,7 @@ app.add_middleware(
     allow_origins=["https://app.example.com"],
     allow_credentials=True,
 )
+
 ```
 
 ### Multiple Origins
@@ -73,6 +78,7 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
+
 ```
 
 ### Expose Custom Headers
@@ -87,6 +93,7 @@ app.add_middleware(
         "X-RateLimit-Reset",
     ],
 )
+
 ```
 
 ### Long Preflight Cache
@@ -97,6 +104,7 @@ app.add_middleware(
     allow_origins=["https://app.example.com"],
     max_age=86400,  # Cache preflight for 24 hours
 )
+
 ```
 
 ### Specific Methods Only
@@ -108,6 +116,7 @@ app.add_middleware(
     allow_methods=["GET", "POST"],  # Only GET and POST
     allow_headers=["Content-Type", "Authorization"],
 )
+
 ```
 
 ## Response Headers
@@ -119,6 +128,7 @@ For simple requests (GET, HEAD, POST with simple content types):
 ```http
 Access-Control-Allow-Origin: https://app.example.com
 Access-Control-Allow-Credentials: true
+
 ```
 
 ### Preflight Response (OPTIONS)
@@ -131,6 +141,7 @@ Access-Control-Allow-Methods: GET, POST, PUT, DELETE
 Access-Control-Allow-Headers: Content-Type, Authorization
 Access-Control-Allow-Credentials: true
 Access-Control-Max-Age: 600
+
 ```
 
 ### Exposed Headers
@@ -139,6 +150,7 @@ When headers are exposed:
 
 ```http
 Access-Control-Expose-Headers: X-Request-ID, X-RateLimit-Remaining
+
 ```
 
 ## How CORS Works
@@ -163,6 +175,7 @@ For "complex" requests (custom headers, PUT/DELETE, etc.):
 ### Wildcard with Credentials
 
 ```python
+
 # ❌ This doesn't work!
 app.add_middleware(
     CORSMiddleware,
@@ -176,6 +189,7 @@ app.add_middleware(
     allow_origins=["https://app.example.com"],
     allow_credentials=True,
 )
+
 ```
 
 ### Missing Headers
@@ -187,6 +201,7 @@ app.add_middleware(
     CORSMiddleware,
     expose_headers=["X-Custom-Header"],  # Must expose explicitly
 )
+
 ```
 
 ### Preflight Not Cached
@@ -198,6 +213,7 @@ app.add_middleware(
     CORSMiddleware,
     max_age=86400,  # Cache for 24 hours
 )
+
 ```
 
 ## Environment Configuration
@@ -212,6 +228,7 @@ app.add_middleware(
     allow_origins=origins if origins[0] else [],
     allow_credentials=True,
 )
+
 ```
 
 ## Best Practices

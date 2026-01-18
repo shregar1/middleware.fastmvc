@@ -6,6 +6,7 @@ Profile request performance for debugging and optimization.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     enabled=True,
     threshold_ms=100,
 )
+
 ```
 
 ## Configuration
@@ -42,6 +44,7 @@ app.add_middleware(
     enabled=True,
     threshold_ms=100,  # Only slow requests
 )
+
 ```
 
 ### Profile Specific Paths
@@ -53,6 +56,7 @@ app.add_middleware(
     include_paths={"/api/search", "/api/reports"},
     threshold_ms=50,
 )
+
 ```
 
 ### Exclude Health Checks
@@ -63,6 +67,7 @@ app.add_middleware(
     enabled=True,
     exclude_paths={"/health", "/metrics", "/ready"},
 )
+
 ```
 
 ### Development Only
@@ -75,6 +80,7 @@ app.add_middleware(
     enabled=os.getenv("ENV") == "development",
     threshold_ms=0,  # Profile all requests
 )
+
 ```
 
 ### With Custom Handler
@@ -90,6 +96,7 @@ app.add_middleware(
     enabled=True,
     handler=profile_handler,
 )
+
 ```
 
 ## Profile Data
@@ -111,6 +118,7 @@ app.add_middleware(
     "memory_mb": 45.2,
     "query_count": 5
 }
+
 ```
 
 ## Response Headers
@@ -121,6 +129,7 @@ When profiling is active:
 X-Profile-Enabled: true
 X-Profile-Duration-Ms: 245.6
 X-Profile-Id: abc-123
+
 ```
 
 ## Accessing Profile Data
@@ -135,6 +144,7 @@ async def get_profiles():
 async def get_slow_requests():
     slow = profiling_middleware.get_slow_requests(threshold_ms=500)
     return {"slow_requests": slow}
+
 ```
 
 ## Use Cases

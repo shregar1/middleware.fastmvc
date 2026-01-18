@@ -6,6 +6,7 @@ Monitor response times against SLAs.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app.add_middleware(
         ResponseTimeSLA("/api/search", target_ms=500, warning_ms=1000, critical_ms=2000),
     ],
 )
+
 ```
 
 ## Configuration
@@ -54,6 +56,7 @@ app.add_middleware(
         ResponseTimeSLA("/api/users", 200, 500, 1000),
     ],
 )
+
 ```
 
 ### Path Patterns
@@ -66,6 +69,7 @@ app.add_middleware(
         ResponseTimeSLA("/api/slow/*", 2000, 5000, 10000),
     ],
 )
+
 ```
 
 ### With Alerting
@@ -87,6 +91,7 @@ app.add_middleware(
     AlertingResponseTime,
     slas=[...],
 )
+
 ```
 
 ### Get Metrics
@@ -100,6 +105,7 @@ async def sla_metrics():
         "violations": middleware.get_violations(),
         "percentiles": middleware.get_percentiles(),
     }
+
 ```
 
 ## Response Headers
@@ -107,6 +113,7 @@ async def sla_metrics():
 ```http
 X-Response-Time-Ms: 145.2
 X-SLA-Status: OK
+
 ```
 
 or
@@ -114,6 +121,7 @@ or
 ```http
 X-Response-Time-Ms: 2500.5
 X-SLA-Status: CRITICAL
+
 ```
 
 ## Violation Logging
@@ -121,21 +129,32 @@ X-SLA-Status: CRITICAL
 ```text
 WARNING: SLA violation for /api/search: 1500ms (warning threshold: 1000ms)
 CRITICAL: SLA violation for /api/health: 250ms (critical threshold: 200ms)
+
 ```
 
 ## Metrics
 
 ```python
 metrics = middleware.get_metrics()
+
 # {
+
 #     "/api/health": {
+
 #         "count": 1000,
+
 #         "p50": 25,
+
 #         "p95": 80,
+
 #         "p99": 150,
+
 #         "violations": 5
+
 #     }
+
 # }
+
 ```
 
 ## Use Cases

@@ -10,8 +10,10 @@ Reverse proxy middleware for routing requests to other services.
 
 ```bash
 pip install fastmvc-middleware[proxy]
+
 # or
 pip install fastmvc-middleware[all]
+
 ```
 
 ## Usage
@@ -38,6 +40,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ## Configuration
@@ -65,17 +68,23 @@ app.add_middleware(
 ### Strip Prefix
 
 ```python
+
 # Request: /api/v2/users
+
 # Forwarded to: http://new-api:8000/users
 ProxyRoute("/api/v2", "http://new-api:8000", strip_prefix=True)
+
 ```
 
 ### Keep Prefix
 
 ```python
+
 # Request: /legacy/data
+
 # Forwarded to: http://old-service:3000/legacy/data
 ProxyRoute("/legacy", "http://old-service:3000", strip_prefix=False)
+
 ```
 
 ### Add Authentication
@@ -86,13 +95,17 @@ ProxyRoute(
     target="http://internal-service:8080",
     add_headers={"X-Internal-Auth": "secret-token"},
 )
+
 ```
 
 ## Headers Forwarded
 
 The middleware automatically forwards:
+
 - `X-Forwarded-For`: Client IP chain
+
 - `X-Forwarded-Proto`: Original protocol (http/https)
+
 - `X-Forwarded-Host`: Original host (if preserve_host=True)
 
 ## Response Codes

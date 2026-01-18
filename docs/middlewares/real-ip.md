@@ -10,6 +10,7 @@ Extract real client IP from proxy headers.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -33,6 +34,7 @@ app.add_middleware(
         "X-Forwarded-For",     # Standard
     ],
 )
+
 ```
 
 ## Configuration
@@ -65,6 +67,7 @@ async def handler():
 async def info(request: Request):
     ip = request.state.real_ip
     return {"ip": ip}
+
 ```
 
 ## CDN/Proxy Headers
@@ -83,6 +86,7 @@ X-Forwarded-For can contain multiple IPs:
 
 ```http
 X-Forwarded-For: client, proxy1, proxy2
+
 ```
 
 The middleware returns the leftmost (client) IP.
@@ -90,8 +94,11 @@ The middleware returns the leftmost (client) IP.
 ## Security Considerations
 
 ⚠️ Only trust these headers if:
+
 1. Your app is behind a known proxy/CDN
+
 2. The proxy/CDN sets these headers
+
 3. Direct access to your app is blocked
 
 ## Use Cases

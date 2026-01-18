@@ -6,6 +6,7 @@ Add API version information to all response headers.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     version="2.1.0",
     min_version="1.5.0",
 )
+
 ```
 
 ## Configuration
@@ -40,6 +42,7 @@ The middleware adds these headers to all responses:
 X-API-Version: 2.1.0
 X-API-Min-Version: 1.5.0
 Sunset: Sat, 31 Dec 2025 23:59:59 GMT
+
 ```
 
 ## Examples
@@ -53,7 +56,9 @@ app.add_middleware(
 )
 
 # All responses include:
+
 # X-API-Version: 2.1.0
+
 ```
 
 ### With Sunset Date
@@ -67,9 +72,13 @@ app.add_middleware(
 )
 
 # Responses include:
+
 # X-API-Version: 3.0.0
+
 # X-API-Min-Version: 2.0.0
+
 # Sunset: Wed, 31 Dec 2025 00:00:00 GMT
+
 ```
 
 ### Custom Header Name
@@ -80,6 +89,7 @@ app.add_middleware(
     version="1.0.0",
     header_name="X-Service-Version",
 )
+
 ```
 
 ## Use Cases

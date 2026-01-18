@@ -21,6 +21,7 @@ Please be respectful and constructive in all interactions. We're building this t
 ```bash
 git clone https://github.com/YOUR_USERNAME/fastmvc-middleware.git
 cd fastmvc-middleware
+
 ```
 
 2. **Create a virtual environment**
@@ -28,15 +29,18 @@ cd fastmvc-middleware
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 ```
 
 3. **Install development dependencies**
 
 ```bash
 make install-dev
+
 # Or manually:
 pip install -e ".[dev]"
 pre-commit install
+
 ```
 
 4. **Verify setup**
@@ -44,6 +48,7 @@ pre-commit install
 ```bash
 make test-fast
 make lint
+
 ```
 
 ## Development Workflow
@@ -52,8 +57,10 @@ make lint
 
 ```bash
 git checkout -b feature/your-feature-name
+
 # or
 git checkout -b fix/issue-description
+
 ```
 
 ### 2. Make Changes
@@ -65,6 +72,7 @@ git checkout -b fix/issue-description
 ### 3. Run Quality Checks
 
 ```bash
+
 # Run all checks
 make check-all
 
@@ -74,6 +82,7 @@ make format      # Format code
 make type-check  # Type checking
 make security    # Security scan
 make test        # Tests with coverage
+
 ```
 
 ### 4. Commit Changes
@@ -85,15 +94,23 @@ git commit -m "feat: add new middleware for XYZ"
 git commit -m "fix: resolve issue with rate limiting"
 git commit -m "docs: update README with new examples"
 git commit -m "test: add tests for compression middleware"
+
 ```
 
 Prefixes:
+
 - `feat:` - New feature
+
 - `fix:` - Bug fix
+
 - `docs:` - Documentation only
+
 - `test:` - Adding tests
+
 - `refactor:` - Code refactoring
+
 - `perf:` - Performance improvement
+
 - `chore:` - Maintenance tasks
 
 ### 5. Submit Pull Request
@@ -114,6 +131,7 @@ See [Branch Protection Setup](.github/BRANCH_PROTECTION.md) for details on branc
 ### 1. Create the middleware file
 
 ```python
+
 # fastmiddleware/your_middleware.py
 """
 Your Middleware - Brief description.
@@ -133,7 +151,6 @@ from .base import FastMVCMiddleware
 if TYPE_CHECKING:
     from starlette.types import ASGIApp
 
-
 @dataclass
 class YourMiddlewareConfig:
     """Configuration for YourMiddleware.
@@ -146,7 +163,6 @@ class YourMiddlewareConfig:
     option1: str = "default"
     option2: int = 100
     exclude_paths: Set[str] = field(default_factory=set)
-
 
 class YourMiddleware(FastMVCMiddleware):
     """Middleware that does XYZ.
@@ -215,17 +231,20 @@ class YourMiddleware(FastMVCMiddleware):
         # ...
 
         return response
+
 ```
 
 ### 2. Export in `__init__.py`
 
 ```python
 from .your_middleware import YourMiddleware, YourMiddlewareConfig
+
 ```
 
 ### 3. Add tests
 
 ```python
+
 # tests/test_your_middleware.py
 import pytest
 from starlette.applications import Starlette
@@ -233,7 +252,6 @@ from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from fastmiddleware import YourMiddleware, YourMiddlewareConfig
-
 
 class TestYourMiddleware:
     def test_basic_functionality(self):
@@ -256,6 +274,7 @@ class TestYourMiddleware:
 
     def test_exclude_paths(self):
         # Test path exclusion...
+
 ```
 
 ### 4. Add documentation
@@ -263,6 +282,7 @@ class TestYourMiddleware:
 Create `docs/middlewares/your-middleware.md`:
 
 ```markdown
+
 # YourMiddleware
 
 Brief description of what it does.
@@ -291,9 +311,11 @@ app.add_middleware(YourMiddleware, option1="value")
 | ----------- | ------ | --------- | ------------- |
 |`option1`|`str`|`"default"`|Description|
 |`option2`|`int`|`100`|Description|
+
 ## Related Middlewares
 
 - [RelatedMiddleware](related.md)
+
 ```
 
 ## Code Style
@@ -326,6 +348,7 @@ def function(arg1: str, arg2: int = 0) -> bool:
     Raises:
         ValueError: When something is wrong.
     """
+
 ```
 
 ### Testing

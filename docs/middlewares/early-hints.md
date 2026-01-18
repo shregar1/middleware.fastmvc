@@ -6,6 +6,7 @@ HTTP 103 Early Hints for preloading resources.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app.add_middleware(
         EarlyHint("/static/js/app.js", as_type="script"),
     ],
 )
+
 ```
 
 ## Configuration
@@ -60,6 +62,7 @@ app.add_middleware(
         EarlyHint("/static/fonts/inter.woff2", as_type="font", crossorigin="anonymous"),
     ],
 )
+
 ```
 
 ### Path-Specific Hints
@@ -81,6 +84,7 @@ app.add_middleware(
         ],
     },
 )
+
 ```
 
 ### Preconnect to External Services
@@ -94,6 +98,7 @@ app.add_middleware(
         EarlyHint("https://api.stripe.com", rel="preconnect"),
     ],
 )
+
 ```
 
 ### Font Preloading
@@ -114,6 +119,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ## Response Headers
@@ -122,13 +128,17 @@ app.add_middleware(
 Link: </static/css/main.css>; rel=preload; as=style
 Link: </static/js/app.js>; rel=preload; as=script
 Link: </fonts/inter.woff2>; rel=preload; as=font; crossorigin
+
 ```
 
 ## Browser Support
 
 Early Hints (HTTP 103) is supported in:
+
 - Chrome 103+
+
 - Edge 103+
+
 - Firefox (behind flag)
 
 For unsupported browsers, Link headers are still sent and can be used.

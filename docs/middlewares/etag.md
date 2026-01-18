@@ -6,6 +6,7 @@ Generate and validate ETags for response caching.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import ETagMiddleware
 app = FastAPI()
 
 app.add_middleware(ETagMiddleware)
+
 ```
 
 ## Configuration
@@ -41,7 +43,9 @@ app.add_middleware(ETagMiddleware)
 app.add_middleware(ETagMiddleware)
 
 # Response includes:
+
 # ETag: W/"5d41402abc4b2a76b9719d911017c592"
+
 ```
 
 ### Strong ETags
@@ -53,7 +57,9 @@ app.add_middleware(
 )
 
 # Response includes:
+
 # ETag: "5d41402abc4b2a76b9719d911017c592"
+
 ```
 
 ### Custom Hash Algorithm
@@ -63,6 +69,7 @@ app.add_middleware(
     ETagMiddleware,
     hash_algorithm="sha256",
 )
+
 ```
 
 ### With Conditional Requests
@@ -74,10 +81,13 @@ app.add_middleware(ETagMiddleware)
 app.add_middleware(ConditionalRequestMiddleware)
 
 # First request:
+
 # Response: 200 OK, ETag: W/"abc123"
 
 # Second request with If-None-Match: W/"abc123"
+
 # Response: 304 Not Modified (no body)
+
 ```
 
 ### Exclude Paths
@@ -91,6 +101,7 @@ config = ETagConfig(
 )
 
 app.add_middleware(ETagMiddleware, config=config)
+
 ```
 
 ## Weak vs Strong ETags
@@ -101,11 +112,15 @@ app.add_middleware(ETagMiddleware, config=config)
 | Strong | `"..."` | Byte-for-byte identical content |
 
 Use weak ETags when:
+
 - Content may have minor variations (timestamps, whitespace)
+
 - Semantic equality is sufficient
 
 Use strong ETags when:
+
 - Byte-level accuracy is required
+
 - Content must be exactly identical
 
 ## Request/Response Flow
@@ -126,6 +141,7 @@ Client: GET /api/users
 Server: 200 OK  (content changed)
         ETag: W/"def456"
         Body: [...]
+
 ```
 
 ## Related Middlewares

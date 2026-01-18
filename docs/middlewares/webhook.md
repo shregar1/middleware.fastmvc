@@ -6,6 +6,7 @@ Validate incoming webhook signatures.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(
     signature_header="X-Webhook-Signature",
     paths={"/webhooks/stripe", "/webhooks/github"},
 )
+
 ```
 
 ## Configuration
@@ -43,6 +45,7 @@ app.add_middleware(
     secret_key="whsec_abc123",
     paths={"/webhooks/stripe"},
 )
+
 ```
 
 ### Multiple Endpoints
@@ -57,6 +60,7 @@ app.add_middleware(
         "/webhooks/twilio",
     },
 )
+
 ```
 
 ### Stripe Webhooks
@@ -73,11 +77,12 @@ app.add_middleware(
 async def stripe_webhook(request: Request):
     payload = await request.json()
     event_type = payload["type"]
-    
+
     if event_type == "payment_intent.succeeded":
         await handle_payment(payload["data"]["object"])
-    
+
     return {"received": True}
+
 ```
 
 ### GitHub Webhooks
@@ -94,13 +99,14 @@ app.add_middleware(
 async def github_webhook(request: Request):
     event = request.headers.get("X-GitHub-Event")
     payload = await request.json()
-    
+
     if event == "push":
         await handle_push(payload)
     elif event == "pull_request":
         await handle_pr(payload)
-    
+
     return {"ok": True}
+
 ```
 
 ### Multiple Providers
@@ -123,6 +129,7 @@ github_webhook = WebhookMiddleware(
     signature_header="X-Hub-Signature-256",
     paths={"/webhooks/github"},
 )
+
 ```
 
 ### Custom Signature Format
@@ -138,18 +145,23 @@ class CustomWebhook(WebhookMiddleware):
         return header
 
 app.add_middleware(CustomWebhook, secret_key="...", paths={"/webhooks/custom"})
+
 ```
 
 ## Signature Verification
 
 Standard format:
+
 ```http
 X-Webhook-Signature: sha256=abc123def456...
+
 ```
 
 Calculation:
+
 ```text
 HMAC-SHA256(secret, request_body)
+
 ```
 
 ## Error Response
@@ -160,6 +172,7 @@ HMAC-SHA256(secret, request_body)
     "detail": "Invalid webhook signature",
     "status_code": 401
 }
+
 ```
 
 ## Related Middlewares

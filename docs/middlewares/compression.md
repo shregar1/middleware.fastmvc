@@ -6,6 +6,7 @@ GZip compression for HTTP responses, reducing bandwidth and improving load times
 
 ```python
 from fastmiddleware import CompressionMiddleware, CompressionConfig
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import CompressionMiddleware
 app = FastAPI()
 
 app.add_middleware(CompressionMiddleware)
+
 ```
 
 ## Configuration
@@ -28,6 +30,7 @@ app.add_middleware(CompressionMiddleware)
 |`minimum_size`|`int`|`500`|Minimum bytes to compress|
 |`compression_level`|`int`|`6`|GZip level (1-9)|
 |`compressible_types`|`tuple`|See below|MIME types to compress|
+
 ### Default Compressible Types
 
 ```python
@@ -43,6 +46,7 @@ compressible_types = (
     "application/xhtml+xml",
     "image/svg+xml",
 )
+
 ```
 
 ## Response Headers
@@ -52,6 +56,7 @@ When compression is applied:
 ```http
 Content-Encoding: gzip
 Vary: Accept-Encoding
+
 ```
 
 ## Examples
@@ -62,7 +67,9 @@ Vary: Accept-Encoding
 app.add_middleware(CompressionMiddleware)
 
 # Compresses responses > 500 bytes
+
 # Uses compression level 6
+
 ```
 
 ### Custom Minimum Size
@@ -72,6 +79,7 @@ app.add_middleware(
     CompressionMiddleware,
     minimum_size=1000,  # Only compress responses > 1KB
 )
+
 ```
 
 ### Maximum Compression
@@ -81,6 +89,7 @@ app.add_middleware(
     CompressionMiddleware,
     compression_level=9,  # Best compression, more CPU
 )
+
 ```
 
 ### Fast Compression
@@ -90,6 +99,7 @@ app.add_middleware(
     CompressionMiddleware,
     compression_level=1,  # Fastest, less compression
 )
+
 ```
 
 ### Custom Compressible Types
@@ -108,6 +118,7 @@ config = CompressionConfig(
 )
 
 app.add_middleware(CompressionMiddleware, config=config)
+
 ```
 
 ### Full Configuration
@@ -127,6 +138,7 @@ config = CompressionConfig(
 )
 
 app.add_middleware(CompressionMiddleware, config=config)
+
 ```
 
 ## Compression Levels
@@ -137,21 +149,33 @@ app.add_middleware(CompressionMiddleware, config=config)
 |4-5|Balanced|~65%|General use|
 |6|Default|~70%|Good balance|
 |9|Slowest|~75%|Bandwidth-critical|
+
 ## What Gets Compressed
 
 ✅ Compressed:
+
 - JSON responses
+
 - HTML pages
+
 - CSS files
+
 - JavaScript
+
 - SVG images
+
 - XML data
 
 ❌ Not Compressed:
+
 - Images (JPEG, PNG, GIF, WebP)
+
 - Videos
+
 - Already compressed files (zip, gzip)
+
 - Small responses (< minimum_size)
+
 - Streaming responses
 
 ## Path Exclusion
@@ -163,6 +187,7 @@ app.add_middleware(
     CompressionMiddleware,
     exclude_paths={"/stream", "/sse"},
 )
+
 ```
 
 ## Client Requirements
@@ -171,6 +196,7 @@ Clients must include `Accept-Encoding` header:
 
 ```http
 Accept-Encoding: gzip, deflate
+
 ```
 
 Most browsers and HTTP clients do this automatically.
@@ -180,11 +206,13 @@ Most browsers and HTTP clients do this automatically.
 Place CompressionMiddleware early (executed late):
 
 ```python
+
 # Add first = executed last = compresses final response
 app.add_middleware(CompressionMiddleware)  # Add first
 app.add_middleware(TimingMiddleware)
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(CORSMiddleware)  # Add last
+
 ```
 
 ## Performance Considerations
@@ -196,6 +224,7 @@ app.add_middleware(CORSMiddleware)  # Add last
 |High bandwidth cost|Level 9|
 |High CPU cost|Level 1-3|
 |Balanced|Level 5-6|
+
 ### When to Skip Compression
 
 - Pre-compressed static files (use CDN)
@@ -209,6 +238,7 @@ The `Vary: Accept-Encoding` header ensures caches store separate versions:
 
 ```http
 Vary: Accept-Encoding
+
 ```
 
 This prevents serving compressed content to clients that don't support it.
@@ -218,11 +248,14 @@ This prevents serving compressed content to clients that don't support it.
 For static files, consider pre-compression:
 
 ```python
+
 # In production, serve pre-compressed files
+
 # Don't compress on every request
 
 # Use nginx/CDN with:
 gzip_static on;
+
 ```
 
 ## Best Practices

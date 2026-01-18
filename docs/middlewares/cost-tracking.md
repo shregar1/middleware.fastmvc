@@ -6,6 +6,7 @@ Track request costs for billing, quotas, and resource management.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -26,6 +27,7 @@ app.add_middleware(
 async def handler():
     add_cost(5.0)  # External API call cost
     return {"total_cost": get_request_cost()}
+
 ```
 
 ## Configuration
@@ -49,6 +51,7 @@ from fastmiddleware import get_request_cost
 async def summary():
     # ... do work ...
     return {"cost": get_request_cost()}
+
 ```
 
 ### `add_cost(amount: float) -> None`
@@ -62,11 +65,12 @@ from fastmiddleware import add_cost
 async def ai_analysis():
     result = await call_openai_api()  # Expensive operation
     add_cost(0.05)  # Add API cost
-    
+
     images = await generate_images()
     add_cost(0.10)  # Add image generation cost
-    
+
     return result
+
 ```
 
 ## Examples
@@ -83,6 +87,7 @@ app.add_middleware(
     },
     default_cost=1.0,
 )
+
 ```
 
 ### Method-Based Costs
@@ -98,6 +103,7 @@ app.add_middleware(
         "DELETE": 1.5,
     },
 )
+
 ```
 
 ### Track and Report Costs
@@ -110,17 +116,18 @@ app.add_middleware(CostTrackingMiddleware, default_cost=1.0)
 @app.middleware("http")
 async def log_cost(request, call_next):
     response = await call_next(request)
-    
+
     cost = get_request_cost()
     user_id = request.state.user_id
-    
+
     # Log or store for billing
     await billing_service.record_usage(user_id, cost)
-    
+
     # Add cost to response header
     response.headers["X-Request-Cost"] = str(cost)
-    
+
     return response
+
 ```
 
 ### Quota Integration
@@ -133,7 +140,7 @@ app.add_middleware(CostTrackingMiddleware)
 @app.middleware("http")
 async def check_quota(request, call_next):
     user = request.state.user
-    
+
     # Check if user has enough quota
     estimated_cost = estimate_cost(request)
     if user.remaining_quota < estimated_cost:
@@ -141,14 +148,15 @@ async def check_quota(request, call_next):
             status_code=429,
             content={"error": "Quota exceeded"}
         )
-    
+
     response = await call_next(request)
-    
+
     # Deduct actual cost
     actual_cost = get_request_cost()
     await deduct_quota(user, actual_cost)
-    
+
     return response
+
 ```
 
 ## Response Headers
@@ -156,6 +164,7 @@ async def check_quota(request, call_next):
 ```http
 X-Request-Cost: 15.5
 X-Cost-Breakdown: base=1.0,api=5.0,storage=9.5
+
 ```
 
 ## Related Middlewares

@@ -6,6 +6,7 @@ Validate and enforce Content-Type headers on requests.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     ContentTypeMiddleware,
     allowed_types=["application/json", "application/xml"],
 )
+
 ```
 
 ## Configuration
@@ -41,7 +43,9 @@ app.add_middleware(
 )
 
 # POST with Content-Type: text/plain -> 415 Unsupported Media Type
+
 # POST with Content-Type: application/json -> OK
+
 ```
 
 ### Multiple Types
@@ -55,6 +59,7 @@ app.add_middleware(
         "multipart/form-data",
     ],
 )
+
 ```
 
 ### With Charset Variants
@@ -65,6 +70,7 @@ app.add_middleware(
     allowed_types=["application/json"],
     strict=False,  # Allows application/json; charset=utf-8
 )
+
 ```
 
 ### File Upload Endpoint
@@ -78,6 +84,7 @@ app.add_middleware(
         "application/octet-stream",
     ],
 )
+
 ```
 
 ### Exclude Certain Paths
@@ -91,6 +98,7 @@ config = ContentTypeConfig(
 )
 
 app.add_middleware(ContentTypeMiddleware, config=config)
+
 ```
 
 ## Error Response
@@ -103,6 +111,7 @@ When an invalid Content-Type is received:
     "detail": "Content-Type 'text/plain' is not supported. Allowed types: application/json, application/xml",
     "status_code": 415
 }
+
 ```
 
 ## Use Cases

@@ -6,6 +6,7 @@ Handle If-None-Match and If-Modified-Since for efficient caching.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import ConditionalRequestMiddleware
 app = FastAPI()
 
 app.add_middleware(ConditionalRequestMiddleware)
+
 ```
 
 ## How It Works
@@ -41,11 +43,15 @@ app.add_middleware(ConditionalRequestMiddleware)
 app.add_middleware(ConditionalRequestMiddleware)
 
 # First request:
+
 # Response: 200 OK
+
 # ETag: "abc123"
 
 # Second request with If-None-Match: "abc123"
+
 # Response: 304 Not Modified (no body)
+
 ```
 
 ### With ETag Middleware
@@ -55,8 +61,10 @@ from fastmiddleware import ConditionalRequestMiddleware, ETagMiddleware
 
 # Add ETag generation first
 app.add_middleware(ETagMiddleware)
+
 # Then conditional request handling
 app.add_middleware(ConditionalRequestMiddleware)
+
 ```
 
 ### With Cache Middleware
@@ -71,6 +79,7 @@ from fastmiddleware import (
 app.add_middleware(ETagMiddleware)
 app.add_middleware(ConditionalRequestMiddleware)
 app.add_middleware(CacheMiddleware, max_age=3600)
+
 ```
 
 ### Custom Last-Modified
@@ -82,12 +91,13 @@ from datetime import datetime
 @app.get("/article/{id}")
 async def get_article(id: str, response: Response):
     article = await db.get_article(id)
-    
+
     response.headers["Last-Modified"] = article.updated_at.strftime(
         "%a, %d %b %Y %H:%M:%S GMT"
     )
-    
+
     return article
+
 ```
 
 ## Request/Response Flow
@@ -100,6 +110,7 @@ Server -> 200 OK
          ETag: "v1-hash"
          Last-Modified: Sat, 18 Jan 2025 10:00:00 GMT
          Body: {...}
+
 ```
 
 ### Subsequent Request (Unchanged)
@@ -109,6 +120,7 @@ Client -> GET /resource
           If-None-Match: "v1-hash"
 Server -> 304 Not Modified
           (no body)
+
 ```
 
 ### Subsequent Request (Changed)
@@ -119,6 +131,7 @@ Client -> GET /resource
 Server -> 200 OK
           ETag: "v2-hash"
           Body: {...new content...}
+
 ```
 
 ## Benefits

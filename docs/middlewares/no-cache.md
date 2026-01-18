@@ -6,6 +6,7 @@ Disable caching for specific paths or all responses.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     NoCacheMiddleware,
     paths={"/api/user", "/api/session"},
 )
+
 ```
 
 ## Configuration
@@ -35,6 +37,7 @@ app.add_middleware(
 Cache-Control: no-cache, no-store, must-revalidate, private
 Pragma: no-cache
 Expires: 0
+
 ```
 
 ## Examples
@@ -51,6 +54,7 @@ app.add_middleware(
         "/api/checkout",
     },
 )
+
 ```
 
 ### All Responses
@@ -60,6 +64,7 @@ app.add_middleware(
     NoCacheMiddleware,
     apply_all=True,
 )
+
 ```
 
 ### Path Patterns
@@ -72,6 +77,7 @@ app.add_middleware(
         "/api/private/*",
     },
 )
+
 ```
 
 ### Combine with Cache Middleware
@@ -90,6 +96,7 @@ app.add_middleware(
     CacheMiddleware,
     max_age=3600,
 )
+
 ```
 
 ### Dynamic Content
@@ -103,6 +110,7 @@ app.add_middleware(
         "/api/feed",
     },
 )
+
 ```
 
 ## Use Cases

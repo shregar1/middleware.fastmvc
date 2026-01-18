@@ -6,6 +6,7 @@ Adds comprehensive security headers to protect against common web vulnerabilitie
 
 ```python
 from fastmiddleware import SecurityHeadersMiddleware, SecurityHeadersConfig
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # With HSTS enabled
 app.add_middleware(SecurityHeadersMiddleware, enable_hsts=True)
+
 ```
 
 ## Configuration
@@ -61,9 +63,11 @@ app.add_middleware(SecurityHeadersMiddleware, enable_hsts=True)
 
 ```python
 app.add_middleware(SecurityHeadersMiddleware)
+
 ```
 
 Response headers:
+
 ```http
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
@@ -71,6 +75,7 @@ X-XSS-Protection: 1; mode=block
 Referrer-Policy: strict-origin-when-cross-origin
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Resource-Policy: same-origin
+
 ```
 
 ### With HSTS for Production
@@ -82,11 +87,14 @@ app.add_middleware(
     hsts_preload=True,
     hsts_max_age=31536000,
 )
+
 ```
 
 Additional header:
+
 ```http
 Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
 ```
 
 ### With Content Security Policy
@@ -104,6 +112,7 @@ config = SecurityHeadersConfig(
 )
 
 app.add_middleware(SecurityHeadersMiddleware, config=config)
+
 ```
 
 ### Allowing Frames from Same Origin
@@ -113,6 +122,7 @@ app.add_middleware(
     SecurityHeadersMiddleware,
     x_frame_options="SAMEORIGIN",  # Allow embedding in same-origin iframes
 )
+
 ```
 
 ### Restricting Browser Features
@@ -128,6 +138,7 @@ app.add_middleware(
         "usb=()"
     ),
 )
+
 ```
 
 ### Full Production Configuration
@@ -154,6 +165,7 @@ config = SecurityHeadersConfig(
 )
 
 app.add_middleware(SecurityHeadersMiddleware, config=config)
+
 ```
 
 ## Path Exclusion
@@ -165,6 +177,7 @@ app.add_middleware(
     SecurityHeadersMiddleware,
     exclude_paths={"/legacy", "/embed"},
 )
+
 ```
 
 ## Best Practices

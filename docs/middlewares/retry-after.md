@@ -6,6 +6,7 @@ Add Retry-After headers for rate-limited responses.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -20,6 +21,7 @@ app.add_middleware(
     RetryAfterMiddleware,
     default_retry_after=60,
 )
+
 ```
 
 ## Configuration
@@ -33,12 +35,14 @@ app.add_middleware(
 
 ```http
 Retry-After: 60
+
 ```
 
 or with date:
 
 ```http
 Retry-After: Sat, 18 Jan 2025 10:30:00 GMT
+
 ```
 
 ## Examples
@@ -52,6 +56,7 @@ app.add_middleware(
 )
 
 # 429 responses include: Retry-After: 60
+
 ```
 
 ### Custom Status Codes
@@ -62,6 +67,7 @@ app.add_middleware(
     default_retry_after=30,
     status_codes={429, 503, 504},
 )
+
 ```
 
 ### With Rate Limiting
@@ -80,6 +86,7 @@ app.add_middleware(
     RateLimitMiddleware,
     requests_per_minute=100,
 )
+
 ```
 
 ### Dynamic Retry Time
@@ -93,14 +100,15 @@ class DynamicRetryAfter(RetryAfterMiddleware):
         reset = response.headers.get("X-RateLimit-Reset")
         if reset:
             return int(reset) - int(time.time())
-        
+
         # Different delays for different paths
         if request.url.path.startswith("/api/expensive"):
             return 120
-        
+
         return self.default_retry_after
 
 app.add_middleware(DynamicRetryAfter, default_retry_after=60)
+
 ```
 
 ### Maintenance Mode
@@ -115,6 +123,7 @@ async def handler(response: Response):
         response.headers["Retry-After"] = "300"  # 5 minutes
         return {"error": "Service under maintenance"}
     return {"ok": True}
+
 ```
 
 ## Client Handling
@@ -127,6 +136,7 @@ if response.status_code == 429:
     retry_after = int(response.headers.get("Retry-After", 60))
     time.sleep(retry_after)
     response = requests.get("http://api/resource")
+
 ```
 
 ```javascript
@@ -136,6 +146,7 @@ if (response.status === 429) {
     await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
     // Retry request
 }
+
 ```
 
 ## Use Cases

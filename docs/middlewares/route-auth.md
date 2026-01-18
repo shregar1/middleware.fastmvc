@@ -6,6 +6,7 @@ Per-route authentication requirements.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -24,6 +25,7 @@ app.add_middleware(
         RouteAuth("/api/admin", require_auth=True, required_roles=["admin"]),
     ],
 )
+
 ```
 
 ## Configuration
@@ -55,6 +57,7 @@ app.add_middleware(
         RouteAuth("/api/private/*", require_auth=True),
     ],
 )
+
 ```
 
 ### Role-Based Access
@@ -69,6 +72,7 @@ app.add_middleware(
         RouteAuth("/api/superadmin/*", require_auth=True, required_roles=["superadmin"]),
     ],
 )
+
 ```
 
 ### Method-Specific Rules
@@ -83,6 +87,7 @@ app.add_middleware(
         RouteAuth("/api/posts", require_auth=True, methods=["POST", "PUT", "DELETE"]),
     ],
 )
+
 ```
 
 ### OAuth Scopes
@@ -96,6 +101,7 @@ app.add_middleware(
         RouteAuth("/api/admin/*", require_auth=True, required_scopes=["admin"]),
     ],
 )
+
 ```
 
 ### With Authentication Middleware
@@ -117,6 +123,7 @@ app.add_middleware(
         RouteAuth("/api/admin", required_roles=["admin"]),
     ],
 )
+
 ```
 
 ### Default Require Auth
@@ -131,6 +138,7 @@ app.add_middleware(
         RouteAuth("/api/public/*", require_auth=False),
     ],
 )
+
 ```
 
 ## Error Responses
@@ -143,6 +151,7 @@ app.add_middleware(
     "detail": "Authentication required",
     "status_code": 401
 }
+
 ```
 
 ### Insufficient Role
@@ -153,6 +162,7 @@ app.add_middleware(
     "detail": "Required role: admin",
     "status_code": 403
 }
+
 ```
 
 ## Related Middlewares

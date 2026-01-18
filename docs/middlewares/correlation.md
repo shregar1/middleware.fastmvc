@@ -10,6 +10,7 @@ Correlation ID middleware for distributed tracing.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -29,6 +30,7 @@ config = CorrelationConfig(
     generate_if_missing=True,
 )
 app.add_middleware(CorrelationMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -48,11 +50,12 @@ from fastmiddleware import get_correlation_id
 @app.get("/")
 async def handler():
     correlation_id = get_correlation_id()
-    
+
     # Include in logs
     logger.info(f"Processing request", extra={"correlation_id": correlation_id})
-    
+
     return {"correlation_id": correlation_id}
+
 ```
 
 ## Propagation to Downstream Services
@@ -64,14 +67,15 @@ from fastmiddleware import get_correlation_id
 @app.get("/aggregate")
 async def aggregate():
     correlation_id = get_correlation_id()
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(
             "http://service-b/data",
             headers={"X-Correlation-ID": correlation_id},
         )
-    
+
     return response.json()
+
 ```
 
 ## Structured Logging
@@ -91,6 +95,7 @@ logger.addFilter(CorrelationFilter())
 formatter = logging.Formatter(
     '{"correlation_id": "%(correlation_id)s", "message": "%(message)s"}'
 )
+
 ```
 
 ## Response Headers
@@ -102,12 +107,15 @@ formatter = logging.Formatter(
 ## Client Usage
 
 ```bash
+
 # Provide your own ID
 curl -H "X-Correlation-ID: my-request-123" https://api.example.com/
 
 # Or let the server generate one
 curl https://api.example.com/
+
 # Response includes: X-Correlation-ID: <generated-uuid>
+
 ```
 
 ## Related Middlewares

@@ -10,6 +10,7 @@ A/B testing middleware for experiments.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -36,6 +37,7 @@ app.add_middleware(
         ),
     ],
 )
+
 ```
 
 ## Configuration
@@ -66,13 +68,14 @@ from fastmiddleware import get_variant
 @app.get("/checkout")
 async def checkout():
     variant = get_variant("checkout_flow")
-    
+
     if variant == "control":
         return control_checkout()
     elif variant == "variant_a":
         return variant_a_checkout()
     else:
         return variant_b_checkout()
+
 ```
 
 ## Variant Persistence
@@ -87,13 +90,16 @@ async def handler(request: Request):
         "checkout_flow": variants.get("checkout_flow"),
         "pricing_page": variants.get("pricing_page"),
     }
+
 ```
 
 ## Force Variant (Testing)
 
 ```bash
+
 # Force specific variant via query param
 curl "https://api.example.com/?ab_checkout_flow=variant_a"
+
 ```
 
 ## Analytics Integration
@@ -102,14 +108,15 @@ curl "https://api.example.com/?ab_checkout_flow=variant_a"
 @app.get("/purchase")
 async def purchase(request: Request):
     variant = get_variant("checkout_flow")
-    
+
     # Track conversion with variant
     analytics.track("purchase", {
         "variant": variant,
         "experiment": "checkout_flow",
     })
-    
+
     return {"success": True}
+
 ```
 
 ## Related Middlewares

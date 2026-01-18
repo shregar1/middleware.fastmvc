@@ -6,6 +6,7 @@ Shared async-safe request context for storing and retrieving values.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -26,6 +27,7 @@ async def handler():
     user_id = get_context_value("user_id")
     set_context_value("processed", True)
     return {"user_id": user_id}
+
 ```
 
 ## Configuration
@@ -46,6 +48,7 @@ from fastmiddleware import get_context
 
 ctx = get_context()
 print(ctx)  # {"user_id": "123", "tenant_id": "acme", ...}
+
 ```
 
 ### `get_context_value(key, default=None) -> Any`
@@ -57,6 +60,7 @@ from fastmiddleware import get_context_value
 
 user_id = get_context_value("user_id")
 tier = get_context_value("tier", default="free")
+
 ```
 
 ### `set_context_value(key, value) -> None`
@@ -68,6 +72,7 @@ from fastmiddleware import set_context_value
 
 set_context_value("authenticated", True)
 set_context_value("permissions", ["read", "write"])
+
 ```
 
 ## Examples
@@ -88,6 +93,7 @@ app.add_middleware(
 async def profile():
     user_id = get_context_value("user_id")
     return await db.get_user(user_id)
+
 ```
 
 ### Setting Context in Middleware Chain
@@ -109,6 +115,7 @@ async def protected():
     user = get_context_value("user")
     permissions = get_context_value("permissions")
     return {"user": user.name, "permissions": permissions}
+
 ```
 
 ### Context in Background Tasks
@@ -119,14 +126,15 @@ from fastmiddleware import get_context
 @app.post("/process")
 async def process(background_tasks: BackgroundTasks):
     ctx = get_context()  # Capture context
-    
+
     async def background_work():
         # Context is available in background task
         user_id = ctx.get("user_id")
         await do_work(user_id)
-    
+
     background_tasks.add_task(background_work)
     return {"status": "processing"}
+
 ```
 
 ### Logging with Context
@@ -145,13 +153,17 @@ logger = logging.getLogger(__name__)
 logger.addFilter(ContextFilter())
 
 # Log format: [%(request_id)s] [%(user_id)s] %(message)s
+
 ```
 
 ## Thread/Async Safety
 
 The context uses `contextvars.ContextVar` internally, making it safe for:
+
 - Async handlers
+
 - Concurrent requests
+
 - Background tasks (with proper context capture)
 
 ## Related Middlewares

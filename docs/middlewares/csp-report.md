@@ -6,6 +6,7 @@ Handle Content Security Policy violation reports.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ csp_reporter = CSPReportMiddleware(
     log_reports=True,
     store_reports=True,
 )
+
 ```
 
 ## Configuration
@@ -52,6 +54,7 @@ csp_reporter = CSPReportMiddleware(
     report_uri="/_csp-report",
     log_reports=True,
 )
+
 ```
 
 ### Store and Retrieve Reports
@@ -74,6 +77,7 @@ async def get_reports():
 async def clear_reports():
     csp_reporter.clear_reports()
     return {"status": "cleared"}
+
 ```
 
 ### Custom Report Handler
@@ -87,6 +91,7 @@ csp_reporter = CSPReportMiddleware(
     report_uri="/_csp-report",
     handler=send_to_siem,
 )
+
 ```
 
 ### Report-Only Mode
@@ -98,6 +103,7 @@ app.add_middleware(
 )
 
 csp_reporter = CSPReportMiddleware(app)
+
 ```
 
 ## CSP Report Format
@@ -114,6 +120,7 @@ csp_reporter = CSPReportMiddleware(app)
         "status-code": 0
     }
 }
+
 ```
 
 ## Methods
@@ -132,7 +139,9 @@ Get statistics about violations.
 
 ```python
 stats = csp_reporter.get_stats()
+
 # {"total": 150, "by_directive": {"script-src": 100, "style-src": 50}}
+
 ```
 
 ## Related Middlewares

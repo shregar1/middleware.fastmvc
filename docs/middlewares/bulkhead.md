@@ -10,6 +10,7 @@ Bulkhead pattern for resource isolation.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -36,6 +37,7 @@ config = BulkheadConfig(
     path_limits={"/api/heavy": 10},  # Path-specific limits
 )
 app.add_middleware(BulkheadMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -63,6 +65,7 @@ Incoming Request
       │                                   │
       ▼                                   │
   Complete ◄──────────────────────────────┘
+
 ```
 
 ## Response Codes

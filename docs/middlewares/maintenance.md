@@ -6,6 +6,7 @@ Enable maintenance mode with 503 responses, bypass options, and customizable mai
 
 ```python
 from fastmiddleware import MaintenanceMiddleware, MaintenanceConfig
+
 ```
 
 ## Quick Start
@@ -18,6 +19,7 @@ app = FastAPI()
 
 config = MaintenanceConfig(enabled=False)
 middleware = MaintenanceMiddleware(app, config=config)
+
 ```
 
 ## Configuration
@@ -43,6 +45,7 @@ config = MaintenanceConfig(
     retry_after=1800,
 )
 app.add_middleware(MaintenanceMiddleware, config=config)
+
 ```
 
 ### Dynamic Toggle
@@ -59,6 +62,7 @@ middleware.disable()
 # Check status
 if middleware.is_enabled():
     print("Maintenance mode active")
+
 ```
 
 ### Bypass Options
@@ -70,11 +74,14 @@ config = MaintenanceConfig(
     allowed_ips={"10.0.0.1"},
     bypass_token="secret-admin-token",
 )
+
 ```
 
 Bypass header:
+
 ```http
 X-Maintenance-Bypass: secret-admin-token
+
 ```
 
 ### HTML Page
@@ -85,6 +92,7 @@ config = MaintenanceConfig(
     use_html=True,
     message="We're upgrading our systems.",
 )
+
 ```
 
 ## Response
@@ -98,6 +106,7 @@ config = MaintenanceConfig(
     "maintenance": true,
     "retry_after": 300
 }
+
 ```
 
 ### Headers
@@ -106,6 +115,7 @@ config = MaintenanceConfig(
 HTTP/1.1 503 Service Unavailable
 Retry-After: 300
 X-Maintenance-Mode: true
+
 ```
 
 ## Best Practices

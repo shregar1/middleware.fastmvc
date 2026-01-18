@@ -6,6 +6,7 @@ OAuth scope validation for routes.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -24,6 +25,7 @@ app.add_middleware(
         "/api/admin": ["admin:all"],
     },
 )
+
 ```
 
 ## Configuration
@@ -48,7 +50,9 @@ app.add_middleware(
 )
 
 # Request with scopes=["users:read"] can access /api/users
+
 # Request with scopes=["orders:read"] cannot access /api/users
+
 ```
 
 ### Require Any Scope
@@ -63,6 +67,7 @@ app.add_middleware(
 )
 
 # User with "admin:all" can access /api/users
+
 ```
 
 ### Require All Scopes
@@ -77,6 +82,7 @@ app.add_middleware(
 )
 
 # User must have ALL three scopes
+
 ```
 
 ### With Authentication
@@ -97,6 +103,7 @@ app.add_middleware(
         "/api/users": ["users:read"],
     },
 )
+
 ```
 
 ### Path Patterns
@@ -110,6 +117,7 @@ app.add_middleware(
         "/api/admin/*": ["admin:all"],
     },
 )
+
 ```
 
 ### CRUD Scopes
@@ -123,12 +131,13 @@ app.add_middleware(
         "POST /api/users": ["users:write"],
         "PUT /api/users/*": ["users:write"],
         "DELETE /api/users/*": ["users:delete"],
-        
+
         # Resource: orders
         "GET /api/orders": ["orders:read"],
         "POST /api/orders": ["orders:write"],
     },
 )
+
 ```
 
 ### Custom Scope Source
@@ -145,6 +154,7 @@ app.add_middleware(
     CustomScopeMiddleware,
     route_scopes={...},
 )
+
 ```
 
 ## Error Response
@@ -157,6 +167,7 @@ app.add_middleware(
     "provided": ["users:read"],
     "status_code": 403
 }
+
 ```
 
 ## Related Middlewares

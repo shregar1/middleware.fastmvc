@@ -10,6 +10,7 @@ JSON Schema validation middleware for request bodies.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -50,6 +51,7 @@ app.add_middleware(
     },
     strict=True,
 )
+
 ```
 
 ## Configuration
@@ -68,6 +70,7 @@ schemas={
     "/api/users": schema,        # All methods
     "/api/products/*": schema,   # Prefix match
 }
+
 ```
 
 ### Method-Specific
@@ -78,6 +81,7 @@ schemas={
     "PUT:/api/users": update_schema,
     "PATCH:/api/users": patch_schema,
 }
+
 ```
 
 ## Supported Validations
@@ -103,6 +107,7 @@ schemas={
     "age: Value must be >= 0"
   ]
 }
+
 ```
 
 ## Accessing Validated Data
@@ -113,8 +118,9 @@ async def create_user(request: Request):
     # Access validated body
     body = request.state.validated_body
     errors = request.state.validation_errors
-    
+
     return {"user": body}
+
 ```
 
 ## Complex Schema Example
@@ -146,6 +152,7 @@ order_schema = {
     },
     "required": ["customer", "items"],
 }
+
 ```
 
 ## Related Middlewares

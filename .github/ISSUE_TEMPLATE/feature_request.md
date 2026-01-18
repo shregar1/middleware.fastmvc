@@ -19,6 +19,7 @@ Describe the problem you're trying to solve or the use case for this feature.
 Describe the solution you'd like:
 
 ```python
+
 # Example API design
 from fastmiddleware import NewMiddleware
 
@@ -26,6 +27,7 @@ app.add_middleware(
     NewMiddleware,
     option1="value",
 )
+
 ```
 
 ## Alternatives Considered

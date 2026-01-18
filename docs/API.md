@@ -9,6 +9,7 @@ pip install fastmvc-middleware           # Core
 pip install fastmvc-middleware[jwt]      # With JWT support
 pip install fastmvc-middleware[proxy]    # With proxy support
 pip install fastmvc-middleware[all]      # All dependencies
+
 ```
 
 ## Quick Import
@@ -24,6 +25,7 @@ from fastmiddleware import (
     HealthCheckMiddleware,
     CompressionMiddleware,
 )
+
 ```
 
 ---
@@ -367,4 +369,5 @@ print(fastmiddleware.__author__)   # "Shiv"
 print(fastmiddleware.__email__)    # "sengarsinghshivansh@gmail.com, sengarsinghshreyansh@gmail.com"
 print(fastmiddleware.__license__)  # "MIT"
 print(fastmiddleware.__url__)      # "https://github.com/shregar1/fastmvc-middleware"
+
 ```

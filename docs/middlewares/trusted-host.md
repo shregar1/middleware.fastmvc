@@ -6,6 +6,7 @@ Validates the HTTP Host header to prevent host header attacks, DNS rebinding, an
 
 ```python
 from fastmiddleware import TrustedHostMiddleware, TrustedHostConfig
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["example.com", "www.example.com"],
 )
+
 ```
 
 ## Configuration
@@ -51,6 +53,7 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["api.example.com"],
 )
+
 ```
 
 ### Multiple Hosts
@@ -64,6 +67,7 @@ app.add_middleware(
         "api.example.com",
     ],
 )
+
 ```
 
 ### Wildcard Subdomains
@@ -73,6 +77,7 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["*.example.com"],  # Matches any subdomain
 )
+
 ```
 
 ### Mixed Patterns
@@ -86,16 +91,19 @@ app.add_middleware(
         "localhost",             # Local development
     ],
 )
+
 ```
 
 ### Development Mode
 
 ```python
+
 # Allow any host (development only!)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["*"],
 )
+
 ```
 
 > ⚠️ **Warning**: Never use `["*"]` in production!
@@ -109,6 +117,7 @@ config = TrustedHostConfig(
 )
 
 app.add_middleware(TrustedHostMiddleware, config=config)
+
 ```
 
 ### Primary Host Redirect
@@ -121,6 +130,7 @@ config = TrustedHostConfig(
 )
 
 app.add_middleware(TrustedHostMiddleware, config=config)
+
 ```
 
 ## Response
@@ -135,6 +145,7 @@ Request proceeds normally.
 HTTP/1.1 400 Bad Request
 
 Invalid host header
+
 ```
 
 ## Path Exclusion
@@ -147,6 +158,7 @@ app.add_middleware(
     allowed_hosts=["api.example.com"],
     exclude_paths={"/health", "/ready", "/live"},
 )
+
 ```
 
 ## Environment-Based Configuration
@@ -164,6 +176,7 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=allowed_hosts,
 )
+
 ```
 
 ## Kubernetes/Docker
@@ -180,6 +193,7 @@ app.add_middleware(
         "localhost",          # Health checks
     ],
 )
+
 ```
 
 ## Security Considerations
@@ -187,9 +201,13 @@ app.add_middleware(
 ### Host Header Attacks
 
 Without validation, attackers can:
+
 - **Cache poisoning**: Inject malicious content into CDN caches
+
 - **Password reset poisoning**: Redirect password reset links
+
 - **Web cache deception**: Steal sensitive cached data
+
 - **Server-Side Request Forgery (SSRF)**: Bypass access controls
 
 ### Best Practices
@@ -206,8 +224,10 @@ Without validation, attackers can:
 Hosts with non-standard ports are handled automatically:
 
 ```python
+
 # This works for both example.com and example.com:8080
 allowed_hosts=["example.com"]
+
 ```
 
 ### Case Sensitivity
@@ -215,8 +235,10 @@ allowed_hosts=["example.com"]
 Host matching is case-insensitive:
 
 ```python
+
 # Matches EXAMPLE.COM, Example.Com, example.com
 allowed_hosts=["example.com"]
+
 ```
 
 ### Behind a Proxy
@@ -224,8 +246,10 @@ allowed_hosts=["example.com"]
 If behind a reverse proxy, ensure the proxy forwards the original Host header:
 
 ```nginx
+
 # nginx configuration
 proxy_set_header Host $host;
+
 ```
 
 ## Related Middlewares

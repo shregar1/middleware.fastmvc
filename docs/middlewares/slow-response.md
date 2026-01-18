@@ -6,6 +6,7 @@ Add artificial delays for testing (development only).
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app.add_middleware(
     min_delay=1.0,
     max_delay=3.0,
 )
+
 ```
 
 ## Configuration
@@ -49,6 +51,7 @@ app.add_middleware(
     min_delay=0.5,
     max_delay=2.0,
 )
+
 ```
 
 ### Environment-Based
@@ -62,6 +65,7 @@ app.add_middleware(
     min_delay=1.0,
     max_delay=3.0,
 )
+
 ```
 
 ### Slow Specific Paths
@@ -74,6 +78,7 @@ app.add_middleware(
     max_delay=5.0,
     paths={"/api/slow", "/api/upload"},
 )
+
 ```
 
 ### Fixed Delay
@@ -85,11 +90,13 @@ app.add_middleware(
     min_delay=1.0,
     max_delay=1.0,  # Same as min = fixed delay
 )
+
 ```
 
 ### Simulate Network Latency
 
 ```python
+
 # Simulate typical network latencies
 app.add_middleware(
     SlowResponseMiddleware,
@@ -97,6 +104,7 @@ app.add_middleware(
     min_delay=0.1,   # 100ms
     max_delay=0.5,   # 500ms
 )
+
 ```
 
 ### Simulate Slow Database
@@ -109,12 +117,14 @@ app.add_middleware(
     max_delay=10.0,
     paths={"/api/reports", "/api/analytics"},
 )
+
 ```
 
 ## Response Headers
 
 ```http
 X-Artificial-Delay-Ms: 1523
+
 ```
 
 ## Use Cases
@@ -127,6 +137,7 @@ X-Artificial-Delay-Ms: 1523
 ## Safety Measures
 
 ```python
+
 # Automatically disabled in production
 class SafeSlowResponse(SlowResponseMiddleware):
     def __init__(self, app, **kwargs):
@@ -134,6 +145,7 @@ class SafeSlowResponse(SlowResponseMiddleware):
         if os.getenv("ENV") == "production":
             kwargs["enabled"] = False
         super().__init__(app, **kwargs)
+
 ```
 
 ## Related Middlewares

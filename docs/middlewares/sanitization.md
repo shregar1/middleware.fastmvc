@@ -6,6 +6,7 @@ Sanitize input to prevent XSS and injection attacks.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(
     strip_tags=True,
     remove_null_bytes=True,
 )
+
 ```
 
 ## Configuration
@@ -46,7 +48,9 @@ app.add_middleware(
 )
 
 # Input: {"name": "<script>alert('xss')</script>"}
+
 # Sanitized: {"name": "&lt;script&gt;alert('xss')&lt;/script&gt;"}
+
 ```
 
 ### Strip HTML Tags
@@ -58,7 +62,9 @@ app.add_middleware(
 )
 
 # Input: {"name": "<b>John</b> <script>evil()</script>"}
+
 # Sanitized: {"name": "John"}
+
 ```
 
 ### Remove Null Bytes
@@ -70,7 +76,9 @@ app.add_middleware(
 )
 
 # Input: {"name": "John\x00Doe"}
+
 # Sanitized: {"name": "JohnDoe"}
+
 ```
 
 ### Truncate Long Strings
@@ -82,6 +90,7 @@ app.add_middleware(
 )
 
 # Long strings are truncated to 1000 characters
+
 ```
 
 ### Combine Options
@@ -95,6 +104,7 @@ app.add_middleware(
     trim_whitespace=True,
     max_length=5000,
 )
+
 ```
 
 ### Exclude Paths
@@ -108,6 +118,7 @@ config = SanitizationConfig(
 )
 
 app.add_middleware(SanitizationMiddleware, config=config)
+
 ```
 
 ### Sanitize Specific Fields
@@ -117,11 +128,12 @@ from fastmiddleware import SanitizationMiddleware
 
 class SelectiveSanitization(SanitizationMiddleware):
     sanitize_fields = {"name", "description", "comment", "bio"}
-    
+
     def should_sanitize_field(self, field_name: str) -> bool:
         return field_name in self.sanitize_fields
 
 app.add_middleware(SelectiveSanitization, escape_html=True)
+
 ```
 
 ## Sanitization Rules

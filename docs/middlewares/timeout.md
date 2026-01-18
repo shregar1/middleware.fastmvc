@@ -10,6 +10,7 @@ Request timeout enforcement middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -34,6 +35,7 @@ config = TimeoutConfig(
     path_timeouts={"/api/upload": 300.0},  # 5 min for uploads
 )
 app.add_middleware(TimeoutMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -64,6 +66,7 @@ app.add_middleware(
         "/api/quick": 5.0,       # 5 seconds
     },
 )
+
 ```
 
 ## Notes

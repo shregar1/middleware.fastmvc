@@ -6,6 +6,7 @@ Limit request and response payload sizes.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -21,6 +22,7 @@ app.add_middleware(
     max_request_size=10 * 1024 * 1024,   # 10 MB
     max_response_size=50 * 1024 * 1024,  # 50 MB
 )
+
 ```
 
 ## Configuration
@@ -42,6 +44,7 @@ app.add_middleware(
 )
 
 # Request > 5 MB → 413 Payload Too Large
+
 ```
 
 ### Limit Both Directions
@@ -52,6 +55,7 @@ app.add_middleware(
     max_request_size=10 * 1024 * 1024,   # 10 MB requests
     max_response_size=100 * 1024 * 1024,  # 100 MB responses
 )
+
 ```
 
 ### Exclude Upload Endpoints
@@ -62,11 +66,13 @@ app.add_middleware(
     max_request_size=1 * 1024 * 1024,  # 1 MB default
     exclude_paths={"/api/upload", "/api/import"},
 )
+
 ```
 
 ### Path-Specific Limits
 
 ```python
+
 # Use multiple middlewares or custom logic
 from fastmiddleware import PayloadSizeMiddleware
 
@@ -82,6 +88,7 @@ app.add_middleware(
     PathAwarePayloadSize,
     max_request_size=5 * 1024 * 1024,
 )
+
 ```
 
 ### Content-Type Specific
@@ -90,15 +97,16 @@ app.add_middleware(
 class ContentAwarePayloadSize(PayloadSizeMiddleware):
     def get_limit(self, request) -> int:
         content_type = request.headers.get("content-type", "")
-        
+
         if "multipart/form-data" in content_type:
             return 50 * 1024 * 1024  # 50 MB for uploads
         elif "application/json" in content_type:
             return 1 * 1024 * 1024   # 1 MB for JSON
-        
+
         return self.max_request_size
 
 app.add_middleware(ContentAwarePayloadSize, max_request_size=5 * 1024 * 1024)
+
 ```
 
 ## Error Response
@@ -109,6 +117,7 @@ app.add_middleware(ContentAwarePayloadSize, max_request_size=5 * 1024 * 1024)
     "detail": "Request body exceeds maximum size of 10485760 bytes",
     "status_code": 413
 }
+
 ```
 
 ## Use Cases

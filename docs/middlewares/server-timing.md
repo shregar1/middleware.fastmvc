@@ -10,6 +10,7 @@ Server-Timing header for browser devtools integration.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -27,14 +28,15 @@ async def handler():
     # Using context manager
     with timing("db", "Database query"):
         result = await db.query(...)
-    
+
     with timing("cache", "Cache lookup"):
         cached = await cache.get(...)
-    
+
     with timing("render"):
         output = render(result)
-    
+
     return output
+
 ```
 
 ## Configuration
@@ -53,6 +55,7 @@ async def handler():
 with timing("operation_name", "Description"):
     # Code to time
     pass
+
 ```
 
 ### Manual
@@ -66,18 +69,22 @@ await do_something()
 duration = (time.perf_counter() - start) * 1000
 
 add_timing("operation", duration, "Description")
+
 ```
 
 ## Response Header
 
 ```http
 Server-Timing: db;dur=45.23;desc="Database query", cache;dur=2.15;desc="Cache lookup", render;dur=12.45, total;dur=65.12
+
 ```
 
 ## Browser DevTools
 
 The Server-Timing header is visible in browser DevTools:
+
 - Chrome: Network tab → Select request → Timing
+
 - Firefox: Network tab → Timings
 
 ## Nested Timings
@@ -88,14 +95,15 @@ async def complex_handler():
     with timing("total", "Total processing"):
         with timing("fetch", "Fetch data"):
             data = await fetch_data()
-        
+
         with timing("transform", "Transform data"):
             result = transform(data)
-        
+
         with timing("validate", "Validate result"):
             validate(result)
-    
+
     return result
+
 ```
 
 ## Best Practices

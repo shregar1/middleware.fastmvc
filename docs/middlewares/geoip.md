@@ -6,6 +6,7 @@ Extract GeoIP data from CDN headers.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -25,14 +26,19 @@ async def handler():
         "country": geo.get("country"),
         "city": geo.get("city"),
     }
+
 ```
 
 ## How It Works
 
 This middleware extracts GeoIP information from headers set by CDNs and load balancers:
+
 - Cloudflare: `CF-IPCountry`, `CF-IPCity`
+
 - AWS CloudFront: `CloudFront-Viewer-Country`
+
 - Fastly: `Fastly-Geo-Country`
+
 - Akamai: `X-Akamai-Edgescape`
 
 ## Helper Functions
@@ -45,15 +51,25 @@ Returns GeoIP data for the current request.
 from fastmiddleware import get_geo_data
 
 geo = get_geo_data()
+
 # {
+
 #     "country": "US",
+
 #     "country_name": "United States",
+
 #     "city": "San Francisco",
+
 #     "region": "CA",
+
 #     "latitude": 37.7749,
+
 #     "longitude": -122.4194,
+
 #     "timezone": "America/Los_Angeles",
+
 # }
+
 ```
 
 ## Examples
@@ -67,9 +83,10 @@ app.add_middleware(GeoIPMiddleware)
 async def localize():
     geo = get_geo_data()
     country = geo.get("country", "US")
-    
+
     currencies = {"US": "USD", "GB": "GBP", "EU": "EUR"}
     return {"currency": currencies.get(country, "USD")}
+
 ```
 
 ### Country-Based Routing
@@ -79,11 +96,12 @@ async def localize():
 async def content():
     geo = get_geo_data()
     country = geo.get("country")
-    
+
     if country in ["CN", "RU"]:
         return RedirectResponse("/regional-content")
-    
+
     return {"content": "Global content"}
+
 ```
 
 ### Geo-Based Rate Limiting
@@ -95,14 +113,15 @@ from fastmiddleware import GeoIPMiddleware, get_geo_data
 async def geo_rate_limit(request, call_next):
     geo = get_geo_data()
     country = geo.get("country")
-    
+
     # Higher limits for certain countries
     if country in ["US", "GB", "DE"]:
         request.state.rate_limit = 1000
     else:
         request.state.rate_limit = 100
-    
+
     return await call_next(request)
+
 ```
 
 ### GDPR Compliance
@@ -111,13 +130,14 @@ async def geo_rate_limit(request, call_next):
 @app.get("/api/data")
 async def get_data():
     geo = get_geo_data()
-    
+
     eu_countries = ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "PL", ...]
-    
+
     if geo.get("country") in eu_countries:
         return {"data": scrub_pii(data), "gdpr": True}
-    
+
     return {"data": data, "gdpr": False}
+
 ```
 
 ### Timezone Detection
@@ -127,14 +147,15 @@ async def get_data():
 async def get_time():
     geo = get_geo_data()
     timezone = geo.get("timezone", "UTC")
-    
+
     from datetime import datetime
     import pytz
-    
+
     tz = pytz.timezone(timezone)
     local_time = datetime.now(tz)
-    
+
     return {"local_time": local_time.isoformat(), "timezone": timezone}
+
 ```
 
 ## Supported CDN Headers
@@ -151,6 +172,7 @@ async def get_time():
 
 ```python
 request.state.geo_data  # Full geo data dictionary
+
 ```
 
 ## Related Middlewares

@@ -6,6 +6,7 @@ Parse and negotiate Accept-Language headers for internationalization.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -26,6 +27,7 @@ app.add_middleware(
 async def handler():
     lang = get_language()
     return {"language": lang}
+
 ```
 
 ## Configuration
@@ -54,15 +56,16 @@ from fastmiddleware import get_language
 @app.get("/greeting")
 async def greeting():
     lang = get_language()
-    
+
     greetings = {
         "en": "Hello!",
         "es": "¡Hola!",
         "fr": "Bonjour!",
         "de": "Hallo!",
     }
-    
+
     return {"message": greetings.get(lang, greetings["en"])}
+
 ```
 
 ## Examples
@@ -77,7 +80,9 @@ app.add_middleware(
 )
 
 # Request with: Accept-Language: es,en;q=0.9
+
 # get_language() returns: "es"
+
 ```
 
 ### With Locale Variants
@@ -88,6 +93,7 @@ app.add_middleware(
     supported_languages=["en-US", "en-GB", "es-ES", "es-MX"],
     default_language="en-US",
 )
+
 ```
 
 ### Integration with Translation System
@@ -106,8 +112,9 @@ async def translate():
     lang = get_language()
     translator = gettext.translation('messages', localedir='locales', languages=[lang])
     _ = translator.gettext
-    
+
     return {"message": _("Welcome to our API")}
+
 ```
 
 ## Related Middlewares

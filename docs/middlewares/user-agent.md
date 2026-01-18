@@ -10,6 +10,7 @@ User-Agent parsing and device detection middleware.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -29,6 +30,7 @@ config = UserAgentConfig(
     cache_results=True,     # Cache parsed results
 )
 app.add_middleware(UserAgentMiddleware, config=config)
+
 ```
 
 ## Configuration
@@ -47,7 +49,7 @@ from fastmiddleware import get_user_agent
 @app.get("/")
 async def handler():
     ua = get_user_agent()
-    
+
     return {
         "browser": ua["browser"],
         "browser_version": ua["browser_version"],
@@ -59,6 +61,7 @@ async def handler():
         "is_desktop": ua["is_desktop"],
         "is_bot": ua["is_bot"],
     }
+
 ```
 
 ## Parsed Information
@@ -81,7 +84,7 @@ async def handler():
 @app.get("/page")
 async def page():
     ua = get_user_agent()
-    
+
     if ua["is_mobile"]:
         return mobile_response()
     elif ua["is_tablet"]:
@@ -92,12 +95,13 @@ async def page():
 @app.get("/api/data")
 async def data():
     ua = get_user_agent()
-    
+
     if ua["is_bot"]:
         # Return minimal data for bots
         return {"title": "Page Title"}
-    
+
     return full_response()
+
 ```
 
 ## Response Headers (if enabled)
@@ -114,6 +118,7 @@ async def data():
 async def handler(request: Request):
     ua_info = request.state.user_agent
     return {"browser": ua_info.browser}
+
 ```
 
 ## Related Middlewares

@@ -6,6 +6,7 @@ URL redirects with permanent and temporary options.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -23,6 +24,7 @@ app.add_middleware(
         RedirectRule("/legacy/*", "/api/v2/{path}"),
     ],
 )
+
 ```
 
 ## Configuration
@@ -53,6 +55,7 @@ app.add_middleware(
 )
 
 # GET /blog → 301 Redirect to /articles
+
 ```
 
 ### Temporary Redirect
@@ -66,6 +69,7 @@ app.add_middleware(
 )
 
 # GET /maintenance → 307 Redirect to /status
+
 ```
 
 ### Wildcard Patterns
@@ -79,7 +83,9 @@ app.add_middleware(
 )
 
 # /old-api/users → /api/v2/users
+
 # /old-api/orders/123 → /api/v2/orders/123
+
 ```
 
 ### Multiple Redirects
@@ -94,6 +100,7 @@ app.add_middleware(
         RedirectRule("/products", "/shop", permanent=True),
     ],
 )
+
 ```
 
 ### Domain Migration
@@ -105,6 +112,7 @@ app.add_middleware(
         RedirectRule("/v1/*", "/v2/{path}", permanent=True),
     ],
 )
+
 ```
 
 ### Preserve Query Parameters
@@ -118,6 +126,7 @@ app.add_middleware(
 )
 
 # /search?q=hello → /api/search?q=hello
+
 ```
 
 ### SEO Redirects
@@ -129,11 +138,12 @@ app.add_middleware(
         # Canonical URLs
         RedirectRule("/Home", "/", permanent=True),
         RedirectRule("/HOME", "/", permanent=True),
-        
+
         # Old slugs
         RedirectRule("/old-post-slug", "/new-post-slug", permanent=True),
     ],
 )
+
 ```
 
 ## Status Codes

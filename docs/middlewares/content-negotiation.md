@@ -6,6 +6,7 @@ Negotiate response content type based on Accept header.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -25,6 +26,7 @@ app.add_middleware(
 async def handler():
     content_type = get_negotiated_type()
     return {"negotiated": content_type}
+
 ```
 
 ## Configuration
@@ -47,9 +49,9 @@ from fastmiddleware import get_negotiated_type
 @app.get("/users")
 async def get_users():
     content_type = get_negotiated_type()
-    
+
     users = await db.get_users()
-    
+
     if content_type == "application/xml":
         return Response(
             content=users_to_xml(users),
@@ -62,6 +64,7 @@ async def get_users():
         )
     else:
         return users  # JSON by default
+
 ```
 
 ## Examples
@@ -75,7 +78,9 @@ app.add_middleware(
 )
 
 # Request: Accept: application/xml
+
 # get_negotiated_type() returns: "application/xml"
+
 ```
 
 ### Strict Mode (406 on No Match)
@@ -88,7 +93,9 @@ app.add_middleware(
 )
 
 # Request: Accept: text/plain
+
 # Response: 406 Not Acceptable
+
 ```
 
 ### Multiple Format Support
@@ -111,23 +118,27 @@ app.add_middleware(
 async def get_data():
     data = await fetch_data()
     content_type = get_negotiated_type()
-    
+
     formatters = {
         "application/json": lambda d: JSONResponse(d),
         "application/xml": lambda d: Response(to_xml(d), media_type="application/xml"),
         "text/csv": lambda d: Response(to_csv(d), media_type="text/csv"),
         "text/html": lambda d: HTMLResponse(render(d)),
     }
-    
+
     formatter = formatters.get(content_type, formatters["application/json"])
     return formatter(data)
+
 ```
 
 ### With Quality Weights
 
 ```python
+
 # Request: Accept: application/xml;q=0.9, application/json;q=1.0
+
 # Result: "application/json" (higher quality weight)
+
 ```
 
 ## Request State
@@ -135,6 +146,7 @@ async def get_data():
 ```python
 request.state.negotiated_type  # The selected content type
 request.state.accept_types     # Parsed Accept header
+
 ```
 
 ## Related Middlewares

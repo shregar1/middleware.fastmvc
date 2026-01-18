@@ -6,6 +6,7 @@ Prioritize requests for processing.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -24,6 +25,7 @@ app.add_middleware(
         "/api/reports": Priority.LOW,
     },
 )
+
 ```
 
 ## Configuration
@@ -59,6 +61,7 @@ app.add_middleware(
         "/api/export": Priority.BACKGROUND,
     },
 )
+
 ```
 
 ### Client-Specified Priority
@@ -70,6 +73,7 @@ app.add_middleware(
 )
 
 # Client can send: X-Request-Priority: high
+
 ```
 
 ### With Load Shedding
@@ -89,6 +93,7 @@ app.add_middleware(
     max_concurrent=1000,
     shed_low_priority_first=True,
 )
+
 ```
 
 ### Dynamic Priority
@@ -101,14 +106,15 @@ class DynamicPriority(RequestPriorityMiddleware):
         # Premium users get higher priority
         if request.state.user_tier == "premium":
             return Priority.HIGH
-        
+
         # Path-based
         if request.url.path.startswith("/api/webhooks"):
             return Priority.HIGH
-        
+
         return Priority.NORMAL
 
 app.add_middleware(DynamicPriority)
+
 ```
 
 ### Queue Integration
@@ -119,17 +125,19 @@ from fastmiddleware import RequestPriorityMiddleware, Priority
 @app.post("/tasks")
 async def create_task(task: Task, request: Request):
     priority = getattr(request.state, "priority", Priority.NORMAL)
-    
+
     # Use priority for queue ordering
     await task_queue.enqueue(task, priority=priority.value)
-    
+
     return {"queued": True, "priority": priority.name}
+
 ```
 
 ## Request State
 
 ```python
 request.state.priority  # Priority enum value
+
 ```
 
 ## Response Headers
@@ -137,6 +145,7 @@ request.state.priority  # Priority enum value
 ```http
 X-Priority: HIGH
 X-Priority-Value: 1
+
 ```
 
 ## Use Cases

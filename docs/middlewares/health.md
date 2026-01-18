@@ -6,6 +6,7 @@ Built-in health, readiness, and liveness endpoints for Kubernetes and load balan
 
 ```python
 from fastmiddleware import HealthCheckMiddleware, HealthConfig
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import HealthCheckMiddleware
 app = FastAPI()
 
 app.add_middleware(HealthCheckMiddleware)
+
 ```
 
 ## Configuration
@@ -57,6 +59,7 @@ app.add_middleware(HealthCheckMiddleware)
         "redis": "healthy"
     }
 }
+
 ```
 
 ### /ready
@@ -70,6 +73,7 @@ app.add_middleware(HealthCheckMiddleware)
         "redis": "healthy"
     }
 }
+
 ```
 
 ### /live
@@ -79,6 +83,7 @@ app.add_middleware(HealthCheckMiddleware)
     "alive": true,
     "timestamp": "2024-01-01T00:00:00Z"
 }
+
 ```
 
 ## Examples
@@ -92,6 +97,7 @@ config = HealthConfig(
 )
 
 app.add_middleware(HealthCheckMiddleware, config=config)
+
 ```
 
 ### With Custom Checks
@@ -136,6 +142,7 @@ config = HealthConfig(
 )
 
 app.add_middleware(HealthCheckMiddleware, config=config)
+
 ```
 
 ### Custom Paths
@@ -148,6 +155,7 @@ config = HealthConfig(
 )
 
 app.add_middleware(HealthCheckMiddleware, config=config)
+
 ```
 
 ### Without Details
@@ -158,7 +166,9 @@ config = HealthConfig(
 )
 
 # Response:
+
 # {"status": "healthy", "timestamp": "..."}
+
 ```
 
 ## Kubernetes Configuration
@@ -174,7 +184,7 @@ spec:
       image: my-api:1.0.0
       ports:
         - containerPort: 8000
-      
+
       livenessProbe:
         httpGet:
           path: /live
@@ -183,7 +193,7 @@ spec:
         periodSeconds: 10
         timeoutSeconds: 5
         failureThreshold: 3
-      
+
       readinessProbe:
         httpGet:
           path: /ready
@@ -192,7 +202,7 @@ spec:
         periodSeconds: 5
         timeoutSeconds: 3
         failureThreshold: 3
-      
+
       startupProbe:
         httpGet:
           path: /health
@@ -200,6 +210,7 @@ spec:
         initialDelaySeconds: 0
         periodSeconds: 5
         failureThreshold: 30
+
 ```
 
 ### Deployment
@@ -223,6 +234,7 @@ spec:
             httpGet:
               path: /ready
               port: 8000
+
 ```
 
 ## Health Check Types
@@ -236,8 +248,11 @@ spec:
 - Failure triggers pod restart
 
 **When to fail**:
+
 - Application deadlock
+
 - Unrecoverable state
+
 - Resource exhaustion
 
 ### Readiness
@@ -249,8 +264,11 @@ spec:
 - Failure removes from load balancer
 
 **When to fail**:
+
 - Database unavailable
+
 - Cache unavailable
+
 - Required service down
 
 ### Health (Startup)
@@ -282,6 +300,7 @@ When a check fails:
         "redis": "unhealthy"  // Failed check
     }
 }
+
 ```
 
 HTTP Status: `503 Service Unavailable`

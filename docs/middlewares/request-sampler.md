@@ -6,6 +6,7 @@ Sample requests for analytics and logging.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -26,6 +27,7 @@ async def handler():
     if is_sampled():
         log_detailed_metrics()
     return {"sampled": is_sampled()}
+
 ```
 
 ## Configuration
@@ -51,6 +53,7 @@ async def handler():
         # Expensive logging/tracing
         await detailed_log()
     return {"ok": True}
+
 ```
 
 ## Examples
@@ -62,6 +65,7 @@ app.add_middleware(
     RequestSamplerMiddleware,
     rate=0.1,  # 10%
 )
+
 ```
 
 ### Per-Path Rates
@@ -76,6 +80,7 @@ app.add_middleware(
         "/api/debug": 0.5,            # 50% for debugging
     },
 )
+
 ```
 
 ### Always Sample Certain Paths
@@ -86,6 +91,7 @@ app.add_middleware(
     rate=0.1,
     always_sample={"/api/errors", "/api/critical"},
 )
+
 ```
 
 ### Conditional Detailed Logging
@@ -96,7 +102,7 @@ from fastmiddleware import is_sampled
 @app.get("/search")
 async def search(q: str):
     result = await perform_search(q)
-    
+
     if is_sampled():
         # Only log details for sampled requests
         await log_search_details({
@@ -105,8 +111,9 @@ async def search(q: str):
             "response_time": ...,
             "cache_hit": ...,
         })
-    
+
     return result
+
 ```
 
 ### Distributed Tracing
@@ -128,6 +135,7 @@ async def handler():
             # Detailed tracing
             ...
     return {"ok": True}
+
 ```
 
 ### Analytics Sampling
@@ -138,7 +146,7 @@ from fastmiddleware import is_sampled
 @app.middleware("http")
 async def analytics(request, call_next):
     response = await call_next(request)
-    
+
     if is_sampled():
         await send_to_analytics({
             "path": request.url.path,
@@ -146,20 +154,23 @@ async def analytics(request, call_next):
             "status": response.status_code,
             "user_agent": request.headers.get("user-agent"),
         })
-    
+
     return response
+
 ```
 
 ## Request State
 
 ```python
 request.state.sampled  # bool - Is this request sampled?
+
 ```
 
 ## Response Headers
 
 ```http
 X-Sampled: true
+
 ```
 
 ## Use Cases

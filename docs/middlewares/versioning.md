@@ -10,6 +10,7 @@ API versioning middleware supporting header, query, and path-based versions.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Usage
@@ -43,6 +44,7 @@ app.add_middleware(
     location=VersionLocation.PATH,
     path_prefix="/v",  # Matches /v1, /v2, etc.
 )
+
 ```
 
 ## Configuration
@@ -65,7 +67,7 @@ from fastmiddleware import get_api_version
 @app.get("/users")
 async def get_users():
     version = get_api_version()
-    
+
     if version == "2.0":
         return get_users_v2()
     return get_users_v1()
@@ -75,6 +77,7 @@ async def get_users():
 async def get_data(request: Request):
     version = request.state.api_version
     return {"version": version}
+
 ```
 
 ## Version Locations
@@ -83,18 +86,21 @@ async def get_data(request: Request):
 
 ```bash
 curl -H "X-API-Version: 2.0" https://api.example.com/users
+
 ```
 
 ### Query Parameter
 
 ```bash
 curl "https://api.example.com/users?version=2.0"
+
 ```
 
 ### URL Path
 
 ```bash
 curl https://api.example.com/v2/users
+
 ```
 
 ## Response Headers
@@ -113,6 +119,7 @@ If `supported_versions` is set and version not in list:
   "message": "Unsupported API version: 3.0",
   "supported_versions": ["1.0", "2.0"]
 }
+
 ```
 
 ## Related Middlewares

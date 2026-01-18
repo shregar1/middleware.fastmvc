@@ -6,6 +6,7 @@ Transform request and response headers.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(
     add_response_headers={"X-Powered-By": "FastMVC"},
     remove_response_headers={"Server"},
 )
+
 ```
 
 ## Configuration
@@ -48,6 +50,7 @@ app.add_middleware(
         "X-Request-Id": "{request_id}",
     },
 )
+
 ```
 
 ### Remove Server Information
@@ -57,6 +60,7 @@ app.add_middleware(
     HeaderTransformMiddleware,
     remove_response_headers={"Server", "X-Powered-By"},
 )
+
 ```
 
 ### Add Request Headers
@@ -69,6 +73,7 @@ app.add_middleware(
         "X-Internal-Request": "true",
     },
 )
+
 ```
 
 ### Rename Headers
@@ -83,6 +88,7 @@ app.add_middleware(
         "X-Custom-Id": "X-Request-Id",
     },
 )
+
 ```
 
 ### Dynamic Header Values
@@ -97,6 +103,7 @@ app.add_middleware(
         "X-Server-Time": lambda: datetime.utcnow().isoformat(),
     },
 )
+
 ```
 
 ### Security Headers
@@ -115,6 +122,7 @@ app.add_middleware(
         "X-AspNet-Version",
     },
 )
+
 ```
 
 ### CORS Headers
@@ -128,6 +136,7 @@ app.add_middleware(
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
 )
+
 ```
 
 ### Caching Headers
@@ -140,6 +149,7 @@ app.add_middleware(
         "Vary": "Accept-Encoding",
     },
 )
+
 ```
 
 ## Use Cases

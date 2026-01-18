@@ -6,6 +6,7 @@ Structured request/response logging with configurable verbosity, custom formatte
 
 ```python
 from fastmiddleware import LoggingMiddleware
+
 ```
 
 ## Quick Start
@@ -17,6 +18,7 @@ from fastmiddleware import LoggingMiddleware
 app = FastAPI()
 
 app.add_middleware(LoggingMiddleware)
+
 ```
 
 ## Configuration
@@ -39,6 +41,7 @@ app.add_middleware(LoggingMiddleware)
 ```text
 → GET /api/users
 ← ✓ GET /api/users [200] 12.34ms
+
 ```
 
 ### With Headers
@@ -48,6 +51,7 @@ app.add_middleware(LoggingMiddleware)
   Headers: {"accept": "application/json", "authorization": "[REDACTED]"}
 ← ✓ GET /api/users [200] 12.34ms
   Headers: {"content-type": "application/json", "x-request-id": "abc-123"}
+
 ```
 
 ### Error Response
@@ -55,6 +59,7 @@ app.add_middleware(LoggingMiddleware)
 ```text
 → POST /api/users
 ← ✗ POST /api/users [400] 5.67ms
+
 ```
 
 ## Examples
@@ -67,6 +72,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 app.add_middleware(LoggingMiddleware)
+
 ```
 
 ### Verbose Logging (Development)
@@ -80,6 +86,7 @@ app.add_middleware(
     log_request_body=True,
     log_response_body=True,
 )
+
 ```
 
 ### Production Logging
@@ -92,6 +99,7 @@ app.add_middleware(
     log_response_headers=False,
     exclude_paths={"/health", "/ready", "/live", "/metrics"},
 )
+
 ```
 
 ### Custom Logger
@@ -115,6 +123,7 @@ app.add_middleware(
     LoggingMiddleware,
     custom_logger=api_logger,
 )
+
 ```
 
 ### JSON Logging
@@ -142,6 +151,7 @@ handler.setFormatter(JSONFormatter())
 logger.addHandler(handler)
 
 app.add_middleware(LoggingMiddleware, custom_logger=logger)
+
 ```
 
 ### Sensitive Data Filtering
@@ -157,12 +167,15 @@ app.add_middleware(
         "x-auth-token",
     },
 )
+
 ```
 
 Output:
+
 ```text
 → GET /api/users
   Headers: {"authorization": "[REDACTED]", "x-api-key": "[REDACTED]", "accept": "application/json"}
+
 ```
 
 ## Log Levels
@@ -203,6 +216,7 @@ app.add_middleware(
         "/favicon.ico",
     },
 )
+
 ```
 
 ## Integration with Request ID
@@ -216,8 +230,11 @@ app.add_middleware(LoggingMiddleware)
 app.add_middleware(RequestIDMiddleware)
 
 # Logs will include request ID
+
 # → GET /api/users [req-id: abc-123-def]
+
 # ← ✓ GET /api/users [200] 12.34ms [req-id: abc-123-def]
+
 ```
 
 ## Best Practices

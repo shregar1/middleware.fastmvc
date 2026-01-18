@@ -6,6 +6,7 @@ Prevent replay attacks using timestamps and nonces.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -22,6 +23,7 @@ app.add_middleware(
     timestamp_header="X-Timestamp",
     nonce_header="X-Nonce",
 )
+
 ```
 
 ## Configuration
@@ -45,6 +47,7 @@ app.add_middleware(
 ```http
 X-Timestamp: 1705574400
 X-Nonce: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
 ```
 
 ## Examples
@@ -56,6 +59,7 @@ app.add_middleware(
     ReplayPreventionMiddleware,
     max_age=300,  # 5 minutes
 )
+
 ```
 
 ### Exclude Public Endpoints
@@ -66,6 +70,7 @@ app.add_middleware(
     max_age=300,
     exclude_paths={"/health", "/public", "/docs"},
 )
+
 ```
 
 ### Shorter Window for Sensitive Endpoints
@@ -75,6 +80,7 @@ app.add_middleware(
     ReplayPreventionMiddleware,
     max_age=60,  # 1 minute
 )
+
 ```
 
 ### Client Implementation (Python)
@@ -90,6 +96,7 @@ def make_secure_request(url, data):
         "X-Nonce": str(uuid.uuid4()),
     }
     return requests.post(url, json=data, headers=headers)
+
 ```
 
 ### Client Implementation (JavaScript)
@@ -101,13 +108,14 @@ async function secureRequest(url, data) {
         'X-Nonce': crypto.randomUUID(),
         'Content-Type': 'application/json',
     };
-    
+
     return fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(data),
     });
 }
+
 ```
 
 ### With Request Signing
@@ -126,6 +134,7 @@ app.add_middleware(
     RequestSigningMiddleware,
     secret_key="your-secret",
 )
+
 ```
 
 ## Error Responses
@@ -138,6 +147,7 @@ app.add_middleware(
     "detail": "Timestamp is older than 300 seconds",
     "status_code": 401
 }
+
 ```
 
 ### Replay Detected
@@ -148,6 +158,7 @@ app.add_middleware(
     "detail": "Nonce has already been used",
     "status_code": 401
 }
+
 ```
 
 ### Missing Headers
@@ -158,6 +169,7 @@ app.add_middleware(
     "detail": "Missing required header: X-Timestamp",
     "status_code": 400
 }
+
 ```
 
 ## Related Middlewares

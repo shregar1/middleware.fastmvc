@@ -6,6 +6,7 @@ Support for HTTP Client Hints for adaptive content delivery.
 
 ```bash
 pip install fastmvc-middleware
+
 ```
 
 ## Quick Start
@@ -25,6 +26,7 @@ app.add_middleware(
 async def handler():
     hints = get_client_hints()
     return hints
+
 ```
 
 ## Configuration
@@ -58,16 +60,17 @@ from fastmiddleware import get_client_hints
 @app.get("/image")
 async def get_image():
     hints = get_client_hints()
-    
+
     dpr = hints.get("dpr", 1)
     save_data = hints.get("save_data", False)
-    
+
     if save_data:
         return serve_low_quality_image()
     elif dpr >= 2:
         return serve_retina_image()
     else:
         return serve_standard_image()
+
 ```
 
 ## Examples
@@ -81,7 +84,9 @@ app.add_middleware(
 )
 
 # Response includes:
+
 # Accept-CH: DPR, Viewport-Width
+
 ```
 
 ### With Save-Data Detection
@@ -95,10 +100,11 @@ app.add_middleware(
 @app.get("/content")
 async def content():
     hints = get_client_hints()
-    
+
     if hints.get("save_data"):
         return {"content": "Lightweight version"}
     return {"content": "Full version with images"}
+
 ```
 
 ### Adaptive Image Serving
@@ -114,14 +120,15 @@ app.add_middleware(
 @app.get("/images/{image_id}")
 async def get_image(image_id: str):
     hints = get_client_hints()
-    
+
     dpr = hints.get("dpr", 1)
     width = hints.get("width", 800)
-    
+
     # Calculate optimal image size
     optimal_width = int(width * dpr)
-    
+
     return serve_resized_image(image_id, optimal_width)
+
 ```
 
 ### Critical Hints
@@ -132,6 +139,7 @@ app.add_middleware(
     request_hints=["DPR", "Viewport-Width"],
     critical_hints=["DPR"],  # Browser must send on first request
 )
+
 ```
 
 ## Response Headers
@@ -140,6 +148,7 @@ app.add_middleware(
 Accept-CH: DPR, Viewport-Width, Save-Data
 Accept-CH-Lifetime: 86400
 Critical-CH: DPR
+
 ```
 
 ## Related Middlewares
